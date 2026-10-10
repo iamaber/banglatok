@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: stable
+      - run: test -z "$(gofmt -l tokenizer internal/native cmd corpus)"
+      - run: go test -race ./...
+      - run: go vet ./...
+
+  python:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python: ['3.10', '3.11', '3.12', '3.13', '3.14', '3.15']
+        include:
+          - os: macos-15
+            python: '3.10'
+          - os: macos-15
+            python: '3.15'
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: stable
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install build twine
+      - name: Build wheel from source distribution
+        run: python -m build
+      - run: python -m pip install --no-deps dist/*.whl
+      - name: Validate release archives
+        run: |
+          python -m twine check --strict dist/*
+          python tools/check_dist.py dist --version "$(python -c 'from importlib.metadata import version; print(version("bn-tokenizers-embedding"))')"
+      - run: python -m unittest discover -s tests -v
+      - run: python examples/quickstart.py
