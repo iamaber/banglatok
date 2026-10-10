@@ -6,12 +6,22 @@ import tempfile
 import unittest
 import weakref
 from concurrent.futures import ThreadPoolExecutor
+from importlib.resources import as_file, files
 from pathlib import Path
 
 from bn_tokenizers_embedding import Tokenizer, _native, normalize
 
 
 class TokenizerTests(unittest.TestCase):
+    def test_bundled_demo_round_trip(self) -> None:
+        demo = files("bn_tokenizers_embedding").joinpath("data/demo-unigram.json")
+        self.assertTrue(demo.is_file(), "installed package is missing the offline demo model")
+        texts = ["  আমি বাংলা বলি। ", "ami bangla boli", "I speak Bangla", "meetingটা 🙂"]
+        with as_file(demo) as path, Tokenizer(path) as tokenizer:
+            batch = tokenizer.encode_batch(texts)
+            self.assertEqual([tokenizer.decode(ids) for ids in batch],
+                             ["আমি বাংলা বলি।", "ami bangla boli", "I speak Bangla", "meetingটা 🙂"])
+
     @classmethod
     def setUpClass(cls) -> None:
         cls.directory = tempfile.TemporaryDirectory()
