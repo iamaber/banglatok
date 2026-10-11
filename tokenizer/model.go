@@ -35,12 +35,13 @@ type node struct {
 
 // Tokenizer is immutable after construction and safe for concurrent Encode calls.
 type Tokenizer struct {
-	model         Model
-	trie          []node
-	mergeRanks    map[uint64]int
-	characters    map[rune]int
-	encodedPieces map[string][]int
-	spaceFusion   []int
+	model           Model
+	trie            []node
+	mergeRanks      map[uint64]int
+	characters      map[rune]int
+	denseCharacters []int32
+	encodedPieces   map[string][]int
+	spaceFusion     []int
 }
 
 func New(m Model) (*Tokenizer, error) {
@@ -144,13 +145,21 @@ func (m Model) Save(path string) error {
 // Encode returns deterministic IDs. Version 2 can fuse a space with the first
 // token of the following word; literal markers and special-token strings round-trip.
 func (t *Tokenizer) Encode(text string) []int {
+	return t.AppendEncode(nil, text)
+}
+
+// AppendEncode appends the IDs of text to dst, letting callers reuse buffers.
+func (t *Tokenizer) AppendEncode(dst []int, text string) []int {
 	s := Normalize(text)
-	ids := make([]int, 0, len(s)/2)
+	if dst == nil {
+		dst = make([]int, 0, len(s)/4+8)
+	}
+	ids, first := dst, len(dst)
 	var local [128]viterbiState
 	scratch := local[:]
 	for len(s) > 0 {
 		w, rest, _ := strings.Cut(s, " ")
-		if len(ids) > 0 {
+		if len(ids) > first {
 			ids = append(ids, ByteOffset+32)
 		}
 		start := len(ids)
@@ -164,7 +173,7 @@ func (t *Tokenizer) Encode(text string) []int {
 			}
 			ids = t.appendUnigram(ids, w, scratch[:len(w)+1])
 		}
-		if start > 0 && len(t.spaceFusion) > 0 {
+		if start > first && len(t.spaceFusion) > 0 {
 			if fused := t.spaceFusion[ids[start]]; fused != 0 {
 				ids[start-1] = fused
 				copy(ids[start:], ids[start+1:])
@@ -175,6 +184,19 @@ func (t *Tokenizer) Encode(text string) []int {
 	}
 	return ids
 }
+
+// Vocabulary returns learned piece texts in ID order, starting at PieceOffset,
+// and the base IDs that fused IDs expand to after a space, in fused-ID order.
+func (t *Tokenizer) Vocabulary() (pieces []string, spaceFusion []int) {
+	pieces = make([]string, len(t.model.Pieces))
+	for i, p := range t.model.Pieces {
+		pieces[i] = p.Text
+	}
+	return pieces, append([]int(nil), t.model.SpaceFusion...)
+}
+
+// Algorithm reports "unigram" or "bpe".
+func (t *Tokenizer) Algorithm() string { return t.model.Algorithm }
 
 // Decode rejects reserved/invalid IDs rather than silently losing text.
 func (t *Tokenizer) Decode(ids []int) (string, error) {
