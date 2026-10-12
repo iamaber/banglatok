@@ -2,6 +2,7 @@
 package main
 
 /*
+#include <stdint.h>
 #include <stdlib.h>
 */
 import "C"
@@ -15,6 +16,30 @@ import (
 
 var registry native.Registry
 
+// Status codes returned by bntok_encode_into in place of an ID count.
+const (
+	encodeClosed  = -1
+	encodeInvalid = -2
+)
+
+// bntok_encode_into encodes one UTF-8 text into a caller-owned uint32 buffer.
+// It returns the ID count; a count above capacity means retry with that size.
+// Input and output memory are only used during the call.
+//
+//export bntok_encode_into
+func bntok_encode_into(handle C.ulonglong, data *C.char, length C.size_t, out *C.uint32_t, capacity C.size_t) C.longlong {
+	if uint64(length) > math.MaxInt32 || uint64(capacity) > math.MaxInt32 || (data == nil && length != 0) || (out == nil && capacity != 0) {
+		return encodeInvalid
+	}
+	text := unsafe.String((*byte)(unsafe.Pointer(data)), int(length))
+	ids := unsafe.Slice((*uint32)(unsafe.Pointer(out)), int(capacity))
+	n, err := registry.EncodeInto(uint64(handle), text, ids)
+	if err != nil {
+		return encodeClosed
+	}
+	return C.longlong(n)
+}
+
 //export bntok_encode
 func bntok_encode(handle C.ulonglong, data *C.char, length C.size_t, outputLength *C.size_t) *C.char {
 	if outputLength == nil {
@@ -22,9 +47,9 @@ func bntok_encode(handle C.ulonglong, data *C.char, length C.size_t, outputLengt
 	}
 	var response []byte
 	if uint64(length) > math.MaxInt32 || (data == nil && length != 0) {
-		response = append([]byte{1}, "invalid encode input size"...)
+		response = native.EncodeError("invalid encode input size")
 	} else {
-		response = registry.EncodeBinary(uint64(handle), C.GoBytes(unsafe.Pointer(data), C.int(length)))
+		response = registry.EncodeBinary(uint64(handle), unsafe.Slice((*byte)(unsafe.Pointer(data)), int(length)))
 	}
 	*outputLength = C.size_t(len(response))
 	return (*C.char)(C.CBytes(response))

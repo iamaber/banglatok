@@ -1,41 +1,89 @@
 package native
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"sync"
+	"unsafe"
+)
 
-// EncodeBinary accepts repeated uint32 byte lengths followed by UTF-8 text.
-// The response starts with a status byte: 1 followed by an error message, or 0
-// followed by repeated uint32 ID counts and uint32 IDs. Integers are little-endian.
-// JSON remains the control interface for loading, decoding and releasing models.
+// Scratch ID buffers are reused across calls; returned data never aliases them.
+var scratch = sync.Pool{New: func() any { return new([]int) }}
+
+// maxPooledIDs keeps one unusually large request from pinning its buffer.
+const maxPooledIDs = 1 << 16
+
+func release(buffer *[]int, ids []int) {
+	if cap(ids) <= maxPooledIDs {
+		*buffer = ids
+		scratch.Put(buffer)
+	}
+}
+
+// EncodeInto encodes one UTF-8 text into out and returns its ID count. A count
+// larger than len(out) means out was too small and holds no complete result.
+// text may alias caller-owned memory: nothing derived from it is retained.
+func (r *Registry) EncodeInto(handle uint64, text string, out []uint32) (int, error) {
+	model, err := r.model(handle)
+	if err != nil {
+		return 0, err
+	}
+	buffer := scratch.Get().(*[]int)
+	ids := model.AppendEncode((*buffer)[:0], text)
+	if len(ids) <= len(out) {
+		for i, id := range ids {
+			out[i] = uint32(id)
+		}
+	}
+	release(buffer, ids)
+	return len(ids), nil
+}
+
+// EncodeBinary accepts repeated little-endian uint32 byte lengths followed by
+// UTF-8 text. data may alias caller-owned memory for the duration of the call.
+// The response is native-endian uint32 words: status 1 followed by an error
+// message in the remaining bytes, or status 0, one ID count per text, then all
+// IDs in input order.
 func (r *Registry) EncodeBinary(handle uint64, data []byte) []byte {
+	model, err := r.model(handle)
+	if err != nil {
+		return EncodeError(err.Error())
+	}
 	var texts []string
 	for len(data) > 0 {
 		if len(data) < 4 {
-			return encodeError("truncated text length")
+			return EncodeError("truncated text length")
 		}
 		n := uint64(binary.LittleEndian.Uint32(data))
 		data = data[4:]
 		if n > uint64(len(data)) {
-			return encodeError("truncated text")
+			return EncodeError("truncated text")
 		}
-		texts = append(texts, string(data[:int(n)]))
+		texts = append(texts, unsafe.String(unsafe.SliceData(data), int(n)))
 		data = data[int(n):]
 	}
-	batch, err := r.encodeBatch(handle, texts)
-	if err != nil {
-		return encodeError(err.Error())
+	buffer := scratch.Get().(*[]int)
+	ids := (*buffer)[:0]
+	ends := make([]int, len(texts))
+	for i, text := range texts {
+		ids = model.AppendEncode(ids, text)
+		ends[i] = len(ids)
 	}
-	size := 1
-	for _, ids := range batch {
-		size += 4 + 4*len(ids)
+	output := make([]byte, 4*(1+len(texts)+len(ids)))
+	words := unsafe.Slice((*uint32)(unsafe.Pointer(unsafe.SliceData(output))), len(output)/4)
+	previous := 0
+	for i, end := range ends {
+		words[1+i] = uint32(end - previous)
+		previous = end
 	}
-	output := make([]byte, 1, size)
-	for _, ids := range batch {
-		output = binary.LittleEndian.AppendUint32(output, uint32(len(ids)))
-		for _, id := range ids {
-			output = binary.LittleEndian.AppendUint32(output, uint32(id))
-		}
+	for i, id := range ids {
+		words[1+len(texts)+i] = uint32(id)
 	}
+	release(buffer, ids)
 	return output
 }
 
-func encodeError(message string) []byte { return append([]byte{1}, message...) }
+// EncodeError builds the EncodeBinary error response for message.
+func EncodeError(message string) []byte {
+	output := binary.NativeEndian.AppendUint32(nil, 1)
+	return append(output, message...)
+}

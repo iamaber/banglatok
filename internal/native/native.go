@@ -20,12 +20,15 @@ type request struct {
 }
 
 type response struct {
-	Handle     uint64  `json:"handle,omitempty"`
-	Vocabulary int     `json:"vocabulary,omitempty"`
-	IDs        []int   `json:"ids,omitempty"`
-	Batch      [][]int `json:"batch,omitempty"`
-	Text       string  `json:"text"`
-	Error      string  `json:"error,omitempty"`
+	Handle      uint64   `json:"handle,omitempty"`
+	Vocabulary  int      `json:"vocabulary,omitempty"`
+	Algorithm   string   `json:"algorithm,omitempty"`
+	IDs         []int    `json:"ids,omitempty"`
+	Batch       [][]int  `json:"batch,omitempty"`
+	Pieces      []string `json:"pieces,omitempty"`
+	SpaceFusion []int    `json:"space_fusion,omitempty"`
+	Text        string   `json:"text"`
+	Error       string   `json:"error,omitempty"`
 }
 
 // Registry owns models until Python closes or finalizes their handles.
@@ -65,7 +68,7 @@ func (r *Registry) call(req request) (response, error) {
 		}
 		r.next++
 		r.models[r.next] = model
-		return response{Handle: r.next, Vocabulary: model.VocabSize()}, nil
+		return response{Handle: r.next, Vocabulary: model.VocabSize(), Algorithm: model.Algorithm()}, nil
 	}
 	if req.Operation == "normalize" {
 		return response{Text: tokenizer.Normalize(req.Text)}, nil
@@ -90,6 +93,9 @@ func (r *Registry) call(req request) (response, error) {
 	case "decode":
 		text, err := model.Decode(req.IDs)
 		return response{Text: text}, err
+	case "pieces":
+		pieces, fusion := model.Vocabulary()
+		return response{Pieces: pieces, SpaceFusion: fusion}, nil
 	default:
 		return response{}, fmt.Errorf("unknown operation %q", req.Operation)
 	}

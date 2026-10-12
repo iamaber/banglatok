@@ -19,8 +19,10 @@ class TokenizerTests(unittest.TestCase):
         texts = ["  আমি বাংলা বলি। ", "ami bangla boli", "I speak Bangla", "meetingটা 🙂"]
         with as_file(demo) as path, Tokenizer(path) as tokenizer:
             batch = tokenizer.encode_batch(texts)
-            self.assertEqual([tokenizer.decode(ids) for ids in batch],
-                             ["আমি বাংলা বলি।", "ami bangla boli", "I speak Bangla", "meetingটা 🙂"])
+            self.assertEqual(
+                [tokenizer.decode(ids) for ids in batch],
+                ["আমি বাংলা বলি।", "ami bangla boli", "I speak Bangla", "meetingটা 🙂"],
+            )
 
     @classmethod
     def setUpClass(cls) -> None:
