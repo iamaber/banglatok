@@ -1,0 +1,35 @@
+name: Bug report
+description: Report an installation, native-runtime or tokenization problem.
+body:
+  - type: markdown
+    attributes:
+      value: Use a small hand-written example. Do not upload credentials, private text, or unreviewed corpus/model files. For vulnerabilities, follow SECURITY.md.
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS/version, architecture, Python version, package version; Go/compiler version for source builds.
+    validations:
+      required: true
+  - type: textarea
+    id: installation
+    attributes:
+      label: Installation method
+      description: Exact install command and whether you used a wheel or a source build.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Small Python example plus model format/version or the bundled toy model. Include the full error traceback.
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true

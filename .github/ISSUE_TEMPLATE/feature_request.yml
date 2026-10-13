@@ -1,0 +1,17 @@
+name: Feature request
+description: Explain a tokenizer use case or a missing capability.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: Describe the text/language/platform and the limitation you encountered.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior and alternatives
+      description: Explain the smallest useful change and any workaround you tried. Keep embedding-model research separate from tokenizer API requests.
+    validations:
+      required: true
