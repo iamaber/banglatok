@@ -89,11 +89,11 @@ The original wheel remains in `dist/`; the optimized wheel and source archive ar
 python -m pip install --force-reinstall --no-deps dist/optimized/*.whl
 export TOKENIZERS_PARALLELISM=false
 export NLTK_DATA="$PWD/data/raw/nltk"
-python benchmarks/compare_frameworks.py --cpu-model "Apple M5" \
-  --output reports/performance-after.json
-python benchmarks/load_cost.py --model models/bpe-32000.json
-python benchmarks/space_fusion.py
-python -m unittest discover -s benchmarks -p 'test_*.py' -v
+python research/benchmarks/compare_frameworks.py --cpu-model "Apple M5" \
+  --output research/reports/performance-after.json
+python research/benchmarks/load_cost.py --model models/bpe-32000.json
+python research/benchmarks/space_fusion.py
+python -m unittest discover -s research/benchmarks -p 'test_*.py' -v
 
 # Go-only corpus benchmark, with the desired source checkout and toolchain.
 BNTOK_MODEL="$PWD/models/bpe-32000.json" \

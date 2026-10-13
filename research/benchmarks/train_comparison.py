@@ -94,7 +94,9 @@ def main() -> None:
             for path in [output / "sentencepiece-32000.model", output / "hf-bpe-32000.json"]
         },
     }
-    Path("reports/comparison-training.json").write_text(json.dumps(metadata, indent=2) + "\n")
+    Path("research/reports/comparison-training.json").write_text(
+        json.dumps(metadata, indent=2) + "\n"
+    )
 
 
 if __name__ == "__main__":

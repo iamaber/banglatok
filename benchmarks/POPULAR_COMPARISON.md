@@ -1,6 +1,6 @@
 # Comparison with popular Bangla-capable tokenizers
 
-Measured 10 November 2026 on an Apple M5 (arm64), macOS 27.0.1, Python 3.12.13, with bn-tokenizers-embedding 0.2.0. Raw results, timing samples and hashes are in [popular-comparison.json](popular-comparison.json). The harness is [benchmarks/compare_popular.py](../benchmarks/compare_popular.py).
+Measured 10 November 2026 on an Apple M5 (arm64), macOS 27.0.1, Python 3.12.13, with bn-tokenizers-embedding 0.2.0. Raw results, timing samples and hashes are in [results/popular-comparison.json](results/popular-comparison.json). The harness is [benchmarks/compare_popular.py](compare_popular.py).
 
 **Summary.** On text from a source it never trained on, the default `bn-bpe-58k` model:
 
@@ -69,12 +69,12 @@ On 16 authored stress cases (emoji, ZWJ/ZWNJ, NUL, combining marks, other script
 
 - **Same input for everyone.** Text is NFC- and whitespace-normalized once, before any candidate sees it. "Lossless round trip" means `decode(encode(text)) == text` on that normalized text. Tokens per word divides all emitted IDs, without special tokens, by whitespace-separated words.
 - **Timing.** Single-threaded throughout: `TOKENIZERS_PARALLELISM=false`, `RAYON_NUM_THREADS=1`, `num_threads=1` for SentencePiece and tiktoken batches. Each value is the median of five full passes, with candidate and mode order shuffled on every pass. Timed work runs from the public encode call to a Python list of integer IDs. Hugging Face models use their Rust `tokenizers` backend directly, the fastest path they offer. Batches hold 64 texts. Model loading and quality checks are not timed.
-- **Candidates.** BNLP's `SentencepieceTokenizer` wraps exactly this `bn_spm.model`; an earlier run measured the wrapper itself with identical IDs ([FRAMEWORK_COMPARISON.md](FRAMEWORK_COMPARISON.md)). We trained "SentencePiece Unigram 32k, our data" on our training split to show what the same data gives an established library. It is not a published package. Multilingual-E5 and BGE-M3 use the XLM-R tokenizer unchanged. Versions: sentencepiece 0.2.3, tiktoken 0.14.0, tokenizers 0.23.3, transformers 5.22.2.
+- **Candidates.** BNLP's `SentencepieceTokenizer` wraps exactly this `bn_spm.model`; an earlier run measured the wrapper itself with identical IDs ([FRAMEWORK_COMPARISON.md](../research/reports/FRAMEWORK_COMPARISON.md)). We trained "SentencePiece Unigram 32k, our data" on our training split to show what the same data gives an established library. It is not a published package. Multilingual-E5 and BGE-M3 use the XLM-R tokenizer unchanged. Versions: sentencepiece 0.2.3, tiktoken 0.14.0, tokenizers 0.23.3, transformers 5.22.2.
 
 ## Limitations
 
 - One machine, warm caches, five repeats. Other CPUs will give other absolute numbers, and the ratios may move too.
-- Fewer tokens means shorter sequences and lower compute or API cost per text. It does not by itself mean better downstream accuracy. Our vocabularies only help an encoder or LLM that was trained or adapted to use them; see [ROUND2_ORIGINAL_COMPARISON.md](ROUND2_ORIGINAL_COMPARISON.md).
+- Fewer tokens means shorter sequences and lower compute or API cost per text. It does not by itself mean better downstream accuracy. Our vocabularies only help an encoder or LLM that was trained or adapted to use them; see [ROUND2_ORIGINAL_COMPARISON.md](../research/reports/ROUND2_ORIGINAL_COMPARISON.md).
 - Script buckets on BanglishRev do not separate English from Banglish within Latin-script text.
 - BanglishRev is review text. Formal domains such as news and law, and other dialects, may behave differently.
 
@@ -93,4 +93,4 @@ TOKENIZERS_PARALLELISM=false RAYON_NUM_THREADS=1 python benchmarks/compare_popul
   --sentencepiece models/comparison/sentencepiece-32000.model --cpu-model "your CPU"
 ```
 
-Either corpus may be omitted; the harness evaluates whichever files exist. `benchmarks/train_comparison.py` builds the same-data SentencePiece model.
+Either corpus may be omitted; the harness evaluates whichever files exist. `research/benchmarks/train_comparison.py` builds the same-data SentencePiece model.

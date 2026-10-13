@@ -39,7 +39,7 @@ Here are 10,000 naturally written e-commerce reviews from [BanglishRev](https://
 | mBERT cased | 119,547 | 2.122 | 48.0% | 1,706 | 8.1 | 8.1 |
 | Qwen3 | 151,669 | 3.588 | 100% | 0 | 6.0 | 6.0 |
 
-[Full report](reports/POPULAR_COMPARISON.md): per-script breakdown, the in-domain validation split, more tokenizers, method, limitations, and the commands to reproduce it. BanglaBERT is about 3% shorter on Bengali-only text but lossy; among lossless tokenizers, `bn-bpe-58k` is the most compact on Bengali, Latin and mixed script. Shorter sequences cut compute and context use, but they do not by themselves make a downstream model more accurate.
+[Full report](benchmarks/POPULAR_COMPARISON.md): per-script breakdown, the in-domain validation split, more tokenizers, method, limitations, and the commands to reproduce it. BanglaBERT is about 3% shorter on Bengali-only text but lossy; among lossless tokenizers, `bn-bpe-58k` is the most compact on Bengali, Latin and mixed script. Shorter sequences cut compute and context use, but they do not by themselves make a downstream model more accurate.
 
 ## Install
 
@@ -123,7 +123,7 @@ See [docs/TRAINING_AND_RESEARCH.md](docs/TRAINING_AND_RESEARCH.md) for the corpu
 
 ## Research
 
-This repository also holds the research behind the models. [data/CORPUS.md](data/CORPUS.md) documents the corpus construction, provenance and leakage controls. [reports/RESULTS.md](reports/RESULTS.md) has the intrinsic evaluation. The retrieval experiments are in [experiments/retrieval/](experiments/retrieval/README.md), and [reports/ROUND2_ORIGINAL_COMPARISON.md](reports/ROUND2_ORIGINAL_COMPARISON.md) has the encoder-adaptation results. In those experiments, swapping a custom vocabulary into multilingual-E5 did not beat the unchanged model. Treat these vocabularies as a strong starting point for training, not as a drop-in accuracy gain for existing encoders.
+This repository also holds the research behind the models, under [research/](research/). [data/CORPUS.md](data/CORPUS.md) documents the corpus construction, provenance and leakage controls. [research/reports/RESULTS.md](research/reports/RESULTS.md) has the intrinsic evaluation. The retrieval experiments are in [research/experiments/retrieval/](research/experiments/retrieval/README.md), and [research/reports/ROUND2_ORIGINAL_COMPARISON.md](research/reports/ROUND2_ORIGINAL_COMPARISON.md) has the encoder-adaptation results. In those experiments, swapping a custom vocabulary into multilingual-E5 did not beat the unchanged model. Treat these vocabularies as a strong starting point for training, not as a drop-in accuracy gain for existing encoders.
 
 ## Contributing
 

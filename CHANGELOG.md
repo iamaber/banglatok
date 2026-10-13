@@ -10,7 +10,7 @@ First public release candidate.
 - `tokenize`, `count_tokens`, `decode_batch`, `id_to_token`, `token_to_id`, `get_vocab`, the `algorithm` property, `available_models()` and the control-ID constants.
 - `tokenizer(texts, add_special_tokens=..., max_length=..., padding=...)` returns encoder-ready `input_ids` and `attention_mask`. `decode(..., skip_special_tokens=True)` drops the control IDs again.
 - A `bntokenize` command and `python -m bn_tokenizers_embedding`.
-- `benchmarks/compare_popular.py` and `reports/POPULAR_COMPARISON.md` compare the models with SentencePiece/BNLP, tiktoken, BanglaBERT, MuRIL, mBERT, XLM-R and Qwen3 on unseen and in-domain text.
+- `benchmarks/compare_popular.py` and `benchmarks/POPULAR_COMPARISON.md` compare the models with SentencePiece/BNLP, tiktoken, BanglaBERT, MuRIL, mBERT, XLM-R and Qwen3 on unseen and in-domain text.
 - `benchmarks/build_fused_model.py` reproducibly builds fused models from a base BPE model.
 - Linux aarch64 wheels in the release workflow.
 

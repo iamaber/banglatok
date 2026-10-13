@@ -42,7 +42,7 @@ python benchmarks/build_fused_model.py --base models/bpe-16000.json --budget 320
 
 - The training data is Wikipedia-heavy Bangla, sentence-level English, and Banglish from social-media comments. Domains far from these (legal, medical, code, other scripts) will fragment more.
 - The code-mixed bucket is small: 4,709 training records and 156 validation records.
-- Better compression and speed do not by themselves mean better downstream accuracy. See [reports/ROUND2_ORIGINAL_COMPARISON.md](../reports/ROUND2_ORIGINAL_COMPARISON.md) for the encoder experiments.
+- Better compression and speed do not by themselves mean better downstream accuracy. See [research/reports/ROUND2_ORIGINAL_COMPARISON.md](../research/reports/ROUND2_ORIGINAL_COMPARISON.md) for the encoder experiments.
 
 ## License of the model files
 

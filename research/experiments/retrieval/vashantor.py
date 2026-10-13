@@ -182,7 +182,9 @@ if __name__ == "__main__":
     )
     parser.add_argument("--prepared", type=Path, default=Path("data/processed"))
     parser.add_argument(
-        "--material", type=Path, default=Path("experiments/retrieval/domain_material.jsonl")
+        "--material",
+        type=Path,
+        default=Path("research/experiments/retrieval/domain_material.jsonl"),
     )
     parser.add_argument("--output", type=Path, default=Path("data/processed/vashantor-expanded-v1"))
     parser.add_argument("--bntok", type=Path, default=Path("bin/bntok"))

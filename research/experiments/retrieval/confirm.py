@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 from compare import score_rankings
-from prepare import read_rows, sha256, verify_manifest
+from prepare import read_rows, recorded, sha256, verify_manifest
 from seed_analysis import DIRECTIONS, paired_seeds
 
 
@@ -17,7 +17,7 @@ def confirm(suite: Path, selection: Path, output: Path) -> dict:
     if (
         not decision.get("selection_frozen_before_reserved_test")
         or specification.get("frozen_selection_sha256") != sha256(selection)
-        or sha256(Path(decision["evaluation_suite"])) != decision["evaluation_suite_sha256"]
+        or sha256(recorded(decision["evaluation_suite"])) != decision["evaluation_suite_sha256"]
     ):
         raise ValueError("test results are not bound to an unchanged frozen development decision")
     runs = {}

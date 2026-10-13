@@ -66,14 +66,14 @@ After preparing the corpus, existing base models and the earlier `models/compari
 uv build --out-dir dist/speed
 # Install the new wheel in an environment with comparison-requirements.txt.
 python -m pip install --force-reinstall --no-deps dist/speed/*.whl
-python benchmarks/prepare_speed_models.py
+python research/benchmarks/prepare_speed_models.py
 export TOKENIZERS_PARALLELISM=false
 export NLTK_DATA="$PWD/data/raw/nltk"
-python benchmarks/compare_frameworks.py --repeats 9 --cpu-model 'your CPU' \
+python research/benchmarks/compare_frameworks.py --repeats 9 --cpu-model 'your CPU' \
   --model models/speed/bpe-cache-64000.json \
   --model models/speed/fused-cache-64000.json \
-  --output reports/speed-final.json
-python benchmarks/verify_speed_models.py
+  --output research/reports/speed-final.json
+python research/benchmarks/verify_speed_models.py
 ```
 
 ```python

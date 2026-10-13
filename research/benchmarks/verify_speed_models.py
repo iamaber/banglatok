@@ -36,7 +36,7 @@ def main() -> None:
                 subprocess.check_output(
                     [
                         sys.executable,
-                        "benchmarks/load_cost.py",
+                        "research/benchmarks/load_cost.py",
                         "--model",
                         str(path),
                         "--repeats",
@@ -55,7 +55,7 @@ def main() -> None:
                 else "IDs equal 32k base",
                 "load": load,
             }
-    Path("reports/speed-verification.json").write_text(
+    Path("research/reports/speed-verification.json").write_text(
         json.dumps(
             {
                 "validation_sha256": sha256(source),

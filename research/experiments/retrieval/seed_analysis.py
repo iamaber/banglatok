@@ -250,7 +250,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--suite", type=Path, required=True)
     parser.add_argument(
-        "--criteria", type=Path, default=Path("experiments/retrieval/criteria.json")
+        "--criteria", type=Path, default=Path("research/experiments/retrieval/criteria.json")
     )
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()

@@ -39,27 +39,27 @@ Run from the repository root with the pinned environment in `requirements.txt`, 
 Restore the completed review against its checksum-bound original packet:
 
 ```sh
-.venv/retrieval/bin/python experiments/retrieval/annotation_archive.py restore \
+.venv/retrieval/bin/python research/experiments/retrieval/annotation_archive.py restore \
   --pilot data/processed/retrieval-pilot-v1 \
-  --archive experiments/retrieval/pilot-annotation-complete-v1 \
+  --archive research/experiments/retrieval/pilot-annotation-complete-v1 \
   --output data/processed/retrieval-review-repro
-.venv/retrieval/bin/python experiments/retrieval/review.py import \
+.venv/retrieval/bin/python research/experiments/retrieval/review.py import \
   --pilot data/processed/retrieval-pilot-v1 \
   --judgments data/processed/retrieval-review-repro/reviewer-1.jsonl \
   --pair-review data/processed/retrieval-review-repro/pair-review.jsonl \
   --output data/processed/retrieval-reviewed-repro
-.venv/retrieval/bin/python experiments/retrieval/domains.py \
-  --judgments experiments/retrieval/domain_intent_judgments_v1.jsonl \
+.venv/retrieval/bin/python research/experiments/retrieval/domains.py \
+  --judgments research/experiments/retrieval/domain_intent_judgments_v1.jsonl \
   --output data/processed/domain-benchmark-repro
 ```
 
 `vashantor.py`, `audit_expansion.py` and `alignment.py` build/audit the expanded training inputs. `run_matrix.py` executes the fixed training protocol; the committed verified matrices and individual training reports document the completed runs. `run_evaluations.py` evaluates all checkpoints and validates resumed artifacts. `seed_analysis.py` freezes development selection; `confirm.py` checks reserved-test evidence against that exact selection. `sentence_analysis.py` reports raw/reviewed/strict correspondence, paired comparisons and unknown-candidate coverage.
 
-The final suite reports are `reports/encoder-evaluation-{development-reviewed-v2,test-reviewed-v2,sentence-v1}.json`; full model reports are under `reports/encoder-evaluation/`. Rankings, scores, corpora and checkpoint weights stay local in their hash-bound directories. To regenerate model results, use a new output directory with the same verified matrices and datasets.
+The final suite reports are `research/reports/encoder-evaluation-{development-reviewed-v2,test-reviewed-v2,sentence-v1}.json`; full model reports are under `research/reports/encoder-evaluation/`. Rankings, scores, corpora and checkpoint weights stay local in their hash-bound directories. To regenerate model results, use a new output directory with the same verified matrices and datasets.
 
 ```sh
 HF_HUB_OFFLINE=1 TOKENIZERS_PARALLELISM=false .venv/retrieval/bin/python \
-  -m unittest discover -s experiments/retrieval -p 'test_*.py'
+  -m unittest discover -s research/experiments/retrieval -p 'test_*.py'
 ```
 
 Future work includes independent fluent review, larger natural-search corpora, edition-specific external retrieval data, better vocabulary-transfer methods and longer adaptation budgets. These are limits and follow-up experiments, not results already established by this run.
@@ -71,9 +71,9 @@ The [completed archive](expanded_pool_review_v1/) contains 6,711 additional agen
 Run from the repository root. Use fresh output paths, since the commands refuse overwrites. Rebuild the packet, verify it against the archived checksums, import the archived judgments, then rescore:
 
 ```sh
-.venv/retrieval/bin/python experiments/retrieval/expand_pool.py build \
+.venv/retrieval/bin/python research/experiments/retrieval/expand_pool.py build \
   --source data/processed/retrieval-reviewed-v1 \
-  --suite reports/encoder-evaluation-sentence-v1.json \
+  --suite research/reports/encoder-evaluation-sentence-v1.json \
   --output data/processed/retrieval-expanded-pool-repro
 
 .venv/retrieval/bin/python - <<'PYVERIFY'
@@ -81,29 +81,33 @@ import hashlib
 import json
 from pathlib import Path
 
-archive = Path("experiments/retrieval/expanded_pool_review_v1")
+archive = Path("research/experiments/retrieval/expanded_pool_review_v1")
 pool = Path("data/processed/retrieval-expanded-pool-repro")
 manifest = json.loads((archive / "manifest.json").read_text())
 for path, key in (
     (pool / "packet.jsonl", "packet_sha256"),
-    (pool / "manifest.json", "pool_manifest_sha256"),
     (archive / "pool-manifest.json", "pool_manifest_sha256"),
     (archive / "judgments.jsonl", "judgments_sha256"),
 ):
     if hashlib.sha256(path.read_bytes()).hexdigest() != manifest[key]:
         raise ValueError(f"Archive checksum mismatch: {path}")
+# The archived pool manifest predates the move of reports/ under research/.
+archived = json.loads((archive / "pool-manifest.json").read_text())
+archived["suite"] = f"research/{archived['suite']}"
+if json.loads((pool / "manifest.json").read_text()) != archived:
+    raise ValueError("Rebuilt pool manifest differs from the archive")
 print("Packet, pool manifest and archived judgments verified")
 PYVERIFY
 
-.venv/retrieval/bin/python experiments/retrieval/expand_pool.py import \
+.venv/retrieval/bin/python research/experiments/retrieval/expand_pool.py import \
   --pool data/processed/retrieval-expanded-pool-repro \
-  --labels experiments/retrieval/expanded_pool_review_v1/judgments.jsonl \
+  --labels research/experiments/retrieval/expanded_pool_review_v1/judgments.jsonl \
   --output data/processed/retrieval-reviewed-expanded-repro
 
-.venv/retrieval/bin/python experiments/retrieval/expanded_analysis.py \
+.venv/retrieval/bin/python research/experiments/retrieval/expanded_analysis.py \
   --dataset data/processed/retrieval-reviewed-expanded-repro \
-  --suite reports/encoder-evaluation-sentence-v1.json \
-  --selection reports/encoder-domain-selection-v2.json \
+  --suite research/reports/encoder-evaluation-sentence-v1.json \
+  --selection research/reports/encoder-domain-selection-v2.json \
   --output data/processed/retrieval-expanded-analysis-repro.json
 ```
 

@@ -77,13 +77,13 @@ memory and the frozen decision. Custom tokenizers failed the declared developmen
 quality and English-retention gates under both budgets.
 
 ```sh
-python3.12 experiments/retrieval/domains.py \
-  --judgments experiments/retrieval/domain_intent_judgments_v1.jsonl \
+python3.12 research/experiments/retrieval/domains.py \
+  --judgments research/experiments/retrieval/domain_intent_judgments_v1.jsonl \
   --output data/processed/domain-benchmark-repro
 HF_HUB_OFFLINE=1 TOKENIZERS_PARALLELISM=false .venv/retrieval/bin/python \
-  experiments/retrieval/evaluate.py \
+  research/experiments/retrieval/evaluate.py \
   --pilot data/processed/domain-benchmark-repro/development/bl-bn \
-  --report reports/domain-baseline-repro.json \
+  --report research/reports/domain-baseline-repro.json \
   --model models/hf-cache/models--intfloat--multilingual-e5-small/snapshots/614241f622f53c4eeff9890bdc4f31cfecc418b3
 ```
 

@@ -117,7 +117,7 @@ def main() -> None:
                 for bucket, counts in sorted(stats.items())
             },
         }
-        Path("reports/space-fusion.json").write_text(json.dumps(result, indent=2) + "\n")
+        Path("research/reports/space-fusion.json").write_text(json.dumps(result, indent=2) + "\n")
 
 
 if __name__ == "__main__":
