@@ -198,6 +198,9 @@ func (t *Tokenizer) Vocabulary() (pieces []string, spaceFusion []int) {
 // Algorithm reports "unigram" or "bpe".
 func (t *Tokenizer) Algorithm() string { return t.model.Algorithm }
 
+// Merges returns a copy of the BPE merge rules in rank order; Unigram has none.
+func (t *Tokenizer) Merges() []Merge { return append([]Merge(nil), t.model.Merges...) }
+
 // Decode rejects reserved/invalid IDs rather than silently losing text.
 func (t *Tokenizer) Decode(ids []int) (string, error) {
 	var b strings.Builder
