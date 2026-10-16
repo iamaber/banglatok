@@ -11,7 +11,7 @@ from pathlib import Path
 
 from train_comparison import normalized, sha256
 
-from bn_tokenizers_embedding import Tokenizer
+from banglatok import Tokenizer
 
 SPACE = 36
 

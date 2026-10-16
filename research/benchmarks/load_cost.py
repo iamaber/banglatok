@@ -20,7 +20,7 @@ def main() -> None:
     if args.repeats < 1:
         parser.error("repeats must be positive")
     if args.child:
-        from bn_tokenizers_embedding import Tokenizer
+        from banglatok import Tokenizer
 
         started = perf_counter()
         with Tokenizer(args.model):

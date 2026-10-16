@@ -8,8 +8,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/iamaber/bn-tokenizers-embedding/corpus"
-	"github.com/iamaber/bn-tokenizers-embedding/tokenizer"
+	"github.com/iamaber/banglatok/corpus"
+	"github.com/iamaber/banglatok/tokenizer"
 )
 
 func main() {

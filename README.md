@@ -1,14 +1,14 @@
-# bn-tokenizers-embedding
+# banglatok
 
 **Fast, lossless subword tokenizers for Bangla, English and Banglish (romanized Bengali), including code-mixed text.**
 
-[![CI](https://github.com/iamaber/bn-tokenizers-embedding/actions/workflows/ci.yml/badge.svg)](https://github.com/iamaber/bn-tokenizers-embedding/actions/workflows/ci.yml)
+[![CI](https://github.com/iamaber/banglatok/actions/workflows/ci.yml/badge.svg)](https://github.com/iamaber/banglatok/actions/workflows/ci.yml)
 ![Python 3.10–3.15](https://img.shields.io/badge/python-3.10%E2%80%933.15-blue)
 ![Runtime dependencies: none](https://img.shields.io/badge/runtime%20deps-none-brightgreen)
 [![License: MIT (code), CC BY-SA 4.0 (models)](https://img.shields.io/badge/license-MIT%20%7C%20CC%20BY--SA%204.0-lightgrey)](#license)
 
 ```python
-from bn_tokenizers_embedding import Tokenizer
+from banglatok import Tokenizer
 
 tok = Tokenizer.from_pretrained()          # bundled model; no download, no network
 tok.tokenize("meetingটা ১০টায়, don't be late 🙂")
@@ -20,7 +20,7 @@ tok.tokenize("meetingটা ১০টায়, don't be late 🙂")
 - **Fast.** In single-threaded runs on unseen text it was 1.3–1.8× faster than SentencePiece, 1.6–5.9× faster than tiktoken, and 6.7–12× faster than Hugging Face `tokenizers`.
 - **Tiny footprint.** The engine is native Go behind `ctypes`, with zero Python runtime dependencies and typed APIs. It is thread-safe, and two pretrained models ship inside the wheel.
 
-> The package name is historical. This library tokenizes; it does not compute embeddings. Its vocabularies are meant for training or adapting encoders and LLMs on Bengali text, and for counting or segmenting such text.
+The vocabularies are meant for training or adapting encoders and LLMs on Bengali text, and for counting or segmenting such text.
 
 ## Benchmarks
 
@@ -44,19 +44,19 @@ Here are 10,000 naturally written e-commerce reviews from [BanglishRev](https://
 ## Install
 
 ```sh
-pip install bn-tokenizers-embedding
+pip install banglatok
 ```
 
 Prebuilt wheels target Linux (x86_64, aarch64) and macOS (x86_64, arm64) for CPython 3.10–3.15, and need no compiler. Until the first PyPI release, or on other platforms, build from source. That needs Go 1.24+ and a C compiler:
 
 ```sh
-pip install git+https://github.com/iamaber/bn-tokenizers-embedding
+pip install git+https://github.com/iamaber/banglatok
 ```
 
 ## Usage
 
 ```python
-from bn_tokenizers_embedding import Tokenizer
+from banglatok import Tokenizer
 
 with Tokenizer.from_pretrained("bn-bpe-58k") as tok:
     ids = tok.encode("আমি বাংলায় গান গাই। ami banglay gaan gai")
@@ -74,13 +74,13 @@ Load a tokenizer once and reuse it. Calls from many threads at once are safe, be
 ### Command line
 
 ```sh
-$ bntokenize "আমি বাংলা বলি"
+$ banglatok "আমি বাংলা বলি"
 আমি |  বাংলা |  বলি
-$ echo "ami bangla boli" | bntokenize --ids
+$ echo "ami bangla boli" | banglatok --ids
 4405 33616 34749
-$ bntokenize --json "ami valo"
+$ banglatok --json "ami valo"
 {"ids": [4405, 32047], "tokens": ["ami", " valo"]}
-$ bntokenize --count --model bn-bpe-28k < lines.txt    # one count per line
+$ banglatok --count --model bn-bpe-28k < lines.txt    # one count per line
 ```
 
 ### API

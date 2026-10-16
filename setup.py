@@ -51,6 +51,6 @@ class PlatformWheel(bdist_wheel):
 
 
 setup(
-    ext_modules=[Extension("bn_tokenizers_embedding._go", sources=[])],
+    ext_modules=[Extension("banglatok._go", sources=[])],
     cmdclass={"build_ext": GoBuildExt, "bdist_wheel": PlatformWheel},
 )

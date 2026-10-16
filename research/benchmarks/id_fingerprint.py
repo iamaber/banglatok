@@ -4,7 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from bn_tokenizers_embedding import Tokenizer
+from banglatok import Tokenizer
 
 
 def main() -> None:

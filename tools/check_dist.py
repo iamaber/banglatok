@@ -6,7 +6,7 @@ import zipfile
 from email.parser import BytesParser
 from pathlib import Path, PurePosixPath
 
-NAME = "bn_tokenizers_embedding"
+NAME = "banglatok"
 NOTICES = {
     "LICENSE",
     "MODEL_LICENSE.md",
@@ -71,7 +71,7 @@ def check(directory: Path, version: str) -> None:
             if metadata_name not in paths:
                 raise ValueError(f"wheel version differs: {wheel.name}")
             metadata = BytesParser().parsebytes(archive.read(metadata_name))
-            if metadata["Name"] != "bn-tokenizers-embedding" or metadata["Version"] != version:
+            if metadata["Name"] != "banglatok" or metadata["Version"] != version:
                 raise ValueError(f"wheel name/version differs: {wheel.name}")
             if metadata["License-Expression"] != LICENSE_EXPRESSION:
                 raise ValueError("wheel license expression does not cover native code and models")

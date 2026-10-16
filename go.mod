@@ -1,4 +1,4 @@
-module github.com/iamaber/bn-tokenizers-embedding
+module github.com/iamaber/banglatok
 
 go 1.24.0
 

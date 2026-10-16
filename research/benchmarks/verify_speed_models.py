@@ -9,7 +9,7 @@ from compare_frameworks import STRESS_TEXTS
 from space_fusion import expand
 from train_comparison import normalized, sha256
 
-from bn_tokenizers_embedding import Tokenizer
+from banglatok import Tokenizer
 
 
 def main() -> None:

@@ -36,7 +36,7 @@ def normalize(text: str) -> str:
 
 def available_models() -> list[str]:
     """Names accepted by :meth:`Tokenizer.from_pretrained`, bundled in the wheel."""
-    directory = files("bn_tokenizers_embedding").joinpath("pretrained")
+    directory = files("banglatok").joinpath("pretrained")
     return sorted(
         entry.name.removesuffix(".json")
         for entry in directory.iterdir()
@@ -65,7 +65,7 @@ class Tokenizer:
         names = available_models()
         if name not in names:
             raise ValueError(f"unknown model {name!r}; available: {', '.join(names)}")
-        resource = files("bn_tokenizers_embedding").joinpath(f"pretrained/{name}.json")
+        resource = files("banglatok").joinpath(f"pretrained/{name}.json")
         # The Go loader reads the file during construction, so a temporary
         # extraction (for zipped installs) may be removed afterwards.
         with as_file(resource) as path:

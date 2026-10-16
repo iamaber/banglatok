@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 from importlib.resources import as_file, files
 from pathlib import Path
 
-from bn_tokenizers_embedding import (
+from banglatok import (
     BOS_ID,
     DEFAULT_MODEL,
     EOS_ID,
@@ -19,7 +19,7 @@ from bn_tokenizers_embedding import (
     available_models,
     normalize,
 )
-from bn_tokenizers_embedding.__main__ import main
+from banglatok.__main__ import main
 
 STRESS = [
     "আমি বাংলায় গান গাই।",
@@ -147,7 +147,7 @@ class HuggingFaceExportTests(unittest.TestCase):
                     self.assertEqual(hf.encode(text).ids, tok(text)["input_ids"])
 
     def test_unigram_export_is_rejected(self) -> None:
-        demo = files("bn_tokenizers_embedding").joinpath("data/demo-unigram.json")
+        demo = files("banglatok").joinpath("data/demo-unigram.json")
         with as_file(demo) as path, Tokenizer(path) as tok, tempfile.TemporaryDirectory() as out:
             with self.assertRaisesRegex(ValueError, "BPE models only"):
                 tok.save_huggingface(out)

@@ -1,5 +1,5 @@
 blank_issues_enabled: true
 contact_links:
   - name: Report a security vulnerability privately
-    url: https://github.com/iamaber/bn-tokenizers-embedding/blob/main/SECURITY.md
+    url: https://github.com/iamaber/banglatok/blob/main/SECURITY.md
     about: Read the private-reporting instructions before sharing sensitive details.

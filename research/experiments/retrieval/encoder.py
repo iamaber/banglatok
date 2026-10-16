@@ -101,7 +101,7 @@ class Encoder:
                 raise ValueError("checkpoint tokenizer checksum mismatch")
             self.initialization = {"method": "load adapted custom embedding table", "seconds": 0.0}
         if self.custom_path is not None:
-            from bn_tokenizers_embedding import Tokenizer
+            from banglatok import Tokenizer
 
             self.tokenizer = Tokenizer(self.custom_path)
             if not metadata.get("custom_tokenizer"):

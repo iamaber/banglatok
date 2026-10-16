@@ -21,8 +21,8 @@ from bnlp import SentencepieceTokenizer
 from tokenizers import Tokenizer as HFTokenizer
 from train_comparison import normalized, sha256
 
-from bn_tokenizers_embedding import Tokenizer as GoTokenizer
-from bn_tokenizers_embedding import _native
+from banglatok import Tokenizer as GoTokenizer
+from banglatok import _native
 
 STRESS_TEXTS = [
     "আমি বাংলায় গান গাই।",
@@ -261,7 +261,7 @@ def main() -> None:
             "packages": {
                 name: version(name)
                 for name in [
-                    "bn-tokenizers-embedding",
+                    "banglatok",
                     "bnlp-toolkit",
                     "sentencepiece",
                     "tokenizers",

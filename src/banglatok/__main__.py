@@ -1,4 +1,4 @@
-"""Command line: ``bntokenize "আমি বাংলা বলি"`` or ``python -m bn_tokenizers_embedding``."""
+"""Command line: ``banglatok "আমি বাংলা বলি"`` or ``python -m banglatok``."""
 
 import argparse
 import io
@@ -11,7 +11,7 @@ from . import DEFAULT_MODEL, Tokenizer, __version__, available_models
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="bntokenize",
+        prog="banglatok",
         description="Tokenize Bangla, English and Banglish text. Reads standard input "
         "line by line when no text is given.",
     )
