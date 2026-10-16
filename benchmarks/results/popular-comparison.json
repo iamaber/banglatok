@@ -1,10 +1,10 @@
 {
- "created_utc": "2026-11-10T16:02:56.419418+00:00",
+ "created_utc": "2026-11-13T10:06:24.562173+00:00",
  "python": "3.12.13",
  "platform": "macOS-27.0.1-arm64-arm-64bit",
  "cpu_model": "Apple M5",
  "packages": {
-  "bn-tokenizers-embedding": "0.2.0",
+  "banglatok": "0.2.0",
   "sentencepiece": "0.2.3",
   "tiktoken": "0.14.0",
   "tokenizers": "0.23.3",
@@ -13,16 +13,16 @@
  "repeats": 5,
  "batch_size": 64,
  "seed": 20261110,
- "harness_sha256": "c48f0b88ea40737dcc652a158de6ff6df26b30892ade45c3c9bb833b0fbcd425",
+ "harness_sha256": "c7854d75f6ad3b305b092759ce10439c221bc3fc65a77303f9fec1099cdc3925",
  "candidates": {
-  "bn-tokenizers-embedding bn-bpe-58k": {
+  "banglatok bn-bpe-58k": {
    "source": "bundled",
    "vocab_size": 57925,
    "note": "this package",
    "stress_round_trips": 16,
    "stress_cases": 16
   },
-  "bn-tokenizers-embedding bn-bpe-28k": {
+  "banglatok bn-bpe-28k": {
    "source": "bundled",
    "vocab_size": 27760,
    "note": "this package",
@@ -36,9 +36,30 @@
    "stress_round_trips": 8,
    "stress_cases": 16
   },
-  "SentencePiece Unigram 32k, same training data": {
-   "source": "sentencepiece-32000.model sha256 6036178b02f20207dfcf291843a4508ba10fc267ceb1cb2b3d7e956c39197f82",
-   "vocab_size": 32000,
+  "SentencePiece Unigram 27,760, same training data": {
+   "source": "sentencepiece-unigram-27760.model sha256 b34c0d9a3c9e5fca680f9ee4bc19390180ddc3dc473bab070dab37d43bbabc0c",
+   "vocab_size": 27760,
+   "note": "sentencepiece 0.2.3",
+   "stress_round_trips": 15,
+   "stress_cases": 16
+  },
+  "SentencePiece BPE 27,760, same training data": {
+   "source": "sentencepiece-bpe-27760.model sha256 7d6b38bbd37057fe16a2997375d3c62e53a4e6f96adfb4b369cf450c185b5ba6",
+   "vocab_size": 27760,
+   "note": "sentencepiece 0.2.3",
+   "stress_round_trips": 15,
+   "stress_cases": 16
+  },
+  "SentencePiece Unigram 57,925, same training data": {
+   "source": "sentencepiece-unigram-57925.model sha256 c2b4d67cba5e77de08daa3030890eca0be943ee5b6e678c0d23576e1321451b3",
+   "vocab_size": 57925,
+   "note": "sentencepiece 0.2.3",
+   "stress_round_trips": 15,
+   "stress_cases": 16
+  },
+  "SentencePiece BPE 57,925, same training data": {
+   "source": "sentencepiece-bpe-57925.model sha256 d79d9f97e51cde565dee51aea46dedf387acf9e8172de15ad276dd724c750357",
+   "vocab_size": 57925,
    "note": "sentencepiece 0.2.3",
    "stress_round_trips": 15,
    "stress_cases": 16
@@ -108,23 +129,23 @@
    "utf8_bytes": 3013257,
    "ordered_text_sha256": "88b57174621deaf7538367891f377316b6fe8ebe5c1203e0d54ff81ff5ec33bd",
    "candidates": {
-    "bn-tokenizers-embedding bn-bpe-58k": {
+    "banglatok bn-bpe-58k": {
      "speed": {
-      "single_MB_per_second": 77.3611077702789,
-      "batch_MB_per_second": 88.27470338276245,
+      "single_MB_per_second": 77.54376609730785,
+      "batch_MB_per_second": 88.16106378708001,
       "single_seconds": [
-       0.039973166999971,
-       0.03868391600008181,
-       0.03900291699983427,
-       0.03854258399996979,
-       0.03895054099984918
+       0.039860333999968134,
+       0.03902008300065063,
+       0.03866287499840837,
+       0.038858790998347104,
+       0.03885154098679777
       ],
       "batch_seconds": [
-       0.03231195799980924,
-       0.034326916000281926,
-       0.03413500000033309,
-       0.03404412500003673,
-       0.034617125000295346
+       0.034478040994144976,
+       0.035904457996366546,
+       0.03417900000931695,
+       0.03402937500504777,
+       0.03415575000690296
       ]
      },
      "quality": {
@@ -190,23 +211,23 @@
       }
      }
     },
-    "bn-tokenizers-embedding bn-bpe-28k": {
+    "banglatok bn-bpe-28k": {
      "speed": {
-      "single_MB_per_second": 78.92730362422185,
-      "batch_MB_per_second": 89.66625750396958,
+      "single_MB_per_second": 78.89983370531888,
+      "batch_MB_per_second": 90.81569106076331,
       "single_seconds": [
-       0.03776841700027944,
-       0.03817762499966193,
-       0.03850395900008152,
-       0.03801291600029799,
-       0.0395968749999156
+       0.03825712500838563,
+       0.038096167001640424,
+       0.03820199999609031,
+       0.036329499998828396,
+       0.03819091699551791
       ],
       "batch_seconds": [
-       0.03360525000016423,
-       0.03349049999997078,
-       0.03568287500002043,
-       0.03362775000005058,
-       0.03102179100005742
+       0.03431987499061506,
+       0.03408037500048522,
+       0.03317991599033121,
+       0.03315495800052304,
+       0.032805708004161716
       ]
      },
      "quality": {
@@ -274,21 +295,21 @@
     },
     "BNLP bn_spm (SentencePiece)": {
      "speed": {
-      "single_MB_per_second": 42.84469943350574,
-      "batch_MB_per_second": 41.71687759250593,
+      "single_MB_per_second": 42.62751049767827,
+      "batch_MB_per_second": 42.160456117501255,
       "single_seconds": [
-       0.07032975000038277,
-       0.06826962500008449,
-       0.07025841699987723,
-       0.07040787500000079,
-       0.07117904200003977
+       0.07166045800840948,
+       0.0700462919921847,
+       0.07042070799798239,
+       0.07068808299663942,
+       0.07071991699922364
       ],
       "batch_seconds": [
-       0.07092608399989331,
-       0.07223112500014395,
-       0.07240362499987896,
-       0.07021941700031675,
-       0.07383966599991254
+       0.0712157920061145,
+       0.07168275000003632,
+       0.07101562499883585,
+       0.0714711670007091,
+       0.07150749998982064
       ]
      },
      "quality": {
@@ -354,56 +375,56 @@
       }
      }
     },
-    "SentencePiece Unigram 32k, same training data": {
+    "SentencePiece Unigram 27,760, same training data": {
      "speed": {
-      "single_MB_per_second": 49.05717082444024,
-      "batch_MB_per_second": 47.69994132140114,
+      "single_MB_per_second": 49.118012395677354,
+      "batch_MB_per_second": 47.86759322407009,
       "single_seconds": [
-       0.06142337500023132,
-       0.0614274170002318,
-       0.06133404199999859,
-       0.06115349999981845,
-       0.062372459000016534
+       0.061347291004494764,
+       0.06061549999867566,
+       0.06202579100499861,
+       0.06050158300786279,
+       0.06165449999389239
       ],
       "batch_seconds": [
-       0.06286245899991627,
-       0.06317108399980498,
-       0.06315083399977084,
-       0.06317395799987935,
-       0.06318841700021949
+       0.06294983300904278,
+       0.061716041003819555,
+       0.06310624998877756,
+       0.06464270800643135,
+       0.06292108399793506
       ]
      },
      "quality": {
       "all": {
        "texts": 14779,
-       "tokens": 350939,
+       "tokens": 359653,
        "whitespace_words": 240495,
-       "tokens_per_word": 1.4592361587558993,
-       "characters_per_token": 4.249285488361225,
+       "tokens_per_word": 1.4954697602860767,
+       "characters_per_token": 4.146329934687046,
        "exact_round_trips": 14779,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
        "over_510_token_percent": 0.0,
-       "sequence_p95": 86
+       "sequence_p95": 89
       },
       "bangla": {
        "texts": 4925,
-       "tokens": 205042,
+       "tokens": 210692,
        "whitespace_words": 138501,
-       "tokens_per_word": 1.480436964354048,
-       "characters_per_token": 4.48071614596034,
+       "tokens_per_word": 1.5212308936397572,
+       "characters_per_token": 4.360559489681621,
        "exact_round_trips": 4925,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
        "over_510_token_percent": 0.0,
-       "sequence_p95": 142
+       "sequence_p95": 145
       },
       "banglish": {
        "texts": 6160,
-       "tokens": 111434,
+       "tokens": 113932,
        "whitespace_words": 77760,
-       "tokens_per_word": 1.4330504115226337,
-       "characters_per_token": 4.033858606888383,
+       "tokens_per_word": 1.4651748971193415,
+       "characters_per_token": 3.9454148088333394,
        "exact_round_trips": 6160,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
@@ -412,10 +433,10 @@
       },
       "code-mixed": {
        "texts": 156,
-       "tokens": 3224,
+       "tokens": 3292,
        "whitespace_words": 2023,
-       "tokens_per_word": 1.5936727632229362,
-       "characters_per_token": 3.524193548387097,
+       "tokens_per_word": 1.6272862086010875,
+       "characters_per_token": 3.4513973268529767,
        "exact_round_trips": 156,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
@@ -424,10 +445,10 @@
       },
       "english": {
        "texts": 3538,
-       "tokens": 31239,
+       "tokens": 31737,
        "whitespace_words": 22211,
-       "tokens_per_word": 1.4064652649588043,
-       "characters_per_token": 3.57354588815263,
+       "tokens_per_word": 1.428886587726802,
+       "characters_per_token": 3.5174717207045405,
        "exact_round_trips": 3538,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
@@ -436,23 +457,269 @@
       }
      }
     },
-    "tiktoken o200k_base": {
+    "SentencePiece BPE 27,760, same training data": {
      "speed": {
-      "single_MB_per_second": 32.97982877041593,
-      "batch_MB_per_second": 15.001288766160627,
+      "single_MB_per_second": 18.337402554220684,
+      "batch_MB_per_second": 18.163005625216275,
       "single_seconds": [
-       0.0913873340000464,
-       0.09114291600008073,
-       0.0913666659998853,
-       0.09133462500039968,
-       0.09153574999982084
+       0.16517058400495443,
+       0.1642119579919381,
+       0.16427795799972955,
+       0.16432300000451505,
+       0.16504279199580196
       ],
       "batch_seconds": [
-       0.19358933300009085,
-       0.20086654199985787,
-       0.20035795799958578,
-       0.20120704200007822,
-       0.2009453749997192
+       0.1659007909911452,
+       0.1655154590116581,
+       0.16557329200441018,
+       0.1659847080009058,
+       0.16668258300342131
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 363601,
+       "whitespace_words": 240495,
+       "tokens_per_word": 1.5118859019938045,
+       "characters_per_token": 4.101308852285885,
+       "exact_round_trips": 14779,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 88
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 212447,
+       "whitespace_words": 138501,
+       "tokens_per_word": 1.5339022822939907,
+       "characters_per_token": 4.324537414037383,
+       "exact_round_trips": 4925,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 147
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 115662,
+       "whitespace_words": 77760,
+       "tokens_per_word": 1.4874228395061728,
+       "characters_per_token": 3.8864017568432154,
+       "exact_round_trips": 6160,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 50
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 3325,
+       "whitespace_words": 2023,
+       "tokens_per_word": 1.643598615916955,
+       "characters_per_token": 3.4171428571428573,
+       "exact_round_trips": 156,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 64
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 32167,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.448246364414029,
+       "characters_per_token": 3.470451083408462,
+       "exact_round_trips": 3538,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 15
+      }
+     }
+    },
+    "SentencePiece Unigram 57,925, same training data": {
+     "speed": {
+      "single_MB_per_second": 45.48678612666846,
+      "batch_MB_per_second": 44.58233721822724,
+      "single_seconds": [
+       0.06698408299416769,
+       0.0660291660024086,
+       0.06655654199130367,
+       0.06624466700304765,
+       0.06561133300419897
+      ],
+      "batch_seconds": [
+       0.06573550000030082,
+       0.06874612499086652,
+       0.0676452089974191,
+       0.06738020799821243,
+       0.06758858301327564
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 332960,
+       "whitespace_words": 240495,
+       "tokens_per_word": 1.384477847772303,
+       "characters_per_token": 4.47873618452667,
+       "exact_round_trips": 14779,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 82
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 195132,
+       "whitespace_words": 138501,
+       "tokens_per_word": 1.4088851344033617,
+       "characters_per_token": 4.7082743988684586,
+       "exact_round_trips": 4925,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 135
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 104684,
+       "whitespace_words": 77760,
+       "tokens_per_word": 1.346244855967078,
+       "characters_per_token": 4.293960872721715,
+       "exact_round_trips": 6160,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 45
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 2996,
+       "whitespace_words": 2023,
+       "tokens_per_word": 1.480968858131488,
+       "characters_per_token": 3.7923898531375166,
+       "exact_round_trips": 156,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 60
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 30148,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.3573454594570258,
+       "characters_per_token": 3.7028658617487062,
+       "exact_round_trips": 3538,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 14
+      }
+     }
+    },
+    "SentencePiece BPE 57,925, same training data": {
+     "speed": {
+      "single_MB_per_second": 19.459319739458184,
+      "batch_MB_per_second": 19.16418195986435,
+      "single_seconds": [
+       0.15541866699641105,
+       0.15445783399627544,
+       0.15484904099139385,
+       0.15581508399918675,
+       0.1547511250100797
+      ],
+      "batch_seconds": [
+       0.15706949999730568,
+       0.15723379199334886,
+       0.15708570800779853,
+       0.16049716700217687,
+       0.1575316670059692
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 332108,
+       "whitespace_words": 240495,
+       "tokens_per_word": 1.3809351545770183,
+       "characters_per_token": 4.4902260710371324,
+       "exact_round_trips": 14779,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 81
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 193841,
+       "whitespace_words": 138501,
+       "tokens_per_word": 1.3995639020656891,
+       "characters_per_token": 4.739631966405456,
+       "exact_round_trips": 4925,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 134
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 105059,
+       "whitespace_words": 77760,
+       "tokens_per_word": 1.3510673868312757,
+       "characters_per_token": 4.278633910469355,
+       "exact_round_trips": 6160,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 45
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 3001,
+       "whitespace_words": 2023,
+       "tokens_per_word": 1.4834404349975283,
+       "characters_per_token": 3.786071309563479,
+       "exact_round_trips": 156,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 60
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 30207,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.3600018009094592,
+       "characters_per_token": 3.6956334624424803,
+       "exact_round_trips": 3538,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 14
+      }
+     }
+    },
+    "tiktoken o200k_base": {
+     "speed": {
+      "single_MB_per_second": 32.96458484064051,
+      "batch_MB_per_second": 14.903320321551274,
+      "single_seconds": [
+       0.09140891701099463,
+       0.09140504199604038,
+       0.09184074999939185,
+       0.09202570799971,
+       0.09135466700536199
+      ],
+      "batch_seconds": [
+       0.19588841700169723,
+       0.20619175001047552,
+       0.2026160829991568,
+       0.2017111669993028,
+       0.20218695800576825
       ]
      },
      "quality": {
@@ -520,21 +787,21 @@
     },
     "tiktoken cl100k_base": {
      "speed": {
-      "single_MB_per_second": 24.146380455395956,
-      "batch_MB_per_second": 12.320537674251211,
+      "single_MB_per_second": 24.293178383045277,
+      "batch_MB_per_second": 12.029730406697906,
       "single_seconds": [
-       0.12499225000010483,
-       0.12480974999971295,
-       0.1247912499998165,
-       0.12434566700039795,
-       0.12471970899969165
+       0.12414720800006762,
+       0.12391558299714234,
+       0.12403716600965708,
+       0.12389083400194068,
+       0.1241546249948442
       ],
       "batch_seconds": [
-       0.24081441699991046,
-       0.24457187500001965,
-       0.25045204099978946,
-       0.24366049999980532,
-       0.25092816599999423
+       0.24709733400959522,
+       0.24689487500290852,
+       0.25327983300667256,
+       0.2523424170067301,
+       0.2504841669870075
       ]
      },
      "quality": {
@@ -602,21 +869,21 @@
     },
     "BanglaBERT (csebuetnlp)": {
      "speed": {
-      "single_MB_per_second": 10.592664950304846,
-      "batch_MB_per_second": 10.563142508695602,
+      "single_MB_per_second": 10.617301643906526,
+      "batch_MB_per_second": 10.586573991849304,
       "single_seconds": [
-       0.2832920410000952,
-       0.284290707999844,
-       0.28446637499973804,
-       0.2885352910002439,
-       0.29028983299986066
+       0.2822324159933487,
+       0.28449616699072067,
+       0.28474995800934266,
+       0.28344291700341273,
+       0.2838062910013832
       ],
       "batch_seconds": [
-       0.28390712500004156,
-       0.28535029199974815,
-       0.2852614169996741,
-       0.2852357080000729,
-       0.2867165420002493
+       0.28544258400506806,
+       0.2846300420060288,
+       0.284913208000944,
+       0.2839284170040628,
+       0.28461216599680483
       ]
      },
      "quality": {
@@ -684,21 +951,21 @@
     },
     "Bangla-BERT (sagorsarker)": {
      "speed": {
-      "single_MB_per_second": 7.88472913622139,
-      "batch_MB_per_second": 7.856624273275349,
+      "single_MB_per_second": 7.857881740965955,
+      "batch_MB_per_second": 7.78183872365213,
       "single_seconds": [
-       0.38235879100011516,
-       0.38368854099962846,
-       0.3821621249999225,
-       0.38216366699998616,
-       0.3817680420002034
+       0.3856764999945881,
+       0.38226154098811094,
+       0.3834693749959115,
+       0.3972802079952089,
+       0.38135841699840967
       ],
       "batch_seconds": [
-       0.38316166699996757,
-       0.3835487080000348,
-       0.38480045899996185,
-       0.3835307500003182,
-       0.3829188750000867
+       0.38801179199072067,
+       0.38721658299618866,
+       0.38650729099754244,
+       0.38545812500524335,
+       0.39569979200314265
       ]
      },
      "quality": {
@@ -766,21 +1033,21 @@
     },
     "MuRIL (Google)": {
      "speed": {
-      "single_MB_per_second": 10.052941655377962,
-      "batch_MB_per_second": 9.991986036284457,
+      "single_MB_per_second": 10.058542970855031,
+      "batch_MB_per_second": 10.026876925719632,
       "single_seconds": [
-       0.29973883299999216,
-       0.29953454199994667,
-       0.30003237500022806,
-       0.29909025000006295,
-       0.2998711669997647
+       0.29861720799817704,
+       0.29957191699941177,
+       0.30138291700859554,
+       0.30174595800053794,
+       0.2995341659989208
       ],
       "batch_seconds": [
-       0.29970429200011495,
-       0.30183208300013575,
-       0.3020609999998669,
-       0.30044104099988544,
-       0.3015673750001042
+       0.30126379200373776,
+       0.30118350000702776,
+       0.3005180000036489,
+       0.2997560830117436,
+       0.300200625002617
       ]
      },
      "quality": {
@@ -848,21 +1115,21 @@
     },
     "mBERT cased": {
      "speed": {
-      "single_MB_per_second": 8.897686075482527,
-      "batch_MB_per_second": 8.846831565095215,
+      "single_MB_per_second": 8.890518084718225,
+      "batch_MB_per_second": 8.827031792659412,
       "single_seconds": [
-       0.33948541600011595,
-       0.3394333340002049,
-       0.33865624999998545,
-       0.33792066699970746,
-       0.3385233750000225
+       0.34200725000118837,
+       0.33892929200374056,
+       0.33811283399700187,
+       0.3379068750073202,
+       0.3393585419980809
       ],
       "batch_seconds": [
-       0.33924266699978034,
-       0.3419880420001391,
-       0.34060295800009044,
-       0.3399119589998918,
-       0.3418102089999593
+       0.33993229099723976,
+       0.3420657079986995,
+       0.3413669589936035,
+       0.34677929199824575,
+       0.33952237499761395
       ]
      },
      "quality": {
@@ -930,21 +1197,21 @@
     },
     "XLM-R / mE5 / BGE-M3": {
      "speed": {
-      "single_MB_per_second": 7.65590250419035,
-      "batch_MB_per_second": 7.592449820869209,
+      "single_MB_per_second": 7.539272871141336,
+      "batch_MB_per_second": 7.598480714798869,
       "single_seconds": [
-       0.3923405000000457,
-       0.39423241700023937,
-       0.3935861249997288,
-       0.3930857080003989,
-       0.3951742499998545
+       0.4157717920024879,
+       0.3926667909981916,
+       0.39251649999641813,
+       0.40985362499486655,
+       0.39967475000594277
       ],
       "batch_seconds": [
-       0.40480391600021903,
-       0.39335799999980736,
-       0.3982918330002576,
-       0.39687545800006774,
-       0.39434116699976585
+       0.3992587079992518,
+       0.3961517090065172,
+       0.3956298330012942,
+       0.3965604590048315,
+       0.39683362501091324
       ]
      },
      "quality": {
@@ -1012,21 +1279,21 @@
     },
     "Qwen3": {
      "speed": {
-      "single_MB_per_second": 6.558899905317107,
-      "batch_MB_per_second": 6.516376053438629,
+      "single_MB_per_second": 6.589186613335435,
+      "batch_MB_per_second": 6.482844092663724,
       "single_seconds": [
-       0.45841429099982633,
-       0.45819120900023336,
-       0.4603954579997662,
-       0.45941499999980806,
-       0.4718586249996406
+       0.45847133299685083,
+       0.45471258299949113,
+       0.45764245800091885,
+       0.45548683300148696,
+       0.4573033329943428
       ],
       "batch_seconds": [
-       0.4734035420001419,
-       0.4624130000001969,
-       0.4619332500001292,
-       0.46172695799987196,
-       0.4637392499998896
+       0.47464374999981374,
+       0.4605491669935873,
+       0.4648047919909004,
+       0.4590290409978479,
+       0.46765249999589287
       ]
      },
      "quality": {
@@ -1101,23 +1368,23 @@
    "utf8_bytes": 1297966,
    "ordered_text_sha256": "89ebf28fe456c073b1d2c6055dbf48296bfd5e65a5e789ea2494f889156be879",
    "candidates": {
-    "bn-tokenizers-embedding bn-bpe-58k": {
+    "banglatok bn-bpe-58k": {
      "speed": {
-      "single_MB_per_second": 61.14861495471573,
-      "batch_MB_per_second": 71.04648521333014,
+      "single_MB_per_second": 58.491745866366244,
+      "batch_MB_per_second": 71.58344582122452,
       "single_seconds": [
-       0.022196791999704146,
-       0.021226416999979847,
-       0.021604000000024826,
-       0.02086025000016889,
-       0.021037665999756427
+       0.022244416002649814,
+       0.021859250002307817,
+       0.023687125009018928,
+       0.021898499995586462,
+       0.02219058400078211
       ],
       "batch_seconds": [
-       0.016605959000116854,
-       0.01844962499990288,
-       0.018269250000230386,
-       0.018084750000070926,
-       0.01832520800007842
+       0.01813220899202861,
+       0.01831241699983366,
+       0.01816508299089037,
+       0.017975374998059124,
+       0.018003333010710776
       ]
      },
      "quality": {
@@ -1171,23 +1438,23 @@
       }
      }
     },
-    "bn-tokenizers-embedding bn-bpe-28k": {
+    "banglatok bn-bpe-28k": {
      "speed": {
-      "single_MB_per_second": 62.098065365815266,
-      "batch_MB_per_second": 72.77633866136699,
+      "single_MB_per_second": 61.5716368017258,
+      "batch_MB_per_second": 72.8669044358345,
       "single_seconds": [
-       0.020901874999708525,
-       0.021164541999951325,
-       0.020909166999899753,
-       0.020889250000436732,
-       0.020893375000014203
+       0.0214040420105448,
+       0.020820334000745788,
+       0.021166666003409773,
+       0.01951325000845827,
+       0.021080582999275066
       ],
       "batch_seconds": [
-       0.01783499999964988,
-       0.017972500000269065,
-       0.01819049999994604,
-       0.0175964580002983,
-       0.016179249999822787
+       0.017838291998486966,
+       0.017411249995348044,
+       0.018014665998634882,
+       0.017812833000789396,
+       0.01751712500117719
       ]
      },
      "quality": {
@@ -1243,21 +1510,21 @@
     },
     "BNLP bn_spm (SentencePiece)": {
      "speed": {
-      "single_MB_per_second": 40.48116082766954,
-      "batch_MB_per_second": 38.98351867030298,
+      "single_MB_per_second": 40.0931098870576,
+      "batch_MB_per_second": 39.22744924531148,
       "single_seconds": [
-       0.03259279100029744,
-       0.030920167000203946,
-       0.031987833000130195,
-       0.03289837500005888,
-       0.03206345800026611
+       0.03208404099859763,
+       0.03216858400264755,
+       0.03260600000794511,
+       0.03237379199708812,
+       0.032633584007271565
       ],
       "batch_seconds": [
-       0.03379987499965864,
-       0.03329524999981004,
-       0.03308049999986906,
-       0.032190083999921626,
-       0.03341591700018398
+       0.03352175001055002,
+       0.03303495800355449,
+       0.03362570899480488,
+       0.03308820800157264,
+       0.03301679099968169
       ]
      },
      "quality": {
@@ -1311,93 +1578,303 @@
       }
      }
     },
-    "SentencePiece Unigram 32k, same training data": {
+    "SentencePiece Unigram 27,760, same training data": {
      "speed": {
-      "single_MB_per_second": 45.686003697834835,
-      "batch_MB_per_second": 43.63570960314793,
+      "single_MB_per_second": 46.401224456056944,
+      "batch_MB_per_second": 43.16559348396008,
       "single_seconds": [
-       0.02853812500006825,
-       0.02819912499990096,
-       0.028168332999939594,
-       0.028440417000183515,
-       0.028410583000095357
+       0.028532667012768798,
+       0.027606334013398737,
+       0.027972666997811757,
+       0.027652083997963928,
+       0.02836729199043475
       ],
       "batch_seconds": [
-       0.02936912499990285,
-       0.02974549999998999,
-       0.029969542000344518,
-       0.030108999999811203,
-       0.029663833000086015
+       0.03010458299831953,
+       0.03060941700823605,
+       0.029557834001025185,
+       0.030069457992794923,
+       0.029173834001994692
       ]
      },
      "quality": {
       "all": {
        "texts": 10000,
-       "tokens": 194210,
+       "tokens": 201076,
        "whitespace_words": 127947,
-       "tokens_per_word": 1.5178941280373905,
-       "characters_per_token": 3.8128778126769993,
+       "tokens_per_word": 1.5715569728090537,
+       "characters_per_token": 3.682682169925799,
        "exact_round_trips": 10000,
-       "round_trip_percent": 100.0,
-       "texts_with_unknowns": 0,
-       "over_510_token_percent": 0.0,
-       "sequence_p95": 55
-      },
-      "bengali script": {
-       "texts": 3401,
-       "tokens": 70613,
-       "whitespace_words": 47288,
-       "tokens_per_word": 1.493254102520724,
-       "characters_per_token": 3.9633070397802106,
-       "exact_round_trips": 3401,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
        "over_510_token_percent": 0.0,
        "sequence_p95": 57
       },
+      "bengali script": {
+       "texts": 3401,
+       "tokens": 74290,
+       "whitespace_words": 47288,
+       "tokens_per_word": 1.571011673151751,
+       "characters_per_token": 3.7671422802530623,
+       "exact_round_trips": 3401,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 59
+      },
       "latin script": {
        "texts": 6189,
-       "tokens": 107173,
+       "tokens": 109612,
        "whitespace_words": 70018,
-       "tokens_per_word": 1.530649261618441,
-       "characters_per_token": 3.725677176154442,
+       "tokens_per_word": 1.5654831614727642,
+       "characters_per_token": 3.6427763383571143,
        "exact_round_trips": 6189,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
        "over_510_token_percent": 0.0,
-       "sequence_p95": 49
+       "sequence_p95": 50
       },
       "mixed script": {
        "texts": 410,
-       "tokens": 16424,
+       "tokens": 17174,
        "whitespace_words": 10641,
-       "tokens_per_word": 1.543463960154121,
-       "characters_per_token": 3.7351436921578176,
+       "tokens_per_word": 1.6139460577013438,
+       "characters_per_token": 3.5720274834051473,
        "exact_round_trips": 410,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
        "over_510_token_percent": 0.0,
-       "sequence_p95": 119
+       "sequence_p95": 121
+      }
+     }
+    },
+    "SentencePiece BPE 27,760, same training data": {
+     "speed": {
+      "single_MB_per_second": 16.566694429713756,
+      "batch_MB_per_second": 16.418362990589777,
+      "single_seconds": [
+       0.07834791699133348,
+       0.07798591699975077,
+       0.07944770899484865,
+       0.0778511249955045,
+       0.07856429199455306
+      ],
+      "batch_seconds": [
+       0.07905575000040699,
+       0.07874129200354218,
+       0.07936283299932256,
+       0.07947787499870174,
+       0.07893187500303611
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 10000,
+       "tokens": 201958,
+       "whitespace_words": 127947,
+       "tokens_per_word": 1.5784504521403393,
+       "characters_per_token": 3.6665989958308165,
+       "exact_round_trips": 10000,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 57
+      },
+      "bengali script": {
+       "texts": 3401,
+       "tokens": 74215,
+       "whitespace_words": 47288,
+       "tokens_per_word": 1.5694256470986296,
+       "characters_per_token": 3.7709492690156976,
+       "exact_round_trips": 3401,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 59
+      },
+      "latin script": {
+       "texts": 6189,
+       "tokens": 110615,
+       "whitespace_words": 70018,
+       "tokens_per_word": 1.5798080493587363,
+       "characters_per_token": 3.6097455137187544,
+       "exact_round_trips": 6189,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 50
+      },
+      "mixed script": {
+       "texts": 410,
+       "tokens": 17128,
+       "whitespace_words": 10641,
+       "tokens_per_word": 1.6096231557184475,
+       "characters_per_token": 3.58162073797291,
+       "exact_round_trips": 410,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 121
+      }
+     }
+    },
+    "SentencePiece Unigram 57,925, same training data": {
+     "speed": {
+      "single_MB_per_second": 42.421060124553215,
+      "batch_MB_per_second": 41.73244602610532,
+      "single_seconds": [
+       0.030414666995056905,
+       0.03100724999967497,
+       0.032322541999747045,
+       0.030597207995015197,
+       0.029875667009036988
+      ],
+      "batch_seconds": [
+       0.030347834006533958,
+       0.030887667002389207,
+       0.03165245799755212,
+       0.031651666009565815,
+       0.031102082997676916
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 10000,
+       "tokens": 180381,
+       "whitespace_words": 127947,
+       "tokens_per_word": 1.4098103120823466,
+       "characters_per_token": 4.105194006020589,
+       "exact_round_trips": 10000,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 51
+      },
+      "bengali script": {
+       "texts": 3401,
+       "tokens": 66065,
+       "whitespace_words": 47288,
+       "tokens_per_word": 1.3970774826594485,
+       "characters_per_token": 4.236146219632181,
+       "exact_round_trips": 3401,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 53
+      },
+      "latin script": {
+       "texts": 6189,
+       "tokens": 98997,
+       "whitespace_words": 70018,
+       "tokens_per_word": 1.4138792881830387,
+       "characters_per_token": 4.033374748729759,
+       "exact_round_trips": 6189,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 45
+      },
+      "mixed script": {
+       "texts": 410,
+       "tokens": 15319,
+       "whitespace_words": 10641,
+       "tokens_per_word": 1.4396203364345457,
+       "characters_per_token": 4.004569488870031,
+       "exact_round_trips": 410,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 109
+      }
+     }
+    },
+    "SentencePiece BPE 57,925, same training data": {
+     "speed": {
+      "single_MB_per_second": 17.67326730374642,
+      "batch_MB_per_second": 17.38057321943559,
+      "single_seconds": [
+       0.07413829199504107,
+       0.07341037500009406,
+       0.07705829200858716,
+       0.0733406249928521,
+       0.07344233398907818
+      ],
+      "batch_seconds": [
+       0.07469199999468401,
+       0.0746484999981476,
+       0.07458608300657943,
+       0.07467912499851082,
+       0.07529791700653732
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 10000,
+       "tokens": 180072,
+       "whitespace_words": 127947,
+       "tokens_per_word": 1.4073952495955357,
+       "characters_per_token": 4.11223843795815,
+       "exact_round_trips": 10000,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 51
+      },
+      "bengali script": {
+       "texts": 3401,
+       "tokens": 65825,
+       "whitespace_words": 47288,
+       "tokens_per_word": 1.3920021992894602,
+       "characters_per_token": 4.251591340676035,
+       "exact_round_trips": 3401,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 53
+      },
+      "latin script": {
+       "texts": 6189,
+       "tokens": 99052,
+       "whitespace_words": 70018,
+       "tokens_per_word": 1.4146648004798765,
+       "characters_per_token": 4.031135161329403,
+       "exact_round_trips": 6189,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 45
+      },
+      "mixed script": {
+       "texts": 410,
+       "tokens": 15195,
+       "whitespace_words": 10641,
+       "tokens_per_word": 1.427967296306738,
+       "characters_per_token": 4.037249095097072,
+       "exact_round_trips": 410,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 106
       }
      }
     },
     "tiktoken o200k_base": {
      "speed": {
-      "single_MB_per_second": 37.398714683748665,
-      "batch_MB_per_second": 12.018889893299045,
+      "single_MB_per_second": 37.349389955808746,
+      "batch_MB_per_second": 12.106042569685222,
       "single_seconds": [
-       0.034905291000086436,
-       0.034597458000007464,
-       0.034790124999744876,
-       0.03432429200029219,
-       0.03470616599997811
+       0.03428833399084397,
+       0.034855124991736375,
+       0.03466512500017416,
+       0.034752000006847084,
+       0.03542420799203683
       ],
       "batch_seconds": [
-       0.10285591600040789,
-       0.10234999999966021,
-       0.10812754200014751,
-       0.10991825000019162,
-       0.10799383399989892
+       0.10194766700442415,
+       0.10895370799698867,
+       0.10721637500682846,
+       0.1083702500036452,
+       0.10252279200358316
       ]
      },
      "quality": {
@@ -1453,21 +1930,21 @@
     },
     "tiktoken cl100k_base": {
      "speed": {
-      "single_MB_per_second": 24.334847270422795,
-      "batch_MB_per_second": 9.842744539074829,
+      "single_MB_per_second": 24.481590624024545,
+      "batch_MB_per_second": 9.71848167992609,
       "single_seconds": [
-       0.05333775000008245,
-       0.0528730840001117,
-       0.05350733300019783,
-       0.053249167000103625,
-       0.05339958300010039
+       0.05258604099799413,
+       0.05275375000201166,
+       0.05541691700636875,
+       0.05359304099692963,
+       0.05301804200280458
       ],
       "batch_seconds": [
-       0.1318703329998243,
-       0.13256458300020313,
-       0.13276870800018514,
-       0.12639916599982826,
-       0.12719225000000733
+       0.13451545899442863,
+       0.13355645899719093,
+       0.1375255000020843,
+       0.12721454199345317,
+       0.13347687499481253
       ]
      },
      "quality": {
@@ -1523,21 +2000,21 @@
     },
     "BanglaBERT (csebuetnlp)": {
      "speed": {
-      "single_MB_per_second": 9.15647897045761,
-      "batch_MB_per_second": 9.157999964881427,
+      "single_MB_per_second": 9.122080422585418,
+      "batch_MB_per_second": 9.166005797206735,
       "single_seconds": [
-       0.14111370899991016,
-       0.14175383399970087,
-       0.14229362499963827,
-       0.14296849999982442,
-       0.14141908300007344
+       0.14104249999218155,
+       0.14228837500559166,
+       0.1441190839977935,
+       0.13960491699981503,
+       0.14234429098723922
       ],
       "batch_seconds": [
-       0.14164204100006828,
-       0.14253829199969914,
-       0.14230858400014768,
-       0.14173029099993073,
-       0.14170475000037186
+       0.14158558299823198,
+       0.14276854100171477,
+       0.14304883300792426,
+       0.14160650000849273,
+       0.1412315000052331
       ]
      },
      "quality": {
@@ -1593,21 +2070,21 @@
     },
     "Bangla-BERT (sagorsarker)": {
      "speed": {
-      "single_MB_per_second": 6.8883863148147375,
-      "batch_MB_per_second": 6.8908547664088315,
+      "single_MB_per_second": 6.895055295759889,
+      "batch_MB_per_second": 6.857274191660022,
       "single_seconds": [
-       0.18890008300013506,
-       0.18842816599999423,
-       0.1882631250000486,
-       0.1879745000001094,
-       0.18847920899997916
+       0.1882459159969585,
+       0.19046524999430403,
+       0.18797470899880864,
+       0.18796883299364708,
+       0.1895480000093812
       ],
       "batch_seconds": [
-       0.18836066699986986,
-       0.1887432080002327,
-       0.1883583329999965,
-       0.18852254200010066,
-       0.18728829099973154
+       0.18857408298936207,
+       0.19008216699876357,
+       0.1889735419972567,
+       0.18928308300382923,
+       0.19167737499810755
       ]
      },
      "quality": {
@@ -1663,21 +2140,21 @@
     },
     "MuRIL (Google)": {
      "speed": {
-      "single_MB_per_second": 8.846086460734304,
-      "batch_MB_per_second": 8.837756866801017,
+      "single_MB_per_second": 8.803153960591999,
+      "batch_MB_per_second": 8.860788787930673,
       "single_seconds": [
-       0.1467277090000607,
-       0.14829604199985624,
-       0.14594308300002012,
-       0.14663983399987046,
-       0.14745412499996746
+       0.14522937500441913,
+       0.14744329200766515,
+       0.14701187500031665,
+       0.14756825000222307,
+       0.14756475000467617
       ],
       "batch_seconds": [
-       0.14667820900012885,
-       0.14686600000004546,
-       0.14686500000016167,
-       0.1477298330000849,
-       0.14702816700037147
+       0.1464842499990482,
+       0.1463940410030773,
+       0.1506294589926256,
+       0.1454825830005575,
+       0.14690566698845942
       ]
      },
      "quality": {
@@ -1733,21 +2210,21 @@
     },
     "mBERT cased": {
      "speed": {
-      "single_MB_per_second": 8.092318036213772,
-      "batch_MB_per_second": 8.098724212239228,
+      "single_MB_per_second": 8.068770753764127,
+      "batch_MB_per_second": 8.063732891466579,
       "single_seconds": [
-       0.16039483299982749,
-       0.16075462499975401,
-       0.1600051249997705,
-       0.160086500000034,
-       0.16065283299985822
+       0.1593827920005424,
+       0.16134379200229887,
+       0.1608629169932101,
+       0.15891716700571124,
+       0.16184291699028108
       ],
       "batch_seconds": [
-       0.16026795900006618,
-       0.1598812080001153,
-       0.15976150000005873,
-       0.1603995840000607,
-       0.1614289170001939
+       0.15856404100486543,
+       0.16111733399156947,
+       0.16175333299906924,
+       0.16096341700176708,
+       0.16024124999239575
       ]
      },
      "quality": {
@@ -1803,21 +2280,21 @@
     },
     "XLM-R / mE5 / BGE-M3": {
      "speed": {
-      "single_MB_per_second": 6.509019402832083,
-      "batch_MB_per_second": 6.503811862229254,
+      "single_MB_per_second": 6.464821935310502,
+      "batch_MB_per_second": 6.436765562494928,
       "single_seconds": [
-       0.19904958300003273,
-       0.19888270799992824,
-       0.19941037499984304,
-       0.20059395799989943,
-       0.20212687499997628
+       0.20528516700142063,
+       0.19965374999446794,
+       0.2007736660016235,
+       0.1992040420009289,
+       0.201326833004714
       ],
       "batch_seconds": [
-       0.19913787499990576,
-       0.19922512499988443,
-       0.20042012499970951,
-       0.20199895899986586,
-       0.19957004099978803
+       0.20164879199001007,
+       0.199986749998061,
+       0.20393920900824014,
+       0.2065990410046652,
+       0.1999610000057146
       ]
      },
      "quality": {
@@ -1873,21 +2350,21 @@
     },
     "Qwen3": {
      "speed": {
-      "single_MB_per_second": 6.0267018021111785,
-      "batch_MB_per_second": 5.993676016674929,
+      "single_MB_per_second": 6.01796977620889,
+      "batch_MB_per_second": 5.987060378050252,
       "single_seconds": [
-       0.21524458300018523,
-       0.2149981249999655,
-       0.21560700000009092,
-       0.21543333300041922,
-       0.21536920900007317
+       0.21495829099148978,
+       0.2156817079958273,
+       0.22366012500424404,
+       0.21507004198792856,
+       0.2160145410016412
       ],
       "batch_seconds": [
-       0.21642612499999814,
-       0.2169743749996087,
-       0.21677699999963806,
-       0.21598437500006185,
-       0.21655591600028856
+       0.21430787500867154,
+       0.21679520800535101,
+       0.21457120799459517,
+       0.2186983749998035,
+       0.21746745800192002
       ]
      },
      "quality": {
