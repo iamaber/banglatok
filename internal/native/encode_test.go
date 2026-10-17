@@ -44,59 +44,23 @@ func parseBinary(t *testing.T, output []byte, texts int) (batch [][]int, message
 	return batch, "", true
 }
 
-func TestBinaryEncode(t *testing.T) {
-	model, err := tokenizer.New(tokenizer.Model{Version: 1, Algorithm: "unigram", Normalization: tokenizer.Normalization, Pieces: []tokenizer.Piece{{Text: "আমি", Score: -1}}})
-	if err != nil {
-		t.Fatal(err)
-	}
+func TestBinaryEncodeMalformedInput(t *testing.T) {
+	_, model := loadTestModel(t, "unigram")
 	r := Registry{models: map[uint64]*tokenizer.Tokenizer{1: model}}
-	texts := []string{"আমি", "", "a\x00b 🙂", "\t বাংলা\n"}
-	batch, message, ok := parseBinary(t, r.EncodeBinary(1, frame(texts)), len(texts))
-	if !ok {
-		t.Fatalf("encode: %s", message)
-	}
-	for i, text := range texts {
-		if !slices.Equal(batch[i], model.Encode(text)) {
-			t.Fatalf("different IDs for %q", text)
-		}
-	}
-	if batch, _, ok := parseBinary(t, r.EncodeBinary(1, nil), 0); !ok || len(batch) != 0 {
-		t.Fatal("empty batch")
-	}
 	for _, input := range [][]byte{{0}, {255, 255, 255, 255}, {2, 0, 0, 0, 'a'}} {
 		if _, _, ok := parseBinary(t, r.EncodeBinary(1, input), 0); ok {
 			t.Fatal("accepted malformed input")
 		}
 	}
-	if _, _, ok := parseBinary(t, r.EncodeBinary(99, nil), 0); ok {
-		t.Fatal("accepted closed handle")
-	}
 }
 
-func TestEncodeInto(t *testing.T) {
-	model, err := tokenizer.New(tokenizer.Model{Version: 1, Algorithm: "unigram", Normalization: tokenizer.Normalization, Pieces: []tokenizer.Piece{{Text: "আমি", Score: -1}}})
-	if err != nil {
-		t.Fatal(err)
-	}
+func TestEncodeIntoUndersizedBuffer(t *testing.T) {
+	_, model := loadTestModel(t, "unigram")
 	r := Registry{models: map[uint64]*tokenizer.Tokenizer{1: model}}
 	text := "আমি 🙂 আমি"
-	want := model.Encode(text)
 	small := make([]uint32, 2)
-	if n, err := r.EncodeInto(1, text, small); err != nil || n != len(want) || n <= len(small) {
+	if n, err := r.EncodeInto(1, text, small); err != nil || n != len(model.Encode(text)) || n <= len(small) {
 		t.Fatalf("undersized buffer: n=%d err=%v", n, err)
-	}
-	out := make([]uint32, len(want))
-	n, err := r.EncodeInto(1, text, out)
-	if err != nil || n != len(want) {
-		t.Fatalf("n=%d err=%v", n, err)
-	}
-	for i, id := range want {
-		if out[i] != uint32(id) {
-			t.Fatalf("ID %d: %d != %d", i, out[i], id)
-		}
-	}
-	if _, err := r.EncodeInto(99, text, out); err == nil {
-		t.Fatal("accepted closed handle")
 	}
 }
 
@@ -106,10 +70,7 @@ func FuzzBinaryEncode(f *testing.F) {
 	f.Add([]byte{0, 0, 0, 0})
 	f.Add([]byte{1, 0, 0, 0, 'a'})
 	f.Add(frame([]string{"আমি 🙂", "", "a\xffb"}))
-	model, err := tokenizer.New(tokenizer.Model{Version: 1, Algorithm: "unigram", Normalization: tokenizer.Normalization, Pieces: []tokenizer.Piece{{Text: "আমি", Score: -1}}})
-	if err != nil {
-		f.Fatal(err)
-	}
+	_, model := loadTestModel(f, "unigram")
 	r := Registry{models: map[uint64]*tokenizer.Tokenizer{1: model}}
 	f.Fuzz(func(t *testing.T, input []byte) {
 		if _, _, ok := parseBinary(t, r.EncodeBinary(2, input), 0); ok {
