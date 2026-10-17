@@ -1,6 +1,6 @@
 # Release procedure
 
-The current candidate is `0.2.0`. This repository has not published that version to PyPI. A local green build is necessary but does not validate the hosted Linux/Intel/macOS wheel matrix.
+The current candidate is `0.2.0`. A local green build is necessary but does not validate the hosted Linux, macOS and Windows wheel matrix.
 
 ## 1. Prepare and review the candidate
 
@@ -34,12 +34,13 @@ It builds:
 - Linux x86_64 and aarch64 in manylinux_2_28, each on a native runner.
 - macOS x86_64 on an Intel runner.
 - macOS arm64 on an Apple Silicon runner.
+- Windows x86_64 on a Windows runner, with MinGW-w64 GCC from the preinstalled MSYS2 for cgo.
 
-Each wheel has `py3-none` platform tags because the Go/ctypes bridge is independent of the CPython extension ABI. It is built once using CPython 3.11, then installed/tested on Python 3.10–3.15 on its matching runner. Free-threaded Python, PyPy and Windows are not validated; Windows users build from source.
+Each wheel has `py3-none` platform tags because the Go/ctypes bridge is independent of the CPython extension ABI. It is built once using CPython 3.11, then installed/tested on Python 3.10–3.15 on its matching runner. Free-threaded Python, PyPy and Windows on ARM are not validated.
 
 Linux uses the verified setup-go toolchain mounted through cibuildwheel's documented `/host` filesystem. macOS sets a deployment target of 14.0. The filename encodes the platform floor; running on a newer CI OS alone does not validate every older OS release. Further deployment testing is welcome before broadening support claims.
 
-Download the `release-distributions` artifact and inspect its sdist and four wheels. The workflow's final validation job runs Twine and the archive gate after all installed-wheel tests pass. Keep that exact artifact set for the release; do not replace a failed artifact with an unrelated local build.
+Download the `release-distributions` artifact and inspect its sdist and five wheels. The workflow's final validation job runs Twine and the archive gate after all installed-wheel tests pass. Keep that exact artifact set for the release; do not replace a failed artifact with an unrelated local build.
 
 ## 3. Configure owner-controlled publishing
 

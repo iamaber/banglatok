@@ -1,8 +1,8 @@
 # Changelog
 
-## 0.2.0 — 2026-11-10
+## 0.2.0 — 2026-11-13
 
-First public release candidate.
+First public release.
 
 ### Added
 
@@ -12,13 +12,17 @@ First public release candidate.
 - A `banglatok` command and `python -m banglatok`.
 - `benchmarks/compare_popular.py` and `benchmarks/POPULAR_COMPARISON.md` compare the models with SentencePiece/BNLP, tiktoken, BanglaBERT, MuRIL, mBERT, XLM-R and Qwen3 on unseen and in-domain text.
 - `benchmarks/build_fused_model.py` reproducibly builds fused models from a base BPE model.
-- Linux aarch64 wheels in the release workflow.
+- `Tokenizer.save_huggingface(directory)` writes `tokenizer.json` and `tokenizer_config.json` for Hugging Face `tokenizers` and `transformers`, with the same IDs as the native tokenizer (checked on 24,799 validation, review and stress texts for both models). `tools/publish_huggingface.py` uploads both models to the Hub.
+- Linux aarch64 and Windows x86_64 wheels in the release workflow.
+- `benchmarks/train_sentencepiece_baselines.py` trains SentencePiece Unigram and BPE baselines with the same vocabulary sizes as the bundled models; the comparison now includes them, and a Linux x86_64 run.
 
 ### Changed
 
 - The project is now `banglatok` (was `bn-tokenizers-embedding`, never published to PyPI). The import is `banglatok` and the command is `banglatok`.
 - Encoding is about 2× faster with identical IDs. Normalization skips work for text that is already NFC. BPE merges recompute pair ranks only around merged tokens. Single texts are encoded straight into a reusable per-thread buffer, and batch results come back in one aligned buffer. Every model and about 94,000 validation, test and stress texts produce the same IDs as before.
-- Go: `Tokenizer.AppendEncode`, `Tokenizer.Vocabulary` and `Tokenizer.Algorithm`.
+- Go: `Tokenizer.AppendEncode`, `Tokenizer.Vocabulary`, `Tokenizer.Algorithm` and `Tokenizer.Merges`.
+- The `banglatok` command reads and writes UTF-8 regardless of the console code page.
+- Research reports, experiments and scripts moved under `research/`.
 - License expression: `MIT AND BSD-3-Clause AND CC-BY-SA-4.0`.
 
 ## 0.1.0a1 — unreleased preview
