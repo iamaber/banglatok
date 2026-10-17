@@ -24,6 +24,6 @@ No synthetic transliteration is generated. BanglaDual is excluded because its up
 | Code-mixed script proxy | 4,709 | 400,072 |
 | Total | 563,476 | 65,967,860 |
 
-Validation contains 14,779 records; the frozen test split contains 16,712. See `reports/corpus-stats.json` and `reports/corpus-audit.json` for counts, source composition, and hashes. Test text is checked only for split integrity; reported tokenizer screening uses validation. These are grouped in-domain splits, not fully unseen-source evaluations.
+Validation contains 14,779 records; the frozen test split contains 16,712. See `research/reports/corpus-stats.json` and `research/reports/corpus-audit.json` for counts, source composition, and hashes. Test text is checked only for split integrity; reported tokenizer screening uses validation. These are grouped in-domain splits, not fully unseen-source evaluations.
 
 The small code-mixed bucket is oversampled by the proposed weighted mixture. Additional naturally authored code-mixed and target-domain records are the highest-priority corpus expansion. Corpus sufficiency for final embeddings must be established by learning curves and downstream evaluation, not by the presence of a 32k vocabulary.

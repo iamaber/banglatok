@@ -1,6 +1,6 @@
 # Release procedure
 
-The current candidate is `0.2.0`. This repository has not published that version to PyPI. A local green build is necessary but does not validate the hosted Linux/Intel/macOS wheel matrix.
+The current candidate is `0.2.0`. A local green build is necessary but does not validate the hosted Linux, macOS and Windows wheel matrix.
 
 ## 1. Prepare and review the candidate
 
@@ -34,20 +34,21 @@ It builds:
 - Linux x86_64 and aarch64 in manylinux_2_28, each on a native runner.
 - macOS x86_64 on an Intel runner.
 - macOS arm64 on an Apple Silicon runner.
+- Windows x86_64 on a Windows runner, with MinGW-w64 GCC from the preinstalled MSYS2 for cgo.
 
-Each wheel has `py3-none` platform tags because the Go/ctypes bridge is independent of the CPython extension ABI. It is built once using CPython 3.11, then installed/tested on Python 3.10–3.15 on its matching runner. Free-threaded Python, PyPy and Windows are not validated; Windows users build from source.
+Each wheel has `py3-none` platform tags because the Go/ctypes bridge is independent of the CPython extension ABI. It is built once using CPython 3.11, then installed/tested on Python 3.10–3.15 on its matching runner. Free-threaded Python, PyPy and Windows on ARM are not validated.
 
 Linux uses the verified setup-go toolchain mounted through cibuildwheel's documented `/host` filesystem. macOS sets a deployment target of 14.0. The filename encodes the platform floor; running on a newer CI OS alone does not validate every older OS release. Further deployment testing is welcome before broadening support claims.
 
-Download the `release-distributions` artifact and inspect its sdist and four wheels. The workflow's final validation job runs Twine and the archive gate after all installed-wheel tests pass. Keep that exact artifact set for the release; do not replace a failed artifact with an unrelated local build.
+Download the `release-distributions` artifact and inspect its sdist and five wheels. The workflow's final validation job runs Twine and the archive gate after all installed-wheel tests pass. Keep that exact artifact set for the release; do not replace a failed artifact with an unrelated local build.
 
 ## 3. Configure owner-controlled publishing
 
 These account/repository settings are not performed by a local build:
 
-- Confirm the intended GitHub repository is `iamaber/bn-tokenizers-embedding`; review visibility and enable the appropriate issue/security settings.
+- Confirm the intended GitHub repository is `iamaber/banglatok`; review visibility and enable the appropriate issue/security settings.
 - Confirm the PyPI project name is available to your account. An absent project page does not reserve the name.
-- Enable PyPI account 2FA and configure a pending Trusted Publisher with project `bn-tokenizers-embedding`, owner `iamaber`, repository `bn-tokenizers-embedding`, workflow `release.yml`, environment `pypi`.
+- Enable PyPI account 2FA and configure a pending Trusted Publisher with project `banglatok`, owner `iamaber`, repository `banglatok`, workflow `release.yml`, environment `pypi`.
 - Create the GitHub environment `pypi` with required reviewers and tag restrictions. Review any environment restrictions before uploading.
 - Retain the pinned action SHAs; Dependabot can propose reviewed updates. No long-lived PyPI API token is required.
 
@@ -68,9 +69,9 @@ The workflow rejects publishing from a branch or a tag that disagrees with `pypr
 In a clean environment on each claimed platform:
 
 ```sh
-python -m pip install --only-binary=:all: bn-tokenizers-embedding==0.2.0
+python -m pip install --only-binary=:all: banglatok==0.2.0
 ```
 
-Run `examples/quickstart.py` and `bntokenize --list-models` outside the repository checkout. Verify the published metadata, licenses and files. Update the changelog and public installation instructions only after the release is actually visible and installable. If a release is broken, follow PyPI's yanking procedure and publish a new version rather than silently replacing artifacts.
+Run `examples/quickstart.py` and `banglatok --list-models` outside the repository checkout. Verify the published metadata, licenses and files. Update the changelog and public installation instructions only after the release is actually visible and installable. If a release is broken, follow PyPI's yanking procedure and publish a new version rather than silently replacing artifacts.
 
 A new or retrained bundled model needs a `docs/MODELS.md` entry with its build command, checksums and limitations, a rerun of `benchmarks/compare_popular.py`, and a new minor version, because IDs change.

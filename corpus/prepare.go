@@ -10,7 +10,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/iamaber/bn-tokenizers-embedding/tokenizer"
+	"github.com/iamaber/banglatok/tokenizer"
 )
 
 var privateText = regexp.MustCompile(`(?i)([a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}|(?:\+?880|\b0)1[3-9][0-9]{8}\b|(?:api[_-]?key|password|secret)\s*[:=]\s*\S+)`)

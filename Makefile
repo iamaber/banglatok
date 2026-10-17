@@ -22,10 +22,10 @@ evaluate: build
 	bin/bntok evaluate
 
 matrix: build
-	mkdir -p reports
+	mkdir -p research/reports
 	set -e; for size in 16000 32000 48000; do \
 	  for algorithm in unigram bpe; do \
 	    bin/bntok train -algorithm $$algorithm -vocab $$size -out models/$$algorithm-$$size.json; \
-	    bin/bntok evaluate -model models/$$algorithm-$$size.json > reports/$$algorithm-$$size-validation.json; \
+	    bin/bntok evaluate -model models/$$algorithm-$$size.json > research/reports/$$algorithm-$$size-validation.json; \
 	  done; \
 	done

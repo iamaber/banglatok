@@ -6,7 +6,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/iamaber/bn-tokenizers-embedding/tokenizer"
+	"github.com/iamaber/banglatok/tokenizer"
 )
 
 // Both wire formats operate on handles created and released through the C control path.

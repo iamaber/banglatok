@@ -1,12 +1,16 @@
 """Bundled models and the higher-level API, exercised through the real native library."""
 
 import contextlib
+import importlib.util
 import io
 import json
+import tempfile
 import unittest
 from concurrent.futures import ThreadPoolExecutor
+from importlib.resources import as_file, files
+from pathlib import Path
 
-from bn_tokenizers_embedding import (
+from banglatok import (
     BOS_ID,
     DEFAULT_MODEL,
     EOS_ID,
@@ -15,7 +19,7 @@ from bn_tokenizers_embedding import (
     available_models,
     normalize,
 )
-from bn_tokenizers_embedding.__main__ import main
+from banglatok.__main__ import main
 
 STRESS = [
     "আমি বাংলায় গান গাই।",
@@ -118,6 +122,35 @@ class PretrainedTests(unittest.TestCase):
             tok(texts, max_length=1)
         with self.assertRaises(ValueError):
             tok(texts, padding="sideways")  # type: ignore[call-overload]
+
+
+@unittest.skipUnless(importlib.util.find_spec("tokenizers"), "tokenizers is not installed")
+class HuggingFaceExportTests(unittest.TestCase):
+    def test_exported_tokenizer_matches_native_ids(self) -> None:
+        from tokenizers import Tokenizer as HFTokenizer
+
+        texts = [*STRESS, " a\u00a0\u2003b\u3000c\n", "x\u2028y\u2029z", "ami 🙂 বাংলা"]
+        for name in available_models():
+            with (
+                self.subTest(model=name),
+                Tokenizer.from_pretrained(name) as tok,
+                tempfile.TemporaryDirectory() as directory,
+            ):
+                tok.save_huggingface(directory)
+                hf = HFTokenizer.from_file(str(Path(directory) / "tokenizer.json"))
+                hf.encode_special_tokens = True
+                self.assertEqual(hf.get_vocab_size(), tok.vocab_size)
+                for text in texts:
+                    ids = tok.encode(text)
+                    self.assertEqual(hf.encode(text, add_special_tokens=False).ids, ids)
+                    self.assertEqual(hf.decode(ids), normalize(text))
+                    self.assertEqual(hf.encode(text).ids, tok(text)["input_ids"])
+
+    def test_unigram_export_is_rejected(self) -> None:
+        demo = files("banglatok").joinpath("data/demo-unigram.json")
+        with as_file(demo) as path, Tokenizer(path) as tok, tempfile.TemporaryDirectory() as out:
+            with self.assertRaisesRegex(ValueError, "BPE models only"):
+                tok.save_huggingface(out)
 
 
 class CommandLineTests(unittest.TestCase):

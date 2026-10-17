@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/iamaber/bn-tokenizers-embedding/corpus"
+	"github.com/iamaber/banglatok/corpus"
 )
 
 func TestPrepareRecordsPreservesHoldoutsAndRefusesOverwrite(t *testing.T) {

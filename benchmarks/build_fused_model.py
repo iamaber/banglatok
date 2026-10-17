@@ -12,7 +12,7 @@ import json
 from collections import Counter
 from pathlib import Path
 
-from bn_tokenizers_embedding import Tokenizer, normalize
+from banglatok import Tokenizer, normalize
 
 SPACE = 36
 

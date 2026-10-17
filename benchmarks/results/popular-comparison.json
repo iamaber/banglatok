@@ -1,0 +1,2424 @@
+{
+ "created_utc": "2026-11-13T10:06:24.562173+00:00",
+ "python": "3.12.13",
+ "platform": "macOS-27.0.1-arm64-arm-64bit",
+ "cpu_model": "Apple M5",
+ "packages": {
+  "banglatok": "0.2.0",
+  "sentencepiece": "0.2.3",
+  "tiktoken": "0.14.0",
+  "tokenizers": "0.23.3",
+  "transformers": "5.22.2"
+ },
+ "repeats": 5,
+ "batch_size": 64,
+ "seed": 20261110,
+ "harness_sha256": "c7854d75f6ad3b305b092759ce10439c221bc3fc65a77303f9fec1099cdc3925",
+ "candidates": {
+  "banglatok bn-bpe-58k": {
+   "source": "bundled",
+   "vocab_size": 57925,
+   "note": "this package",
+   "stress_round_trips": 16,
+   "stress_cases": 16
+  },
+  "banglatok bn-bpe-28k": {
+   "source": "bundled",
+   "vocab_size": 27760,
+   "note": "this package",
+   "stress_round_trips": 16,
+   "stress_cases": 16
+  },
+  "BNLP bn_spm (SentencePiece)": {
+   "source": "bnlp.model sha256 28c0f2892239fd91462e433c93b1196a129ff0e821d81c4f8809fcbbe893fb6b",
+   "vocab_size": 50000,
+   "note": "sentencepiece 0.2.3",
+   "stress_round_trips": 8,
+   "stress_cases": 16
+  },
+  "SentencePiece Unigram 27,760, same training data": {
+   "source": "sentencepiece-unigram-27760.model sha256 b34c0d9a3c9e5fca680f9ee4bc19390180ddc3dc473bab070dab37d43bbabc0c",
+   "vocab_size": 27760,
+   "note": "sentencepiece 0.2.3",
+   "stress_round_trips": 15,
+   "stress_cases": 16
+  },
+  "SentencePiece BPE 27,760, same training data": {
+   "source": "sentencepiece-bpe-27760.model sha256 7d6b38bbd37057fe16a2997375d3c62e53a4e6f96adfb4b369cf450c185b5ba6",
+   "vocab_size": 27760,
+   "note": "sentencepiece 0.2.3",
+   "stress_round_trips": 15,
+   "stress_cases": 16
+  },
+  "SentencePiece Unigram 57,925, same training data": {
+   "source": "sentencepiece-unigram-57925.model sha256 c2b4d67cba5e77de08daa3030890eca0be943ee5b6e678c0d23576e1321451b3",
+   "vocab_size": 57925,
+   "note": "sentencepiece 0.2.3",
+   "stress_round_trips": 15,
+   "stress_cases": 16
+  },
+  "SentencePiece BPE 57,925, same training data": {
+   "source": "sentencepiece-bpe-57925.model sha256 d79d9f97e51cde565dee51aea46dedf387acf9e8172de15ad276dd724c750357",
+   "vocab_size": 57925,
+   "note": "sentencepiece 0.2.3",
+   "stress_round_trips": 15,
+   "stress_cases": 16
+  },
+  "tiktoken o200k_base": {
+   "source": "o200k_base",
+   "vocab_size": 200019,
+   "note": "tiktoken 0.14.0",
+   "stress_round_trips": 16,
+   "stress_cases": 16
+  },
+  "tiktoken cl100k_base": {
+   "source": "cl100k_base",
+   "vocab_size": 100277,
+   "note": "tiktoken 0.14.0",
+   "stress_round_trips": 16,
+   "stress_cases": 16
+  },
+  "BanglaBERT (csebuetnlp)": {
+   "source": "csebuetnlp/banglabert",
+   "vocab_size": 32000,
+   "note": "tokenizers 0.23.3",
+   "stress_round_trips": 5,
+   "stress_cases": 16
+  },
+  "Bangla-BERT (sagorsarker)": {
+   "source": "sagorsarker/bangla-bert-base",
+   "vocab_size": 101975,
+   "note": "tokenizers 0.23.3",
+   "stress_round_trips": 1,
+   "stress_cases": 16
+  },
+  "MuRIL (Google)": {
+   "source": "google/muril-base-cased",
+   "vocab_size": 197258,
+   "note": "tokenizers 0.23.3",
+   "stress_round_trips": 5,
+   "stress_cases": 16
+  },
+  "mBERT cased": {
+   "source": "google-bert/bert-base-multilingual-cased",
+   "vocab_size": 119547,
+   "note": "tokenizers 0.23.3",
+   "stress_round_trips": 6,
+   "stress_cases": 16
+  },
+  "XLM-R / mE5 / BGE-M3": {
+   "source": "FacebookAI/xlm-roberta-base",
+   "vocab_size": 250002,
+   "note": "tokenizers 0.23.3",
+   "stress_round_trips": 11,
+   "stress_cases": 16
+  },
+  "Qwen3": {
+   "source": "Qwen/Qwen3-0.6B",
+   "vocab_size": 151669,
+   "note": "tokenizers 0.23.3",
+   "stress_round_trips": 16,
+   "stress_cases": 16
+  }
+ },
+ "corpora": {
+  "In-domain validation": {
+   "source": "data/processed/validation.jsonl",
+   "source_sha256": "047e0acb94d621508467fcd0e7b3369204f7e040d4b9144b58614faac9f1cc2d",
+   "records": 14779,
+   "utf8_bytes": 3013257,
+   "ordered_text_sha256": "88b57174621deaf7538367891f377316b6fe8ebe5c1203e0d54ff81ff5ec33bd",
+   "candidates": {
+    "banglatok bn-bpe-58k": {
+     "speed": {
+      "single_MB_per_second": 77.54376609730785,
+      "batch_MB_per_second": 88.16106378708001,
+      "single_seconds": [
+       0.039860333999968134,
+       0.03902008300065063,
+       0.03866287499840837,
+       0.038858790998347104,
+       0.03885154098679777
+      ],
+      "batch_seconds": [
+       0.034478040994144976,
+       0.035904457996366546,
+       0.03417900000931695,
+       0.03402937500504777,
+       0.03415575000690296
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 330176,
+       "whitespace_words": 240495,
+       "tokens_per_word": 1.3729017235285557,
+       "characters_per_token": 4.516500290754022,
+       "exact_round_trips": 14779,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 83
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 197038,
+       "whitespace_words": 138501,
+       "tokens_per_word": 1.4226467678933725,
+       "characters_per_token": 4.662730031770521,
+       "exact_round_trips": 4925,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 138
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 105413,
+       "whitespace_words": 77760,
+       "tokens_per_word": 1.3556198559670782,
+       "characters_per_token": 4.264265318319373,
+       "exact_round_trips": 6160,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 47
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 2827,
+       "whitespace_words": 2023,
+       "tokens_per_word": 1.3974295600593178,
+       "characters_per_token": 4.019101521047046,
+       "exact_round_trips": 156,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 55
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 24898,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.1209760929269281,
+       "characters_per_token": 4.483653305486384,
+       "exact_round_trips": 3538,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 13
+      }
+     }
+    },
+    "banglatok bn-bpe-28k": {
+     "speed": {
+      "single_MB_per_second": 78.89983370531888,
+      "batch_MB_per_second": 90.81569106076331,
+      "single_seconds": [
+       0.03825712500838563,
+       0.038096167001640424,
+       0.03820199999609031,
+       0.036329499998828396,
+       0.03819091699551791
+      ],
+      "batch_seconds": [
+       0.03431987499061506,
+       0.03408037500048522,
+       0.03317991599033121,
+       0.03315495800052304,
+       0.032805708004161716
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 375838,
+       "whitespace_words": 240495,
+       "tokens_per_word": 1.562768456724672,
+       "characters_per_token": 3.9677733491557534,
+       "exact_round_trips": 14779,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.006766357669666418,
+       "sequence_p95": 95
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 226678,
+       "whitespace_words": 138501,
+       "tokens_per_word": 1.6366524429426503,
+       "characters_per_token": 4.053039995059071,
+       "exact_round_trips": 4925,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.02030456852791878,
+       "sequence_p95": 159
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 118618,
+       "whitespace_words": 77760,
+       "tokens_per_word": 1.5254372427983538,
+       "characters_per_token": 3.7895513328499892,
+       "exact_round_trips": 6160,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 52
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 3208,
+       "whitespace_words": 2023,
+       "tokens_per_word": 1.5857637172516066,
+       "characters_per_token": 3.541770573566085,
+       "exact_round_trips": 156,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 63
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 27334,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.2306514789968934,
+       "characters_per_token": 4.0840711202165805,
+       "exact_round_trips": 3538,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 14
+      }
+     }
+    },
+    "BNLP bn_spm (SentencePiece)": {
+     "speed": {
+      "single_MB_per_second": 42.62751049767827,
+      "batch_MB_per_second": 42.160456117501255,
+      "single_seconds": [
+       0.07166045800840948,
+       0.0700462919921847,
+       0.07042070799798239,
+       0.07068808299663942,
+       0.07071991699922364
+      ],
+      "batch_seconds": [
+       0.0712157920061145,
+       0.07168275000003632,
+       0.07101562499883585,
+       0.0714711670007091,
+       0.07150749998982064
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 447589,
+       "whitespace_words": 240495,
+       "tokens_per_word": 1.8611156157092663,
+       "characters_per_token": 3.331717267403801,
+       "exact_round_trips": 12998,
+       "round_trip_percent": 87.94911699032411,
+       "texts_with_unknowns": 647,
+       "over_510_token_percent": 0.006766357669666418,
+       "sequence_p95": 96
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 191289,
+       "whitespace_words": 138501,
+       "tokens_per_word": 1.3811380423246042,
+       "characters_per_token": 4.802863729749228,
+       "exact_round_trips": 4557,
+       "round_trip_percent": 92.52791878172589,
+       "texts_with_unknowns": 202,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 128
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 211023,
+       "whitespace_words": 77760,
+       "tokens_per_word": 2.713773148148148,
+       "characters_per_token": 2.1301422119863713,
+       "exact_round_trips": 4785,
+       "round_trip_percent": 77.67857142857143,
+       "texts_with_unknowns": 423,
+       "over_510_token_percent": 0.016233766233766232,
+       "sequence_p95": 92
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 4456,
+       "whitespace_words": 2023,
+       "tokens_per_word": 2.2026693030153237,
+       "characters_per_token": 2.5498204667863553,
+       "exact_round_trips": 121,
+       "round_trip_percent": 77.56410256410257,
+       "texts_with_unknowns": 19,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 77
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 40821,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.8378731259285939,
+       "characters_per_token": 2.734719874574361,
+       "exact_round_trips": 3535,
+       "round_trip_percent": 99.9152063312606,
+       "texts_with_unknowns": 3,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 19
+      }
+     }
+    },
+    "SentencePiece Unigram 27,760, same training data": {
+     "speed": {
+      "single_MB_per_second": 49.118012395677354,
+      "batch_MB_per_second": 47.86759322407009,
+      "single_seconds": [
+       0.061347291004494764,
+       0.06061549999867566,
+       0.06202579100499861,
+       0.06050158300786279,
+       0.06165449999389239
+      ],
+      "batch_seconds": [
+       0.06294983300904278,
+       0.061716041003819555,
+       0.06310624998877756,
+       0.06464270800643135,
+       0.06292108399793506
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 359653,
+       "whitespace_words": 240495,
+       "tokens_per_word": 1.4954697602860767,
+       "characters_per_token": 4.146329934687046,
+       "exact_round_trips": 14779,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 89
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 210692,
+       "whitespace_words": 138501,
+       "tokens_per_word": 1.5212308936397572,
+       "characters_per_token": 4.360559489681621,
+       "exact_round_trips": 4925,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 145
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 113932,
+       "whitespace_words": 77760,
+       "tokens_per_word": 1.4651748971193415,
+       "characters_per_token": 3.9454148088333394,
+       "exact_round_trips": 6160,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 49
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 3292,
+       "whitespace_words": 2023,
+       "tokens_per_word": 1.6272862086010875,
+       "characters_per_token": 3.4513973268529767,
+       "exact_round_trips": 156,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 60
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 31737,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.428886587726802,
+       "characters_per_token": 3.5174717207045405,
+       "exact_round_trips": 3538,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 15
+      }
+     }
+    },
+    "SentencePiece BPE 27,760, same training data": {
+     "speed": {
+      "single_MB_per_second": 18.337402554220684,
+      "batch_MB_per_second": 18.163005625216275,
+      "single_seconds": [
+       0.16517058400495443,
+       0.1642119579919381,
+       0.16427795799972955,
+       0.16432300000451505,
+       0.16504279199580196
+      ],
+      "batch_seconds": [
+       0.1659007909911452,
+       0.1655154590116581,
+       0.16557329200441018,
+       0.1659847080009058,
+       0.16668258300342131
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 363601,
+       "whitespace_words": 240495,
+       "tokens_per_word": 1.5118859019938045,
+       "characters_per_token": 4.101308852285885,
+       "exact_round_trips": 14779,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 88
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 212447,
+       "whitespace_words": 138501,
+       "tokens_per_word": 1.5339022822939907,
+       "characters_per_token": 4.324537414037383,
+       "exact_round_trips": 4925,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 147
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 115662,
+       "whitespace_words": 77760,
+       "tokens_per_word": 1.4874228395061728,
+       "characters_per_token": 3.8864017568432154,
+       "exact_round_trips": 6160,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 50
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 3325,
+       "whitespace_words": 2023,
+       "tokens_per_word": 1.643598615916955,
+       "characters_per_token": 3.4171428571428573,
+       "exact_round_trips": 156,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 64
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 32167,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.448246364414029,
+       "characters_per_token": 3.470451083408462,
+       "exact_round_trips": 3538,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 15
+      }
+     }
+    },
+    "SentencePiece Unigram 57,925, same training data": {
+     "speed": {
+      "single_MB_per_second": 45.48678612666846,
+      "batch_MB_per_second": 44.58233721822724,
+      "single_seconds": [
+       0.06698408299416769,
+       0.0660291660024086,
+       0.06655654199130367,
+       0.06624466700304765,
+       0.06561133300419897
+      ],
+      "batch_seconds": [
+       0.06573550000030082,
+       0.06874612499086652,
+       0.0676452089974191,
+       0.06738020799821243,
+       0.06758858301327564
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 332960,
+       "whitespace_words": 240495,
+       "tokens_per_word": 1.384477847772303,
+       "characters_per_token": 4.47873618452667,
+       "exact_round_trips": 14779,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 82
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 195132,
+       "whitespace_words": 138501,
+       "tokens_per_word": 1.4088851344033617,
+       "characters_per_token": 4.7082743988684586,
+       "exact_round_trips": 4925,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 135
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 104684,
+       "whitespace_words": 77760,
+       "tokens_per_word": 1.346244855967078,
+       "characters_per_token": 4.293960872721715,
+       "exact_round_trips": 6160,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 45
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 2996,
+       "whitespace_words": 2023,
+       "tokens_per_word": 1.480968858131488,
+       "characters_per_token": 3.7923898531375166,
+       "exact_round_trips": 156,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 60
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 30148,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.3573454594570258,
+       "characters_per_token": 3.7028658617487062,
+       "exact_round_trips": 3538,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 14
+      }
+     }
+    },
+    "SentencePiece BPE 57,925, same training data": {
+     "speed": {
+      "single_MB_per_second": 19.459319739458184,
+      "batch_MB_per_second": 19.16418195986435,
+      "single_seconds": [
+       0.15541866699641105,
+       0.15445783399627544,
+       0.15484904099139385,
+       0.15581508399918675,
+       0.1547511250100797
+      ],
+      "batch_seconds": [
+       0.15706949999730568,
+       0.15723379199334886,
+       0.15708570800779853,
+       0.16049716700217687,
+       0.1575316670059692
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 332108,
+       "whitespace_words": 240495,
+       "tokens_per_word": 1.3809351545770183,
+       "characters_per_token": 4.4902260710371324,
+       "exact_round_trips": 14779,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 81
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 193841,
+       "whitespace_words": 138501,
+       "tokens_per_word": 1.3995639020656891,
+       "characters_per_token": 4.739631966405456,
+       "exact_round_trips": 4925,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 134
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 105059,
+       "whitespace_words": 77760,
+       "tokens_per_word": 1.3510673868312757,
+       "characters_per_token": 4.278633910469355,
+       "exact_round_trips": 6160,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 45
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 3001,
+       "whitespace_words": 2023,
+       "tokens_per_word": 1.4834404349975283,
+       "characters_per_token": 3.786071309563479,
+       "exact_round_trips": 156,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 60
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 30207,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.3600018009094592,
+       "characters_per_token": 3.6956334624424803,
+       "exact_round_trips": 3538,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 14
+      }
+     }
+    },
+    "tiktoken o200k_base": {
+     "speed": {
+      "single_MB_per_second": 32.96458484064051,
+      "batch_MB_per_second": 14.903320321551274,
+      "single_seconds": [
+       0.09140891701099463,
+       0.09140504199604038,
+       0.09184074999939185,
+       0.09202570799971,
+       0.09135466700536199
+      ],
+      "batch_seconds": [
+       0.19588841700169723,
+       0.20619175001047552,
+       0.2026160829991568,
+       0.2017111669993028,
+       0.20218695800576825
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 517680,
+       "whitespace_words": 240495,
+       "tokens_per_word": 2.152560344289902,
+       "characters_per_token": 2.880621233194251,
+       "exact_round_trips": 14779,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.07442993436633061,
+       "sequence_p95": 145
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 342716,
+       "whitespace_words": 138501,
+       "tokens_per_word": 2.474465888332936,
+       "characters_per_token": 2.6807473243151763,
+       "exact_round_trips": 4925,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.20304568527918782,
+       "sequence_p95": 239
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 144482,
+       "whitespace_words": 77760,
+       "tokens_per_word": 1.8580504115226337,
+       "characters_per_token": 3.1111764787309144,
+       "exact_round_trips": 6160,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.016233766233766232,
+       "sequence_p95": 64
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 4051,
+       "whitespace_words": 2023,
+       "tokens_per_word": 2.0024715768660406,
+       "characters_per_token": 2.8047395704764257,
+       "exact_round_trips": 156,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 82
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 26431,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.1899959479537165,
+       "characters_per_token": 4.223601074495857,
+       "exact_round_trips": 3538,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 12
+      }
+     }
+    },
+    "tiktoken cl100k_base": {
+     "speed": {
+      "single_MB_per_second": 24.293178383045277,
+      "batch_MB_per_second": 12.029730406697906,
+      "single_seconds": [
+       0.12414720800006762,
+       0.12391558299714234,
+       0.12403716600965708,
+       0.12389083400194068,
+       0.1241546249948442
+      ],
+      "batch_seconds": [
+       0.24709733400959522,
+       0.24689487500290852,
+       0.25327983300667256,
+       0.2523424170067301,
+       0.2504841669870075
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 1305982,
+       "whitespace_words": 240495,
+       "tokens_per_word": 5.430391484230442,
+       "characters_per_token": 1.141853409924486,
+       "exact_round_trips": 14779,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 4.34400162392584,
+       "sequence_p95": 466
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 1109999,
+       "whitespace_words": 138501,
+       "tokens_per_word": 8.014375347470416,
+       "characters_per_token": 0.8276899348557971,
+       "exact_round_trips": 4925,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 13.01522842639594,
+       "sequence_p95": 791
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 160160,
+       "whitespace_words": 77760,
+       "tokens_per_word": 2.0596707818930042,
+       "characters_per_token": 2.806624625374625,
+       "exact_round_trips": 6160,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.016233766233766232,
+       "sequence_p95": 71
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 8152,
+       "whitespace_words": 2023,
+       "tokens_per_word": 4.029658922392486,
+       "characters_per_token": 1.3937684003925417,
+       "exact_round_trips": 156,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 161
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 27671,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.2458241411913016,
+       "characters_per_token": 4.034331972100755,
+       "exact_round_trips": 3538,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 13
+      }
+     }
+    },
+    "BanglaBERT (csebuetnlp)": {
+     "speed": {
+      "single_MB_per_second": 10.617301643906526,
+      "batch_MB_per_second": 10.586573991849304,
+      "single_seconds": [
+       0.2822324159933487,
+       0.28449616699072067,
+       0.28474995800934266,
+       0.28344291700341273,
+       0.2838062910013832
+      ],
+      "batch_seconds": [
+       0.28544258400506806,
+       0.2846300420060288,
+       0.284913208000944,
+       0.2839284170040628,
+       0.28461216599680483
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 430669,
+       "whitespace_words": 240495,
+       "tokens_per_word": 1.790760722676147,
+       "characters_per_token": 3.4626128186611993,
+       "exact_round_trips": 7441,
+       "round_trip_percent": 50.34846741998782,
+       "texts_with_unknowns": 1579,
+       "over_510_token_percent": 0.013532715339332837,
+       "sequence_p95": 95
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 204798,
+       "whitespace_words": 138501,
+       "tokens_per_word": 1.4786752442220634,
+       "characters_per_token": 4.486054551313978,
+       "exact_round_trips": 1410,
+       "round_trip_percent": 28.629441624365484,
+       "texts_with_unknowns": 361,
+       "over_510_token_percent": 0.02030456852791878,
+       "sequence_p95": 138
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 182651,
+       "whitespace_words": 77760,
+       "tokens_per_word": 2.348906893004115,
+       "characters_per_token": 2.461026766894241,
+       "exact_round_trips": 3671,
+       "round_trip_percent": 59.59415584415584,
+       "texts_with_unknowns": 1176,
+       "over_510_token_percent": 0.016233766233766232,
+       "sequence_p95": 80
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 4134,
+       "whitespace_words": 2023,
+       "tokens_per_word": 2.0434997528423136,
+       "characters_per_token": 2.748427672955975,
+       "exact_round_trips": 52,
+       "round_trip_percent": 33.333333333333336,
+       "texts_with_unknowns": 40,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 72
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 39086,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.7597586781324568,
+       "characters_per_token": 2.8561121629227855,
+       "exact_round_trips": 2308,
+       "round_trip_percent": 65.23459581684567,
+       "texts_with_unknowns": 2,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 18
+      }
+     }
+    },
+    "Bangla-BERT (sagorsarker)": {
+     "speed": {
+      "single_MB_per_second": 7.857881740965955,
+      "batch_MB_per_second": 7.78183872365213,
+      "single_seconds": [
+       0.3856764999945881,
+       0.38226154098811094,
+       0.3834693749959115,
+       0.3972802079952089,
+       0.38135841699840967
+      ],
+      "batch_seconds": [
+       0.38801179199072067,
+       0.38721658299618866,
+       0.38650729099754244,
+       0.38545812500524335,
+       0.39569979200314265
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 408413,
+       "whitespace_words": 240495,
+       "tokens_per_word": 1.6982182581758456,
+       "characters_per_token": 3.6513039496783892,
+       "exact_round_trips": 94,
+       "round_trip_percent": 0.6360376209486434,
+       "texts_with_unknowns": 11971,
+       "over_510_token_percent": 0.006766357669666418,
+       "sequence_p95": 117
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 283255,
+       "whitespace_words": 138501,
+       "tokens_per_word": 2.0451476884643434,
+       "characters_per_token": 3.2434908474695945,
+       "exact_round_trips": 93,
+       "round_trip_percent": 1.8883248730964468,
+       "texts_with_unknowns": 2123,
+       "over_510_token_percent": 0.02030456852791878,
+       "sequence_p95": 197
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 93413,
+       "whitespace_words": 77760,
+       "tokens_per_word": 1.2012988683127572,
+       "characters_per_token": 4.812060419855909,
+       "exact_round_trips": 1,
+       "round_trip_percent": 0.016233766233766232,
+       "texts_with_unknowns": 6156,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 40
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 3099,
+       "whitespace_words": 2023,
+       "tokens_per_word": 1.5318833415719229,
+       "characters_per_token": 3.666343981929655,
+       "exact_round_trips": 0,
+       "round_trip_percent": 0.0,
+       "texts_with_unknowns": 154,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 53
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 28646,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.2897213092611768,
+       "characters_per_token": 3.897018780981638,
+       "exact_round_trips": 0,
+       "round_trip_percent": 0.0,
+       "texts_with_unknowns": 3538,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 13
+      }
+     }
+    },
+    "MuRIL (Google)": {
+     "speed": {
+      "single_MB_per_second": 10.058542970855031,
+      "batch_MB_per_second": 10.026876925719632,
+      "single_seconds": [
+       0.29861720799817704,
+       0.29957191699941177,
+       0.30138291700859554,
+       0.30174595800053794,
+       0.2995341659989208
+      ],
+      "batch_seconds": [
+       0.30126379200373776,
+       0.30118350000702776,
+       0.3005180000036489,
+       0.2997560830117436,
+       0.300200625002617
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 391813,
+       "whitespace_words": 240495,
+       "tokens_per_word": 1.6291939541362606,
+       "characters_per_token": 3.8059992904778555,
+       "exact_round_trips": 7418,
+       "round_trip_percent": 50.192841193585494,
+       "texts_with_unknowns": 352,
+       "over_510_token_percent": 0.006766357669666418,
+       "sequence_p95": 90
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 207983,
+       "whitespace_words": 138501,
+       "tokens_per_word": 1.5016714680760428,
+       "characters_per_token": 4.417356226230028,
+       "exact_round_trips": 1427,
+       "round_trip_percent": 28.9746192893401,
+       "texts_with_unknowns": 75,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 139
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 150763,
+       "whitespace_words": 77760,
+       "tokens_per_word": 1.9388245884773663,
+       "characters_per_token": 2.981560462447683,
+       "exact_round_trips": 3620,
+       "round_trip_percent": 58.76623376623377,
+       "texts_with_unknowns": 270,
+       "over_510_token_percent": 0.016233766233766232,
+       "sequence_p95": 65
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 3770,
+       "whitespace_words": 2023,
+       "tokens_per_word": 1.8635689569945626,
+       "characters_per_token": 3.013793103448276,
+       "exact_round_trips": 63,
+       "round_trip_percent": 40.38461538461539,
+       "texts_with_unknowns": 7,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 70
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 29297,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.319031110710909,
+       "characters_per_token": 3.8104242755230913,
+       "exact_round_trips": 2308,
+       "round_trip_percent": 65.23459581684567,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 13
+      }
+     }
+    },
+    "mBERT cased": {
+     "speed": {
+      "single_MB_per_second": 8.890518084718225,
+      "batch_MB_per_second": 8.827031792659412,
+      "single_seconds": [
+       0.34200725000118837,
+       0.33892929200374056,
+       0.33811283399700187,
+       0.3379068750073202,
+       0.3393585419980809
+      ],
+      "batch_seconds": [
+       0.33993229099723976,
+       0.3420657079986995,
+       0.3413669589936035,
+       0.34677929199824575,
+       0.33952237499761395
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 596738,
+       "whitespace_words": 240495,
+       "tokens_per_word": 2.481290671323728,
+       "characters_per_token": 2.4989861547278704,
+       "exact_round_trips": 7373,
+       "round_trip_percent": 49.8883550984505,
+       "texts_with_unknowns": 1641,
+       "over_510_token_percent": 0.16915894174166046,
+       "sequence_p95": 164
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 403210,
+       "whitespace_words": 138501,
+       "tokens_per_word": 2.9112425181045625,
+       "characters_per_token": 2.2785521192430744,
+       "exact_round_trips": 1404,
+       "round_trip_percent": 28.507614213197968,
+       "texts_with_unknowns": 327,
+       "over_510_token_percent": 0.4873096446700508,
+       "sequence_p95": 278
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 157802,
+       "whitespace_words": 77760,
+       "tokens_per_word": 2.02934670781893,
+       "characters_per_token": 2.8485633895641373,
+       "exact_round_trips": 3598,
+       "round_trip_percent": 58.40909090909091,
+       "texts_with_unknowns": 1286,
+       "over_510_token_percent": 0.016233766233766232,
+       "sequence_p95": 70
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 4939,
+       "whitespace_words": 2023,
+       "tokens_per_word": 2.441423628274839,
+       "characters_per_token": 2.3004656813120063,
+       "exact_round_trips": 63,
+       "round_trip_percent": 40.38461538461539,
+       "texts_with_unknowns": 26,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 97
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 30787,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.386114988068975,
+       "characters_per_token": 3.626010978659824,
+       "exact_round_trips": 2308,
+       "round_trip_percent": 65.23459581684567,
+       "texts_with_unknowns": 2,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 14
+      }
+     }
+    },
+    "XLM-R / mE5 / BGE-M3": {
+     "speed": {
+      "single_MB_per_second": 7.539272871141336,
+      "batch_MB_per_second": 7.598480714798869,
+      "single_seconds": [
+       0.4157717920024879,
+       0.3926667909981916,
+       0.39251649999641813,
+       0.40985362499486655,
+       0.39967475000594277
+      ],
+      "batch_seconds": [
+       0.3992587079992518,
+       0.3961517090065172,
+       0.3956298330012942,
+       0.3965604590048315,
+       0.39683362501091324
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 489304,
+       "whitespace_words": 240495,
+       "tokens_per_word": 2.0345703652882596,
+       "characters_per_token": 3.047675882477969,
+       "exact_round_trips": 13538,
+       "round_trip_percent": 91.60295013194397,
+       "texts_with_unknowns": 20,
+       "over_510_token_percent": 0.04736450368766493,
+       "sequence_p95": 130
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 309506,
+       "whitespace_words": 138501,
+       "tokens_per_word": 2.234684226106671,
+       "characters_per_token": 2.9683915659147155,
+       "exact_round_trips": 4738,
+       "round_trip_percent": 96.20304568527919,
+       "texts_with_unknowns": 4,
+       "over_510_token_percent": 0.1218274111675127,
+       "sequence_p95": 219
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 145213,
+       "whitespace_words": 77760,
+       "tokens_per_word": 1.8674511316872429,
+       "characters_per_token": 3.0955148643716472,
+       "exact_round_trips": 5126,
+       "round_trip_percent": 83.21428571428571,
+       "texts_with_unknowns": 16,
+       "over_510_token_percent": 0.016233766233766232,
+       "sequence_p95": 64
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 3901,
+       "whitespace_words": 2023,
+       "tokens_per_word": 1.9283242708848245,
+       "characters_per_token": 2.9125865162778775,
+       "exact_round_trips": 136,
+       "round_trip_percent": 87.17948717948718,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 78
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 30684,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.3814776462113367,
+       "characters_per_token": 3.638182766262547,
+       "exact_round_trips": 3538,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 14
+      }
+     }
+    },
+    "Qwen3": {
+     "speed": {
+      "single_MB_per_second": 6.589186613335435,
+      "batch_MB_per_second": 6.482844092663724,
+      "single_seconds": [
+       0.45847133299685083,
+       0.45471258299949113,
+       0.45764245800091885,
+       0.45548683300148696,
+       0.4573033329943428
+      ],
+      "batch_seconds": [
+       0.47464374999981374,
+       0.4605491669935873,
+       0.4648047919909004,
+       0.4590290409978479,
+       0.46765249999589287
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 1166931,
+       "whitespace_words": 240495,
+       "tokens_per_word": 4.852204827543193,
+       "characters_per_token": 1.2779161749923518,
+       "exact_round_trips": 14779,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 3.3696461194938765,
+       "sequence_p95": 408
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 971231,
+       "whitespace_words": 138501,
+       "tokens_per_word": 7.012447563555498,
+       "characters_per_token": 0.9459490069818611,
+       "exact_round_trips": 4925,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 10.091370558375635,
+       "sequence_p95": 696
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 160605,
+       "whitespace_words": 77760,
+       "tokens_per_word": 2.0653935185185186,
+       "characters_per_token": 2.7988481056006975,
+       "exact_round_trips": 6160,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.016233766233766232,
+       "sequence_p95": 71
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 7394,
+       "whitespace_words": 2023,
+       "tokens_per_word": 3.6549678695007413,
+       "characters_per_token": 1.5366513389234515,
+       "exact_round_trips": 156,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 145
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 27701,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.2471748232857593,
+       "characters_per_token": 4.0299628172268145,
+       "exact_round_trips": 3538,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 13
+      }
+     }
+    }
+   }
+  },
+  "Unseen-source BanglishRev reviews": {
+   "source": "data/raw/banglishrev/reviews-v1-head64m.json",
+   "source_sha256": "553b8e1eab436e71fb29d7159acf508f0ddc34778f6eab8a9d710ba655497f72",
+   "records": 10000,
+   "utf8_bytes": 1297966,
+   "ordered_text_sha256": "89ebf28fe456c073b1d2c6055dbf48296bfd5e65a5e789ea2494f889156be879",
+   "candidates": {
+    "banglatok bn-bpe-58k": {
+     "speed": {
+      "single_MB_per_second": 58.491745866366244,
+      "batch_MB_per_second": 71.58344582122452,
+      "single_seconds": [
+       0.022244416002649814,
+       0.021859250002307817,
+       0.023687125009018928,
+       0.021898499995586462,
+       0.02219058400078211
+      ],
+      "batch_seconds": [
+       0.01813220899202861,
+       0.01831241699983366,
+       0.01816508299089037,
+       0.017975374998059124,
+       0.018003333010710776
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 10000,
+       "tokens": 176494,
+       "whitespace_words": 127947,
+       "tokens_per_word": 1.3794305454602296,
+       "characters_per_token": 4.195604383151835,
+       "exact_round_trips": 10000,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 50
+      },
+      "bengali script": {
+       "texts": 3401,
+       "tokens": 65298,
+       "whitespace_words": 47288,
+       "tokens_per_word": 1.380857722889528,
+       "characters_per_token": 4.285904621887347,
+       "exact_round_trips": 3401,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 53
+      },
+      "latin script": {
+       "texts": 6189,
+       "tokens": 96103,
+       "whitespace_words": 70018,
+       "tokens_per_word": 1.3725470593276015,
+       "characters_per_token": 4.1548338761537105,
+       "exact_round_trips": 6189,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 44
+      },
+      "mixed script": {
+       "texts": 410,
+       "tokens": 15093,
+       "whitespace_words": 10641,
+       "tokens_per_word": 1.4183817310403157,
+       "characters_per_token": 4.064533227323925,
+       "exact_round_trips": 410,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 110
+      }
+     }
+    },
+    "banglatok bn-bpe-28k": {
+     "speed": {
+      "single_MB_per_second": 61.5716368017258,
+      "batch_MB_per_second": 72.8669044358345,
+      "single_seconds": [
+       0.0214040420105448,
+       0.020820334000745788,
+       0.021166666003409773,
+       0.01951325000845827,
+       0.021080582999275066
+      ],
+      "batch_seconds": [
+       0.017838291998486966,
+       0.017411249995348044,
+       0.018014665998634882,
+       0.017812833000789396,
+       0.01751712500117719
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 10000,
+       "tokens": 203100,
+       "whitespace_words": 127947,
+       "tokens_per_word": 1.5873760228844755,
+       "characters_per_token": 3.6459822747415065,
+       "exact_round_trips": 10000,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 58
+      },
+      "bengali script": {
+       "texts": 3401,
+       "tokens": 75799,
+       "whitespace_words": 47288,
+       "tokens_per_word": 1.6029225173405515,
+       "characters_per_token": 3.6921463343843586,
+       "exact_round_trips": 3401,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 61
+      },
+      "latin script": {
+       "texts": 6189,
+       "tokens": 109929,
+       "whitespace_words": 70018,
+       "tokens_per_word": 1.570010568710903,
+       "characters_per_token": 3.6322717390315566,
+       "exact_round_trips": 6189,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 50
+      },
+      "mixed script": {
+       "texts": 410,
+       "tokens": 17372,
+       "whitespace_words": 10641,
+       "tokens_per_word": 1.6325533314538108,
+       "characters_per_token": 3.531314759382915,
+       "exact_round_trips": 410,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 128
+      }
+     }
+    },
+    "BNLP bn_spm (SentencePiece)": {
+     "speed": {
+      "single_MB_per_second": 40.0931098870576,
+      "batch_MB_per_second": 39.22744924531148,
+      "single_seconds": [
+       0.03208404099859763,
+       0.03216858400264755,
+       0.03260600000794511,
+       0.03237379199708812,
+       0.032633584007271565
+      ],
+      "batch_seconds": [
+       0.03352175001055002,
+       0.03303495800355449,
+       0.03362570899480488,
+       0.03308820800157264,
+       0.03301679099968169
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 10000,
+       "tokens": 233509,
+       "whitespace_words": 127947,
+       "tokens_per_word": 1.8250447450897638,
+       "characters_per_token": 3.1711796975705435,
+       "exact_round_trips": 8014,
+       "round_trip_percent": 80.14,
+       "texts_with_unknowns": 1932,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 66
+      },
+      "bengali script": {
+       "texts": 3401,
+       "tokens": 66018,
+       "whitespace_words": 47288,
+       "tokens_per_word": 1.3960835729994925,
+       "characters_per_token": 4.239162046714532,
+       "exact_round_trips": 2897,
+       "round_trip_percent": 85.1808291678918,
+       "texts_with_unknowns": 473,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 53
+      },
+      "latin script": {
+       "texts": 6189,
+       "tokens": 151052,
+       "whitespace_words": 70018,
+       "tokens_per_word": 2.157330972035762,
+       "characters_per_token": 2.643407568254641,
+       "exact_round_trips": 4847,
+       "round_trip_percent": 78.31636774923251,
+       "texts_with_unknowns": 1322,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 69
+      },
+      "mixed script": {
+       "texts": 410,
+       "tokens": 16439,
+       "whitespace_words": 10641,
+       "tokens_per_word": 1.5448736021050653,
+       "characters_per_token": 3.731735507025975,
+       "exact_round_trips": 270,
+       "round_trip_percent": 65.85365853658537,
+       "texts_with_unknowns": 137,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 114
+      }
+     }
+    },
+    "SentencePiece Unigram 27,760, same training data": {
+     "speed": {
+      "single_MB_per_second": 46.401224456056944,
+      "batch_MB_per_second": 43.16559348396008,
+      "single_seconds": [
+       0.028532667012768798,
+       0.027606334013398737,
+       0.027972666997811757,
+       0.027652083997963928,
+       0.02836729199043475
+      ],
+      "batch_seconds": [
+       0.03010458299831953,
+       0.03060941700823605,
+       0.029557834001025185,
+       0.030069457992794923,
+       0.029173834001994692
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 10000,
+       "tokens": 201076,
+       "whitespace_words": 127947,
+       "tokens_per_word": 1.5715569728090537,
+       "characters_per_token": 3.682682169925799,
+       "exact_round_trips": 10000,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 57
+      },
+      "bengali script": {
+       "texts": 3401,
+       "tokens": 74290,
+       "whitespace_words": 47288,
+       "tokens_per_word": 1.571011673151751,
+       "characters_per_token": 3.7671422802530623,
+       "exact_round_trips": 3401,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 59
+      },
+      "latin script": {
+       "texts": 6189,
+       "tokens": 109612,
+       "whitespace_words": 70018,
+       "tokens_per_word": 1.5654831614727642,
+       "characters_per_token": 3.6427763383571143,
+       "exact_round_trips": 6189,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 50
+      },
+      "mixed script": {
+       "texts": 410,
+       "tokens": 17174,
+       "whitespace_words": 10641,
+       "tokens_per_word": 1.6139460577013438,
+       "characters_per_token": 3.5720274834051473,
+       "exact_round_trips": 410,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 121
+      }
+     }
+    },
+    "SentencePiece BPE 27,760, same training data": {
+     "speed": {
+      "single_MB_per_second": 16.566694429713756,
+      "batch_MB_per_second": 16.418362990589777,
+      "single_seconds": [
+       0.07834791699133348,
+       0.07798591699975077,
+       0.07944770899484865,
+       0.0778511249955045,
+       0.07856429199455306
+      ],
+      "batch_seconds": [
+       0.07905575000040699,
+       0.07874129200354218,
+       0.07936283299932256,
+       0.07947787499870174,
+       0.07893187500303611
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 10000,
+       "tokens": 201958,
+       "whitespace_words": 127947,
+       "tokens_per_word": 1.5784504521403393,
+       "characters_per_token": 3.6665989958308165,
+       "exact_round_trips": 10000,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 57
+      },
+      "bengali script": {
+       "texts": 3401,
+       "tokens": 74215,
+       "whitespace_words": 47288,
+       "tokens_per_word": 1.5694256470986296,
+       "characters_per_token": 3.7709492690156976,
+       "exact_round_trips": 3401,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 59
+      },
+      "latin script": {
+       "texts": 6189,
+       "tokens": 110615,
+       "whitespace_words": 70018,
+       "tokens_per_word": 1.5798080493587363,
+       "characters_per_token": 3.6097455137187544,
+       "exact_round_trips": 6189,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 50
+      },
+      "mixed script": {
+       "texts": 410,
+       "tokens": 17128,
+       "whitespace_words": 10641,
+       "tokens_per_word": 1.6096231557184475,
+       "characters_per_token": 3.58162073797291,
+       "exact_round_trips": 410,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 121
+      }
+     }
+    },
+    "SentencePiece Unigram 57,925, same training data": {
+     "speed": {
+      "single_MB_per_second": 42.421060124553215,
+      "batch_MB_per_second": 41.73244602610532,
+      "single_seconds": [
+       0.030414666995056905,
+       0.03100724999967497,
+       0.032322541999747045,
+       0.030597207995015197,
+       0.029875667009036988
+      ],
+      "batch_seconds": [
+       0.030347834006533958,
+       0.030887667002389207,
+       0.03165245799755212,
+       0.031651666009565815,
+       0.031102082997676916
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 10000,
+       "tokens": 180381,
+       "whitespace_words": 127947,
+       "tokens_per_word": 1.4098103120823466,
+       "characters_per_token": 4.105194006020589,
+       "exact_round_trips": 10000,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 51
+      },
+      "bengali script": {
+       "texts": 3401,
+       "tokens": 66065,
+       "whitespace_words": 47288,
+       "tokens_per_word": 1.3970774826594485,
+       "characters_per_token": 4.236146219632181,
+       "exact_round_trips": 3401,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 53
+      },
+      "latin script": {
+       "texts": 6189,
+       "tokens": 98997,
+       "whitespace_words": 70018,
+       "tokens_per_word": 1.4138792881830387,
+       "characters_per_token": 4.033374748729759,
+       "exact_round_trips": 6189,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 45
+      },
+      "mixed script": {
+       "texts": 410,
+       "tokens": 15319,
+       "whitespace_words": 10641,
+       "tokens_per_word": 1.4396203364345457,
+       "characters_per_token": 4.004569488870031,
+       "exact_round_trips": 410,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 109
+      }
+     }
+    },
+    "SentencePiece BPE 57,925, same training data": {
+     "speed": {
+      "single_MB_per_second": 17.67326730374642,
+      "batch_MB_per_second": 17.38057321943559,
+      "single_seconds": [
+       0.07413829199504107,
+       0.07341037500009406,
+       0.07705829200858716,
+       0.0733406249928521,
+       0.07344233398907818
+      ],
+      "batch_seconds": [
+       0.07469199999468401,
+       0.0746484999981476,
+       0.07458608300657943,
+       0.07467912499851082,
+       0.07529791700653732
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 10000,
+       "tokens": 180072,
+       "whitespace_words": 127947,
+       "tokens_per_word": 1.4073952495955357,
+       "characters_per_token": 4.11223843795815,
+       "exact_round_trips": 10000,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 51
+      },
+      "bengali script": {
+       "texts": 3401,
+       "tokens": 65825,
+       "whitespace_words": 47288,
+       "tokens_per_word": 1.3920021992894602,
+       "characters_per_token": 4.251591340676035,
+       "exact_round_trips": 3401,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 53
+      },
+      "latin script": {
+       "texts": 6189,
+       "tokens": 99052,
+       "whitespace_words": 70018,
+       "tokens_per_word": 1.4146648004798765,
+       "characters_per_token": 4.031135161329403,
+       "exact_round_trips": 6189,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 45
+      },
+      "mixed script": {
+       "texts": 410,
+       "tokens": 15195,
+       "whitespace_words": 10641,
+       "tokens_per_word": 1.427967296306738,
+       "characters_per_token": 4.037249095097072,
+       "exact_round_trips": 410,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 106
+      }
+     }
+    },
+    "tiktoken o200k_base": {
+     "speed": {
+      "single_MB_per_second": 37.349389955808746,
+      "batch_MB_per_second": 12.106042569685222,
+      "single_seconds": [
+       0.03428833399084397,
+       0.034855124991736375,
+       0.03466512500017416,
+       0.034752000006847084,
+       0.03542420799203683
+      ],
+      "batch_seconds": [
+       0.10194766700442415,
+       0.10895370799698867,
+       0.10721637500682846,
+       0.1083702500036452,
+       0.10252279200358316
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 10000,
+       "tokens": 227807,
+       "whitespace_words": 127947,
+       "tokens_per_word": 1.7804794172587086,
+       "characters_per_token": 3.2505541971932383,
+       "exact_round_trips": 10000,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 67
+      },
+      "bengali script": {
+       "texts": 3401,
+       "tokens": 106581,
+       "whitespace_words": 47288,
+       "tokens_per_word": 2.253869903569616,
+       "characters_per_token": 2.6258057252230698,
+       "exact_round_trips": 3401,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 83
+      },
+      "latin script": {
+       "texts": 6189,
+       "tokens": 99409,
+       "whitespace_words": 70018,
+       "tokens_per_word": 1.419763489388443,
+       "characters_per_token": 4.016658451448058,
+       "exact_round_trips": 6189,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 47
+      },
+      "mixed script": {
+       "texts": 410,
+       "tokens": 21817,
+       "whitespace_words": 10641,
+       "tokens_per_word": 2.0502772295836857,
+       "characters_per_token": 2.8118439748819726,
+       "exact_round_trips": 410,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 153
+      }
+     }
+    },
+    "tiktoken cl100k_base": {
+     "speed": {
+      "single_MB_per_second": 24.481590624024545,
+      "batch_MB_per_second": 9.71848167992609,
+      "single_seconds": [
+       0.05258604099799413,
+       0.05275375000201166,
+       0.05541691700636875,
+       0.05359304099692963,
+       0.05301804200280458
+      ],
+      "batch_seconds": [
+       0.13451545899442863,
+       0.13355645899719093,
+       0.1375255000020843,
+       0.12721454199345317,
+       0.13347687499481253
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 10000,
+       "tokens": 515248,
+       "whitespace_words": 127947,
+       "tokens_per_word": 4.02704244726332,
+       "characters_per_token": 1.4371700617954848,
+       "exact_round_trips": 10000,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.39,
+       "sequence_p95": 194
+      },
+      "bengali script": {
+       "texts": 3401,
+       "tokens": 344190,
+       "whitespace_words": 47288,
+       "tokens_per_word": 7.278590762984266,
+       "characters_per_token": 0.8131003224962956,
+       "exact_round_trips": 3401,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.5880623346074684,
+       "sequence_p95": 271
+      },
+      "latin script": {
+       "texts": 6189,
+       "tokens": 106390,
+       "whitespace_words": 70018,
+       "tokens_per_word": 1.5194664229198207,
+       "characters_per_token": 3.753097095591691,
+       "exact_round_trips": 6189,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 50
+      },
+      "mixed script": {
+       "texts": 410,
+       "tokens": 64668,
+       "whitespace_words": 10641,
+       "tokens_per_word": 6.077248378911756,
+       "characters_per_token": 0.9486299251561824,
+       "exact_round_trips": 410,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 4.634146341463414,
+       "sequence_p95": 481
+      }
+     }
+    },
+    "BanglaBERT (csebuetnlp)": {
+     "speed": {
+      "single_MB_per_second": 9.122080422585418,
+      "batch_MB_per_second": 9.166005797206735,
+      "single_seconds": [
+       0.14104249999218155,
+       0.14228837500559166,
+       0.1441190839977935,
+       0.13960491699981503,
+       0.14234429098723922
+      ],
+      "batch_seconds": [
+       0.14158558299823198,
+       0.14276854100171477,
+       0.14304883300792426,
+       0.14160650000849273,
+       0.1412315000052331
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 10000,
+       "tokens": 226601,
+       "whitespace_words": 127947,
+       "tokens_per_word": 1.771053639397563,
+       "characters_per_token": 3.267854069487778,
+       "exact_round_trips": 5110,
+       "round_trip_percent": 51.1,
+       "texts_with_unknowns": 1110,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 64
+      },
+      "bengali script": {
+       "texts": 3401,
+       "tokens": 63530,
+       "whitespace_words": 47288,
+       "tokens_per_word": 1.3434698020639486,
+       "characters_per_token": 4.405178655753187,
+       "exact_round_trips": 1150,
+       "round_trip_percent": 33.81358423992943,
+       "texts_with_unknowns": 301,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 51
+      },
+      "latin script": {
+       "texts": 6189,
+       "tokens": 146947,
+       "whitespace_words": 70018,
+       "tokens_per_word": 2.0987031906081293,
+       "characters_per_token": 2.7172517982674025,
+       "exact_round_trips": 3888,
+       "round_trip_percent": 62.82113427047988,
+       "texts_with_unknowns": 744,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 67
+      },
+      "mixed script": {
+       "texts": 410,
+       "tokens": 16124,
+       "whitespace_words": 10641,
+       "tokens_per_word": 1.5152711211352317,
+       "characters_per_token": 3.8046390473827834,
+       "exact_round_trips": 72,
+       "round_trip_percent": 17.5609756097561,
+       "texts_with_unknowns": 65,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 113
+      }
+     }
+    },
+    "Bangla-BERT (sagorsarker)": {
+     "speed": {
+      "single_MB_per_second": 6.895055295759889,
+      "batch_MB_per_second": 6.857274191660022,
+      "single_seconds": [
+       0.1882459159969585,
+       0.19046524999430403,
+       0.18797470899880864,
+       0.18796883299364708,
+       0.1895480000093812
+      ],
+      "batch_seconds": [
+       0.18857408298936207,
+       0.19008216699876357,
+       0.1889735419972567,
+       0.18928308300382923,
+       0.19167737499810755
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 10000,
+       "tokens": 192769,
+       "whitespace_words": 127947,
+       "tokens_per_word": 1.506631652168476,
+       "characters_per_token": 3.8413800974223036,
+       "exact_round_trips": 32,
+       "round_trip_percent": 0.32,
+       "texts_with_unknowns": 7410,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 57
+      },
+      "bengali script": {
+       "texts": 3401,
+       "tokens": 88232,
+       "whitespace_words": 47288,
+       "tokens_per_word": 1.8658433429199797,
+       "characters_per_token": 3.1718764167195577,
+       "exact_round_trips": 32,
+       "round_trip_percent": 0.9408997353719494,
+       "texts_with_unknowns": 817,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 68
+      },
+      "latin script": {
+       "texts": 6189,
+       "tokens": 86389,
+       "whitespace_words": 70018,
+       "tokens_per_word": 1.2338113056642577,
+       "characters_per_token": 4.622023637268634,
+       "exact_round_trips": 0,
+       "round_trip_percent": 0.0,
+       "texts_with_unknowns": 6189,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 40
+      },
+      "mixed script": {
+       "texts": 410,
+       "tokens": 18148,
+       "whitespace_words": 10641,
+       "tokens_per_word": 1.7054788083826709,
+       "characters_per_token": 3.3803173903460437,
+       "exact_round_trips": 0,
+       "round_trip_percent": 0.0,
+       "texts_with_unknowns": 404,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 138
+      }
+     }
+    },
+    "MuRIL (Google)": {
+     "speed": {
+      "single_MB_per_second": 8.803153960591999,
+      "batch_MB_per_second": 8.860788787930673,
+      "single_seconds": [
+       0.14522937500441913,
+       0.14744329200766515,
+       0.14701187500031665,
+       0.14756825000222307,
+       0.14756475000467617
+      ],
+      "batch_seconds": [
+       0.1464842499990482,
+       0.1463940410030773,
+       0.1506294589926256,
+       0.1454825830005575,
+       0.14690566698845942
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 10000,
+       "tokens": 191654,
+       "whitespace_words": 127947,
+       "tokens_per_word": 1.4979171063018282,
+       "characters_per_token": 3.8637283855280873,
+       "exact_round_trips": 4794,
+       "round_trip_percent": 47.94,
+       "texts_with_unknowns": 1617,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 54
+      },
+      "bengali script": {
+       "texts": 3401,
+       "tokens": 70907,
+       "whitespace_words": 47288,
+       "tokens_per_word": 1.4994713246489595,
+       "characters_per_token": 3.94687407449194,
+       "exact_round_trips": 1082,
+       "round_trip_percent": 31.81417230226404,
+       "texts_with_unknowns": 462,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 57
+      },
+      "latin script": {
+       "texts": 6189,
+       "tokens": 104933,
+       "whitespace_words": 70018,
+       "tokens_per_word": 1.4986574880744952,
+       "characters_per_token": 3.805209038148152,
+       "exact_round_trips": 3653,
+       "round_trip_percent": 59.024074971724026,
+       "texts_with_unknowns": 1042,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 49
+      },
+      "mixed script": {
+       "texts": 410,
+       "tokens": 15814,
+       "whitespace_words": 10641,
+       "tokens_per_word": 1.4861385208157127,
+       "characters_per_token": 3.8792209434678133,
+       "exact_round_trips": 59,
+       "round_trip_percent": 14.390243902439025,
+       "texts_with_unknowns": 113,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 114
+      }
+     }
+    },
+    "mBERT cased": {
+     "speed": {
+      "single_MB_per_second": 8.068770753764127,
+      "batch_MB_per_second": 8.063732891466579,
+      "single_seconds": [
+       0.1593827920005424,
+       0.16134379200229887,
+       0.1608629169932101,
+       0.15891716700571124,
+       0.16184291699028108
+      ],
+      "batch_seconds": [
+       0.15856404100486543,
+       0.16111733399156947,
+       0.16175333299906924,
+       0.16096341700176708,
+       0.16024124999239575
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 10000,
+       "tokens": 271559,
+       "whitespace_words": 127947,
+       "tokens_per_word": 2.1224335076242506,
+       "characters_per_token": 2.7268438902779875,
+       "exact_round_trips": 4797,
+       "round_trip_percent": 47.97,
+       "texts_with_unknowns": 1706,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 82
+      },
+      "bengali script": {
+       "texts": 3401,
+       "tokens": 132649,
+       "whitespace_words": 47288,
+       "tokens_per_word": 2.8051302656064965,
+       "characters_per_token": 2.109785976524512,
+       "exact_round_trips": 1085,
+       "round_trip_percent": 31.902381652455162,
+       "texts_with_unknowns": 460,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 105
+      },
+      "latin script": {
+       "texts": 6189,
+       "tokens": 112310,
+       "whitespace_words": 70018,
+       "tokens_per_word": 1.604016110143106,
+       "characters_per_token": 3.5552666726026176,
+       "exact_round_trips": 3653,
+       "round_trip_percent": 59.024074971724026,
+       "texts_with_unknowns": 1133,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 53
+      },
+      "mixed script": {
+       "texts": 410,
+       "tokens": 26600,
+       "whitespace_words": 10641,
+       "tokens_per_word": 2.4997650596748424,
+       "characters_per_token": 2.3062406015037595,
+       "exact_round_trips": 59,
+       "round_trip_percent": 14.390243902439025,
+       "texts_with_unknowns": 113,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 196
+      }
+     }
+    },
+    "XLM-R / mE5 / BGE-M3": {
+     "speed": {
+      "single_MB_per_second": 6.464821935310502,
+      "batch_MB_per_second": 6.436765562494928,
+      "single_seconds": [
+       0.20528516700142063,
+       0.19965374999446794,
+       0.2007736660016235,
+       0.1992040420009289,
+       0.201326833004714
+      ],
+      "batch_seconds": [
+       0.20164879199001007,
+       0.199986749998061,
+       0.20393920900824014,
+       0.2065990410046652,
+       0.1999610000057146
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 10000,
+       "tokens": 222594,
+       "whitespace_words": 127947,
+       "tokens_per_word": 1.7397359844310534,
+       "characters_per_token": 3.326679964419526,
+       "exact_round_trips": 9816,
+       "round_trip_percent": 98.16,
+       "texts_with_unknowns": 109,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 64
+      },
+      "bengali script": {
+       "texts": 3401,
+       "tokens": 95690,
+       "whitespace_words": 47288,
+       "tokens_per_word": 2.0235577736423616,
+       "characters_per_token": 2.9246629741874806,
+       "exact_round_trips": 3338,
+       "round_trip_percent": 98.14760364598648,
+       "texts_with_unknowns": 25,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 77
+      },
+      "latin script": {
+       "texts": 6189,
+       "tokens": 106398,
+       "whitespace_words": 70018,
+       "tokens_per_word": 1.5195806792539062,
+       "characters_per_token": 3.752814902535762,
+       "exact_round_trips": 6086,
+       "round_trip_percent": 98.33575698820488,
+       "texts_with_unknowns": 75,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 48
+      },
+      "mixed script": {
+       "texts": 410,
+       "tokens": 20506,
+       "whitespace_words": 10641,
+       "tokens_per_word": 1.92707452307114,
+       "characters_per_token": 2.9916122110601777,
+       "exact_round_trips": 392,
+       "round_trip_percent": 95.60975609756098,
+       "texts_with_unknowns": 9,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 150
+      }
+     }
+    },
+    "Qwen3": {
+     "speed": {
+      "single_MB_per_second": 6.01796977620889,
+      "batch_MB_per_second": 5.987060378050252,
+      "single_seconds": [
+       0.21495829099148978,
+       0.2156817079958273,
+       0.22366012500424404,
+       0.21507004198792856,
+       0.2160145410016412
+      ],
+      "batch_seconds": [
+       0.21430787500867154,
+       0.21679520800535101,
+       0.21457120799459517,
+       0.2186983749998035,
+       0.21746745800192002
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 10000,
+       "tokens": 459051,
+       "whitespace_words": 127947,
+       "tokens_per_word": 3.5878215198480623,
+       "characters_per_token": 1.61310834743852,
+       "exact_round_trips": 10000,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.23,
+       "sequence_p95": 167
+      },
+      "bengali script": {
+       "texts": 3401,
+       "tokens": 297069,
+       "whitespace_words": 47288,
+       "tokens_per_word": 6.282122314329217,
+       "characters_per_token": 0.9420740636013856,
+       "exact_round_trips": 3401,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.3234342840341076,
+       "sequence_p95": 234
+      },
+      "latin script": {
+       "texts": 6189,
+       "tokens": 105338,
+       "whitespace_words": 70018,
+       "tokens_per_word": 1.5044417149875746,
+       "characters_per_token": 3.7905788984032354,
+       "exact_round_trips": 6189,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 50
+      },
+      "mixed script": {
+       "texts": 410,
+       "tokens": 56644,
+       "whitespace_words": 10641,
+       "tokens_per_word": 5.323183911286534,
+       "characters_per_token": 1.0830096744580184,
+       "exact_round_trips": 410,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 2.926829268292683,
+       "sequence_p95": 420
+      }
+     }
+    }
+   }
+  }
+ }
+}
