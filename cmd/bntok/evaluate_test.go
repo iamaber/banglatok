@@ -42,7 +42,7 @@ func TestEvaluateCountsFusedByteFallback(t *testing.T) {
 		t.Fatal(err)
 	}
 	m := result.Buckets["mixed"]
-	if m.Tokens != 5 || m.SpaceTokens != 1 || m.FallbackTokens != 4 || m.Fertility != 2.5 || m.FallbackRate != .8 || m.UsedIDs != 5 {
+	if m.Tokens != 5 || m.SpaceTokens != 1 || m.FallbackTokens != 4 || m.Fertility != 2.5 || m.FallbackRate != .8 || m.UsedIDs != 5 || m.ByteBaselineTokens != 6 {
 		t.Fatalf("incorrect fused metrics: %+v", m)
 	}
 }

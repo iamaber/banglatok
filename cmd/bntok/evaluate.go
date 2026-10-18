@@ -80,7 +80,6 @@ func evaluate(f *flag.FlagSet, args []string) error {
 		m.Words += len(strings.Fields(normalized))
 		m.Bytes += len(normalized)
 		m.Characters += utf8.RuneCountInString(normalized)
-		m.ByteBaselineTokens += len(normalized)
 		for _, id := range ids {
 			m.used[id] = true
 		}
@@ -110,6 +109,7 @@ func evaluate(f *flag.FlagSet, args []string) error {
 		return fmt.Errorf("empty evaluation set")
 	}
 	for _, m := range results {
+		m.ByteBaselineTokens = m.Bytes
 		sort.Ints(m.lengths)
 		m.P50 = m.lengths[(len(m.lengths)-1)*50/100]
 		m.P95 = m.lengths[(len(m.lengths)-1)*95/100]
@@ -122,5 +122,5 @@ func evaluate(f *flag.FlagSet, args []string) error {
 		m.VocabUtilization = float64(m.UsedIDs) / float64(t.VocabSize())
 		m.MBPerSecond = float64(m.Bytes) / 1e6 / m.EncodeSeconds
 	}
-	return corpus.CopyJSON(os.Stdout, map[string]any{"vocabulary": t.VocabSize(), "buckets": results, "round_trip_failures": 0, "max_tokens": *limit, "special_tokens": *special, "unknown_tokens": 0})
+	return writeJSON(os.Stdout, map[string]any{"vocabulary": t.VocabSize(), "buckets": results, "round_trip_failures": 0, "max_tokens": *limit, "special_tokens": *special, "unknown_tokens": 0})
 }

@@ -5,7 +5,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"io"
 	"math"
 	"os"
 	"path/filepath"
@@ -160,11 +159,4 @@ func WordCounts(path string, mixture map[string]float64) (map[string]float64, er
 		}
 	}
 	return counts, nil
-}
-
-// CopyJSON writes a small reproducibility report.
-func CopyJSON(w io.Writer, v any) error {
-	e := json.NewEncoder(w)
-	e.SetIndent("", "  ")
-	return e.Encode(v)
 }
