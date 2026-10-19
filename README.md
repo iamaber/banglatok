@@ -12,7 +12,7 @@
 ```python
 from banglatok import Tokenizer
 
-tok = Tokenizer.from_pretrained()          # bundled model; no download, no network
+tok = Tokenizer.from_pretrained()
 tok.tokenize("meetingটা ১০টায়, don't be late 🙂")
 # ['meeting', 'টা', ' ১০', 'টায়', ',', " don't", ' be', ' late', ' 🙂']
 ```

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2 — 2026-11-13
+
+- Added the full usage guide to both Hugging Face model repositories, with links from their model cards.
+- Simplified the introductory examples in the README and guide.
+
 ## 0.2.1 — 2026-11-13
 
 ### Documentation

@@ -61,7 +61,7 @@ banglatok --version
 ```python
 from banglatok import Tokenizer
 
-tok = Tokenizer.from_pretrained()            # bundled bn-bpe-58k; no download, no network
+tok = Tokenizer.from_pretrained()
 ids = tok.encode("আমি বাংলায় গান গাই।")       # [4504, 35499, 32651, 37272, 1101]
 tok.decode(ids)                              # 'আমি বাংলায় গান গাই।'
 tok.tokenize("আমি বাংলায় গান গাই।")           # ['আমি', ' বাংলায়', ' গান', ' গাই', '।']
@@ -87,7 +87,7 @@ available_models()                           # ['bn-bpe-28k', 'bn-bpe-58k']
 small = Tokenizer.from_pretrained("bn-bpe-28k")
 ```
 
-Both learned from Bengali Wikipedia, Tatoeba and BanglaTLit. [MODELS.md](MODELS.md) has the build steps, checksums and limitations.
+Both learned from Bengali Wikipedia, Tatoeba and BanglaTLit. [MODELS.md](https://github.com/iamaber/banglatok/blob/main/docs/MODELS.md) has the build steps, checksums and limitations.
 
 ## Encoding and decoding
 
@@ -220,7 +220,7 @@ if __name__ == "__main__":
 
 ## Your own models
 
-`Tokenizer(path)` loads any model in banglatok's JSON format, for example one trained with the Go `bntok` command:
+`Tokenizer(path)` loads models in banglatok's JSON format. To train one with the Go `bntok` command, run the following from a [clone of the repository](https://github.com/iamaber/banglatok):
 
 ```sh
 go run ./cmd/bntok train -algorithm bpe -vocab 384 \
@@ -231,7 +231,7 @@ go run ./cmd/bntok train -algorithm bpe -vocab 384 \
 tok = Tokenizer("models/toy-bpe.json")
 ```
 
-[TRAINING_AND_RESEARCH.md](TRAINING_AND_RESEARCH.md) describes the corpus format, training options and the model contract.
+[TRAINING_AND_RESEARCH.md](https://github.com/iamaber/banglatok/blob/main/docs/TRAINING_AND_RESEARCH.md) describes the corpus format, training options and the model contract.
 
 ## Guides
 

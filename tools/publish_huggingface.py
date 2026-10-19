@@ -27,45 +27,55 @@ tags:
 
 # banglatok `{name}`
 
-Fast, lossless subword tokenizers for Bangla, English and Banglish (romanized Bengali),
-including code-mixed text.
+`{name}` is a banglatok BPE tokenizer for Bangla, English and Banglish
+(romanized Bengali). It has {vocab:,} token IDs. This repository contains the
+tokenizer, not a language model.
 
-This is banglatok's `{name}` BPE model. Vocabulary: {vocab:,} IDs.
-This repository holds only the tokenizer; there are no model weights.
+## Use with Transformers
 
-It is the Hugging Face export of `{name}` from
-[banglatok](https://github.com/iamaber/banglatok) {version}, and gives exactly the same IDs.
+Install Transformers in your Python environment:
+
+```sh
+uv pip install transformers
+```
+
+You can use `pip install transformers` instead.
 
 ```python
 from transformers import AutoTokenizer
 
 tok = AutoTokenizer.from_pretrained("{repo}")
-tok("meetingটা ১০টায়, don't be late 🙂")
+encoded = tok("meetingটা ১০টায়, don't be late 🙂")
+text = tok.decode(encoded["input_ids"], skip_special_tokens=True)
 ```
 
-Or use banglatok, the native package with no Python dependencies. We recommend
-[uv](https://docs.astral.sh/uv/); pip works too:
+## Use with banglatok
 
-```sh
-uv add banglatok       # in a uv project
-# or: pip install banglatok
-```
+To use the native tokenizer, add banglatok to your project with `uv add banglatok`,
+or install it with `pip install banglatok`.
 
 ```python
 from banglatok import Tokenizer
 
 tok = Tokenizer.from_pretrained("{name}")
+ids = tok.encode("আমি বাংলা বলি")
+print(tok.decode(ids))
 ```
 
-- Lossless: decoding returns the input after NFC and whitespace normalization.
-  There is no `<unk>` output; unseen characters fall back to UTF-8 bytes.
-- `<s>` and `</s>` wrap each sequence when special tokens are added; `<pad>` is ID 0.
-  Literal `<s>` text in the input stays ordinary text.
-- Training data, build steps and limitations:
-  [docs/MODELS.md](https://github.com/iamaber/banglatok/blob/main/docs/MODELS.md).
-  Benchmarks: [benchmarks/POPULAR_COMPARISON.md](https://github.com/iamaber/banglatok/blob/main/benchmarks/POPULAR_COMPARISON.md).
-- [User guide](https://github.com/iamaber/banglatok/blob/main/docs/USAGE.md):
-  installation, Python API, CLI, token budgets, datasets and model training.
+Both versions use the same token IDs. Text is normalized to NFC, with whitespace
+collapsed and trimmed. Unseen characters use UTF-8 byte tokens. The Transformers
+tokenizer adds `<s>` and `</s>` by default; `banglatok.encode()` does not.
+
+## Guides
+
+The [usage guide](USAGE.md) covers installation, Python and command-line usage,
+token counting, dataset preprocessing, PyTorch batches, model training and
+troubleshooting.
+
+For the training data and model limitations, see
+[MODELS.md](https://github.com/iamaber/banglatok/blob/main/docs/MODELS.md).
+Benchmark results are in
+[POPULAR_COMPARISON.md](https://github.com/iamaber/banglatok/blob/main/benchmarks/POPULAR_COMPARISON.md).
 
 ## License
 
@@ -80,14 +90,16 @@ def main() -> None:
     parser.add_argument("--namespace", default="iamaber")
     parser.add_argument("--dry-run", type=Path, help="write folders here instead of uploading")
     args = parser.parse_args()
+    guide = (Path(__file__).resolve().parents[1] / "docs" / "USAGE.md").read_text(encoding="utf-8")
     for name in available_models():
         repo = f"{args.namespace}/banglatok-{name}"
         with tempfile.TemporaryDirectory() as temporary:
             folder = args.dry_run / name if args.dry_run else Path(temporary)
             with Tokenizer.from_pretrained(name) as tok:
                 tok.save_huggingface(folder)
-                card = CARD.format(name=name, vocab=tok.vocab_size, repo=repo, version=__version__)
+                card = CARD.format(name=name, vocab=tok.vocab_size, repo=repo)
             (folder / "README.md").write_text(card, encoding="utf-8")
+            (folder / "USAGE.md").write_text(guide, encoding="utf-8")
             if args.dry_run:
                 print(f"wrote {folder}")
                 continue
