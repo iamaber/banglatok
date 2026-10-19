@@ -36,7 +36,7 @@ uvx banglatok "আমি বাংলা বলি"          # or run the comman
 
 pip works too: `pip install banglatok`.
 
-Prebuilt wheels cover CPython 3.10–3.15 on Linux (x86_64, aarch64), macOS (x86_64, arm64) and Windows (x86_64), and need no compiler. Other platforms build from source, which needs Go 1.24+ and a C compiler. See the [install guide](https://github.com/iamaber/banglatok/blob/main/docs/USAGE.md#install) for details.
+Prebuilt wheels cover CPython 3.10–3.15 on Linux (x86_64, aarch64), macOS (x86_64, arm64) and Windows (x86_64), and need no compiler. Other platforms build from source, which needs Go 1.24.9+ and a C compiler. See the [install guide](https://github.com/iamaber/banglatok/blob/main/docs/USAGE.md#install) for details.
 
 ## Usage
 
