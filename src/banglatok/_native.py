@@ -2,6 +2,7 @@
 
 import ctypes
 import json
+import os
 import struct
 import sys
 import threading
@@ -62,7 +63,30 @@ def library() -> ctypes.CDLL:
     return lib
 
 
+_FORKED = (
+    "banglatok cannot run in a child process forked after the parent loaded it; "
+    "use the 'spawn' or 'forkserver' multiprocessing start method"
+)
+_forked = False
+
+
+def _after_fork_in_child() -> None:
+    # The Go runtime's threads do not survive fork(); any call would hang.
+    global _forked
+    _forked = _forked or library.cache_info().currsize > 0
+
+
+if hasattr(os, "register_at_fork"):
+    os.register_at_fork(after_in_child=_after_fork_in_child)
+
+
+def _check_process() -> None:
+    if _forked:
+        raise RuntimeError(_FORKED)
+
+
 def call(lib: ctypes.CDLL, request: dict[str, object]) -> Response:
+    _check_process()
     payload = json.dumps(request, ensure_ascii=False, allow_nan=False).encode("utf-8")
     pointer = lib.bntok_call(payload)
     if not pointer:
@@ -77,7 +101,8 @@ def call(lib: ctypes.CDLL, request: dict[str, object]) -> Response:
 
 
 def release(lib: ctypes.CDLL, handle: int) -> None:
-    call(lib, {"op": "close", "handle": handle})
+    if not _forked:
+        call(lib, {"op": "close", "handle": handle})
 
 
 def normalize(text: str) -> str:
@@ -114,6 +139,7 @@ class NativeHandle:
         return not self._finalizer.alive
 
     def check_open(self) -> None:
+        _check_process()
         if not self._finalizer.alive:
             raise RuntimeError("tokenizer is closed")
 

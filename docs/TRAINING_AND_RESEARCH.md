@@ -1,6 +1,6 @@
 # Training, normalization and research
 
-The Python wheel is an inference library with two bundled pretrained models (see [MODELS.md](MODELS.md)). Training and corpus preparation use the Go CLI from a repository clone; they are not Python API methods, and raw corpora and research checkpoints are not bundled with the package.
+The banglatok Python wheel is an inference library with two bundled pretrained models (see [MODELS.md](MODELS.md)). For installation and using the package, start with the [user guide](USAGE.md); uv is recommended and pip is supported. Training tokenizers and preparing corpora use the Go `bntok` command from a repository clone, not Python API methods. Raw corpora and research checkpoints are not bundled.
 
 ## Train without downloading a corpus
 

@@ -22,7 +22,7 @@ class GoBuildExt(build_ext):
         go = os.environ.get("BNTOK_GO") or shutil.which("go")
         if not go:
             raise RuntimeError(
-                "Building from source requires Go 1.24+; set BNTOK_GO or install Go."
+                "Building from source requires Go 1.24.9+; set BNTOK_GO or install Go."
             )
         output = Path(self.get_ext_fullpath(ext.name)).resolve()
         output.parent.mkdir(parents=True, exist_ok=True)

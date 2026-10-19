@@ -1,7 +1,7 @@
 [project]
 name = "banglatok"
-version = "0.2.0"
-description = "Fast, lossless Bangla, English and Banglish subword tokenizers with bundled models and a native Go engine"
+version = "0.2.1"
+description = "Fast, lossless subword tokenizers for Bangla, English and Banglish (romanized Bengali), including code-mixed text."
 readme = "README.md"
 authors = [
     { name = "Aber Islam", email = "aber.islam.dev@gmail.com" }
@@ -53,7 +53,7 @@ classifiers = [
 [project.urls]
 Homepage = "https://github.com/iamaber/banglatok"
 Repository = "https://github.com/iamaber/banglatok"
-Documentation = "https://github.com/iamaber/banglatok#readme"
+Documentation = "https://github.com/iamaber/banglatok/blob/main/docs/USAGE.md"
 Issues = "https://github.com/iamaber/banglatok/issues"
 Changelog = "https://github.com/iamaber/banglatok/blob/main/CHANGELOG.md"
 

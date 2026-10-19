@@ -1,4 +1,4 @@
-"""Fast, lossless Bangla, English and Banglish tokenizers with a native Go engine."""
+"""Fast, lossless subword tokenizers for Bangla, English and Banglish (romanized Bengali)."""
 
 from importlib.metadata import PackageNotFoundError, version
 

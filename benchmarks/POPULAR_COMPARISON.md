@@ -22,8 +22,8 @@ Tokens per word and losslessness are identical on both machines. Speed is MB/s f
 
 | Tokenizer | Vocab | Tokens/word | Lossless round trip | Texts with UNK | MB/s, Apple M5 | MB/s, Linux x86_64 |
 |---|---:|---:|---:|---:|---:|---:|
-| **bn-bpe-58k (this package)** | 57,925 | **1.379** | **100.00%** | **0** | 58.5 / 71.6 | 24.4 / 29.7 |
-| bn-bpe-28k (this package) | 27,760 | 1.587 | 100.00% | 0 | **61.6 / 72.9** | **26.1 / 33.6** |
+| **banglatok `bn-bpe-58k`** | 57,925 | **1.379** | **100.00%** | **0** | 58.5 / 71.6 | 24.4 / 29.7 |
+| banglatok `bn-bpe-28k` | 27,760 | 1.587 | 100.00% | 0 | **61.6 / 72.9** | **26.1 / 33.6** |
 | SentencePiece Unigram 57,925, same training data | 57,925 | 1.410 | 100.00% | 0 | 42.4 / 41.7 | 20.5 / 20.9 |
 | SentencePiece BPE 57,925, same training data | 57,925 | 1.407 | 100.00% | 0 | 17.7 / 17.4 | 9.5 / 9.8 |
 | SentencePiece Unigram 27,760, same training data | 27,760 | 1.572 | 100.00% | 0 | 46.4 / 43.2 | 22.8 / 23.4 |
@@ -40,8 +40,8 @@ Tokens per word and losslessness are identical on both machines. Speed is MB/s f
 
 | Tokenizer | Bengali script | Latin script | Mixed script |
 |---|---:|---:|---:|
-| **bn-bpe-58k** | 1.381 | **1.373** | **1.418** |
-| bn-bpe-28k | 1.603 | 1.570 | 1.633 |
+| **banglatok `bn-bpe-58k`** | 1.381 | **1.373** | **1.418** |
+| banglatok `bn-bpe-28k` | 1.603 | 1.570 | 1.633 |
 | SentencePiece Unigram 57,925, our data | 1.397 | 1.414 | 1.440 |
 | SentencePiece BPE 57,925, our data | 1.392 | 1.415 | 1.428 |
 | SentencePiece Unigram 27,760, our data | 1.571 | 1.565 | 1.614 |
@@ -62,8 +62,8 @@ These are the 14,779 validation records from [data/CORPUS.md](../data/CORPUS.md)
 
 | Tokenizer | Vocab | Tokens/word | Lossless round trip | Texts with UNK | Single MB/s | Batch MB/s |
 |---|---:|---:|---:|---:|---:|---:|
-| **bn-bpe-58k** | 57,925 | **1.373** | **100.00%** | **0** | 77.5 | 88.2 |
-| bn-bpe-28k | 27,760 | 1.563 | 100.00% | 0 | **78.9** | **90.8** |
+| **banglatok `bn-bpe-58k`** | 57,925 | **1.373** | **100.00%** | **0** | 77.5 | 88.2 |
+| banglatok `bn-bpe-28k` | 27,760 | 1.563 | 100.00% | 0 | **78.9** | **90.8** |
 | SentencePiece Unigram 57,925, our data | 57,925 | 1.384 | 100.00% | 0 | 45.5 | 44.6 |
 | SentencePiece BPE 57,925, our data | 57,925 | 1.381 | 100.00% | 0 | 19.5 | 19.2 |
 | SentencePiece Unigram 27,760, our data | 27,760 | 1.495 | 100.00% | 0 | 49.1 | 47.9 |
@@ -100,7 +100,7 @@ On 16 authored stress cases (emoji, ZWJ/ZWNJ, NUL, combining marks, other script
 ## Reproduce
 
 ```sh
-python -m pip install . -r benchmarks/popular-requirements.txt
+uv pip install . -r benchmarks/popular-requirements.txt     # or: python -m pip install ...
 # training and validation splits: see data/CORPUS.md (bntok fetch && bntok prepare)
 python benchmarks/train_sentencepiece_baselines.py
 mkdir -p data/raw/banglishrev

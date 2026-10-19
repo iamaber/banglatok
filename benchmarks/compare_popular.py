@@ -91,7 +91,7 @@ def candidates(cache_dir: Path, sentencepiece_models: list[Path]) -> list[Candid
                 ours.encode_batch,
                 ours.decode,
                 None,
-                "this package",
+                "banglatok bundled model",
             )
         )
     import sentencepiece as spm
