@@ -282,6 +282,19 @@ tokenized[0]["input_ids"]     # [2, 4504, 35499, 32651, 37272, 1101, 3]
 
 Keep `num_proc` unset for this recipe. A tokenizer cannot be pickled for worker processes; to parallelize, use a worker initializer that creates its own tokenizer as shown in [Threads and processes](#threads-and-processes).
 
+The corpus used to train the tokenizer is also available on Hugging Face:
+
+```python
+from datasets import load_dataset
+
+corpus = load_dataset("iamaber/banglatok-training-corpus", split="train", streaming=True)
+record = next(iter(corpus))
+print(record["source"], record["bucket"])
+```
+
+Its dataset card includes the original sources, split counts, attribution and
+source-specific licenses. These terms differ from the package's software license.
+
 ### Feed a PyTorch DataLoader
 
 Tokenize inside the collate function, so each batch is padded only to its own longest text:
