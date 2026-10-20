@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -161,4 +162,66 @@ func FuzzBPEMatchesReference(f *testing.F) {
 			t.Fatalf("%q: %v, want %v", word, got, want)
 		}
 	})
+}
+
+// appendWords skips normalizing text made of cached words because a single
+// space keeps normalized words normalized; check that against full NFC.
+func FuzzNormalizedWordsConcatenate(f *testing.F) {
+	for _, pair := range [][2]string{{"a", "b"}, {"ক", "া"}, {"e", "́"}, {"́", "́"}, {"ে", "া"}, {"🙂", "️"}} {
+		f.Add(pair[0], pair[1])
+	}
+	f.Fuzz(func(t *testing.T, a, b string) {
+		if a == "" || b == "" || Normalize(a) != a || Normalize(b) != b {
+			return
+		}
+		if s := a + " " + b; Normalize(s) != s {
+			t.Fatalf("%+q", s)
+		}
+	})
+}
+
+// Encode verifies normalization while encoding; it must match normalizing first.
+func FuzzEncodeMatchesNormalizeFirst(f *testing.F) {
+	m := smallBPE(f)
+	m.Version, m.SpaceFusion = 2, []int{PieceOffset, PieceOffset + 1, ByteOffset + 0xe0}
+	m.CacheWords = []string{"aaaa", "abab", "আমি", "́", "া", "🙂🙂"}
+	path := filepath.Join(f.TempDir(), "model.json")
+	if err := m.Save(path); err != nil {
+		f.Fatal(err)
+	}
+	tok, err := Load(path)
+	if err != nil {
+		f.Fatal(err)
+	}
+	for _, s := range []string{"", " ", "aaaa abab", "aaaa  abab", "aaaa ", " aaaa", "á ́", "ক া", "কা", "আমি\tআমি", "\xff aaaa", "é aaaa"} {
+		f.Add(s)
+	}
+	f.Fuzz(func(t *testing.T, text string) {
+		want, _ := tok.appendWords(nil, Normalize(text), false)
+		if got := tok.Encode(text); !reflect.DeepEqual(got, want) && len(got)+len(want) > 0 {
+			t.Fatalf("%+q: %v, want %v", text, got, want)
+		}
+	})
+}
+
+func TestBundledCacheWordsConcatenate(t *testing.T) {
+	for _, path := range bundledModels {
+		m := readModel(t, path)
+		words := append([]string{"́", "া", "্", "‍", "a", "ক"}, m.CacheWords...)
+		for _, p := range m.Pieces {
+			if !strings.Contains(p.Text, " ") && Normalize(p.Text) == p.Text {
+				words = append(words, p.Text)
+			}
+		}
+		for i, w := range words {
+			for _, other := range []string{words[(i*7919)%len(words)], "́", "া", "ক"} {
+				if s := w + " " + other; Normalize(s) != s {
+					t.Fatalf("%+q", s)
+				}
+				if s := other + " " + w; Normalize(s) != s {
+					t.Fatalf("%+q", s)
+				}
+			}
+		}
+	}
 }
