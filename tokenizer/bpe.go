@@ -21,7 +21,7 @@ const denseRunes = 0x2100
 
 func (t *Tokenizer) initBPE() error {
 	t.model.Merges = append([]Merge(nil), t.model.Merges...)
-	t.mergeRanks = map[uint64]int{}
+	t.mergeRanks = newMergeTable(len(t.model.Merges))
 	t.characters = map[rune]int{}
 	t.denseCharacters = make([]int32, denseRunes)
 	for i := range t.denseCharacters {
@@ -46,11 +46,9 @@ func (t *Tokenizer) initBPE() error {
 		if t.model.Pieces[m.Result].Text != t.model.Pieces[m.Left].Text+t.model.Pieces[m.Right].Text {
 			return fmt.Errorf("BPE merge text mismatch")
 		}
-		pair := pairKey(PieceOffset+m.Left, PieceOffset+m.Right)
-		if _, ok := t.mergeRanks[pair]; ok {
+		if !t.mergeRanks.insert(pairKey(PieceOffset+m.Left, PieceOffset+m.Right), uint64(rank)<<32|uint64(PieceOffset+m.Result)) {
 			return fmt.Errorf("duplicate BPE merge")
 		}
-		t.mergeRanks[pair] = rank
 		available[m.Result] = true
 	}
 	if len(available) != len(t.model.Pieces) {
@@ -63,6 +61,54 @@ func pairKey(left, right int) uint64 {
 	return uint64(uint32(left))<<32 | uint64(uint32(right))
 }
 
+// noMerge sorts after every packed merge.
+const noMerge = math.MaxUint64
+
+// mergeTable maps a packed ID pair to rank<<32 | result ID with linear-probing
+// open addressing. Key 0 marks an empty slot; no pair of real IDs packs to 0.
+type mergeTable struct {
+	slots []mergeSlot
+	shift uint
+}
+
+type mergeSlot struct{ key, merge uint64 }
+
+func newMergeTable(n int) mergeTable {
+	bits := uint(3)
+	for 1<<bits < 4*n {
+		bits++
+	}
+	return mergeTable{make([]mergeSlot, 1<<bits), 64 - bits}
+}
+
+// home is the first probed slot: a multiplicative (Fibonacci) hash.
+func (m *mergeTable) home(key uint64) uint64 { return key * 0x9e3779b97f4a7c15 >> m.shift }
+
+func (m *mergeTable) insert(key, merge uint64) bool {
+	mask := uint64(len(m.slots) - 1)
+	for i := m.home(key); ; i = (i + 1) & mask {
+		switch m.slots[i].key {
+		case 0:
+			m.slots[i] = mergeSlot{key, merge}
+			return true
+		case key:
+			return false
+		}
+	}
+}
+
+func (m *mergeTable) find(key uint64) uint64 {
+	mask := uint64(len(m.slots) - 1)
+	for i := m.home(key); ; i = (i + 1) & mask {
+		switch s := &m.slots[i]; s.key {
+		case key:
+			return s.merge
+		case 0:
+			return noMerge
+		}
+	}
+}
+
 func (t *Tokenizer) character(r rune) (int, bool) {
 	if r < denseRunes {
 		id := t.denseCharacters[r]
@@ -72,11 +118,9 @@ func (t *Tokenizer) character(r rune) (int, bool) {
 	return id, ok
 }
 
-func (t *Tokenizer) rank(left, right int) int32 {
-	if rank, ok := t.mergeRanks[pairKey(left, right)]; ok {
-		return int32(rank)
-	}
-	return math.MaxInt32
+// merge returns rank<<32 | result ID for a pair, or noMerge.
+func (t *Tokenizer) merge(left, right int) uint64 {
+	return t.mergeRanks.find(pairKey(left, right))
 }
 
 // appendBPE applies the lowest-ranked merge to every non-overlapping
@@ -98,35 +142,34 @@ func (t *Tokenizer) appendBPE(ids []int, s string) []int {
 	if len(word) < 2 {
 		return ids
 	}
-	var local [64]int32
-	ranks := local[:]
-	if len(word) > len(ranks) {
-		ranks = make([]int32, len(word))
+	// merges[i] packs the rank and result of the pair at i, so the minimum is
+	// the next merge and equal values mark its occurrences.
+	var local [64]uint64
+	merges := local[:]
+	if len(word) > len(merges) {
+		merges = make([]uint64, len(word))
 	}
 	for i := 0; i+1 < len(word); i++ {
-		ranks[i] = t.rank(word[i], word[i+1])
+		merges[i] = t.merge(word[i], word[i+1])
 	}
 	for len(word) > 1 {
-		best, pos := int32(math.MaxInt32), -1
-		for i, rank := range ranks[:len(word)-1] {
-			if rank < best {
-				best, pos = rank, i
-			}
+		best := uint64(noMerge)
+		for _, m := range merges[:len(word)-1] {
+			best = min(best, m)
 		}
-		if pos < 0 {
+		if best == noMerge {
 			break
 		}
-		merge := t.model.Merges[best]
-		left, right, result := PieceOffset+merge.Left, PieceOffset+merge.Right, PieceOffset+merge.Result
-		// Compact in place; an unmerged token keeps its old right-pair rank,
+		result := int(uint32(best))
+		// Compact in place; an unmerged token keeps its old right-pair merge,
 		// which stays valid unless its right neighbour was merged.
 		n := 0
 		for i := 0; i < len(word); i++ {
-			if i+1 < len(word) && word[i] == left && word[i+1] == right {
+			if i+1 < len(word) && merges[i] == best {
 				word[n] = result
 				i++
 			} else {
-				word[n], ranks[n] = word[i], ranks[i]
+				word[n], merges[n] = word[i], merges[i]
 			}
 			n++
 		}
@@ -136,10 +179,10 @@ func (t *Tokenizer) appendBPE(ids []int, s string) []int {
 				continue
 			}
 			if i > 0 {
-				ranks[i-1] = t.rank(word[i-1], id)
+				merges[i-1] = t.merge(word[i-1], id)
 			}
 			if i+1 < len(word) {
-				ranks[i] = t.rank(id, word[i+1])
+				merges[i] = t.merge(id, word[i+1])
 			}
 		}
 	}
