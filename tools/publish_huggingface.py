@@ -1,10 +1,19 @@
-"""Export the bundled models to Hugging Face format and upload them to the Hub.
+"""Export bundled or explicit versioned native models to Hugging Face format.
 
-Requires ``huggingface_hub`` and a login (``hf auth login``). Use ``--dry-run``
-to only write the folders.
+Requires ``huggingface_hub`` and a login (``hf auth login``) for uploads.
+Use ``--dry-run DIR`` to write folders without any Hub access. Without ``--model``,
+the original bundled v1 models and cards are exported as before. Repeat
+``--model PATH`` for custom models; stems such as ``bn-bpe-28k-v2`` become distinct
+repository IDs. Custom uploads create new repositories and never overwrite one.
+Use ``--training PATH`` for the exact training JSONL and repeat ``--benchmark PATH``
+for measured ``benchmarks/compare_popular.py`` JSON reports.
 """
 
 import argparse
+import hashlib
+import json
+import re
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -170,19 +179,288 @@ attribution requirements remain applicable, as described above.
 """
 
 
+CUSTOM_CARD = """---
+license: cc-by-sa-4.0
+language:
+- bn
+- en
+library_name: transformers
+datasets:
+- iamaber/banglatok-training-corpus
+tags:
+- tokenizer
+- bangla
+- bengali
+- banglish
+- code-mixed
+- bpe
+- corpus-v2
+---
+
+# banglatok `{name}`
+
+`{name}` is a native BPE tokenizer for Bangla, English and Banglish
+(romanized Bengali), with **{vocab:,} token IDs**. It is not a language model.
+This versioned artifact is separate from the immutable v1 models; its token IDs
+are not interchangeable with theirs.
+
+## Usage
+
+Install with `uv pip install transformers` (recommended), or `pip install transformers`:
+
+```python
+from transformers import AutoTokenizer
+
+tok = AutoTokenizer.from_pretrained("{repo}")
+encoded = tok("meetingটা ১০টায়, don't be late 🙂")
+text = tok.decode(encoded["input_ids"], skip_special_tokens=True)
+```
+
+For the native API, use `uv pip install banglatok` or `pip install banglatok`,
+download the native model file from this repository, and load its local path:
+
+```sh
+curl -fL https://huggingface.co/{repo}/resolve/main/{name}.json -o {name}.json
+```
+
+```python
+from banglatok import Tokenizer
+
+with Tokenizer("{name}.json") as tok:
+    ids = tok.encode("আমি বাংলা বলি")
+    print(tok.decode(ids))
+```
+
+Both exports use the same IDs. Input is normalized to NFC with collapsed,
+trimmed whitespace; unseen characters use UTF-8 byte tokens. Transformers adds
+`<s>` and `</s>` by default; native `encode()` does not. Changing a tokenizer
+requires training or adapting an existing language model's embeddings.
+The copied [usage guide](USAGE.md) covers the broader API; examples naming the
+bundled v1 IDs there still refer to v1, not this local model.
+
+## Training data and provenance
+
+Dataset: [iamaber/banglatok-training-corpus, configuration `v2`](https://huggingface.co/datasets/iamaber/banglatok-training-corpus/tree/main/v2).
+The expanded data and its manifests live under `v2/`; the root v1 data is unchanged.
+Use the dataset's `v2` configuration, not its original default configuration.
+
+- Data version: `v2`.
+- Native model file: [`{name}.json`]({name}.json).
+- Native model SHA-256: `{model_sha256}`.
+- Exact training JSONL SHA-256: `{training_sha256}`.
+- Actual vocabulary size: {vocab:,}, including special and byte token IDs.
+- Exported with banglatok {package_version}.
+- Machine-readable export provenance: [model_provenance.json](model_provenance.json).
+
+Vocabulary learning, space fusion and caches use training text only, not held-out
+splits. The v1 validation/test files remain frozen; expanded sources have separate
+extra-validation/extra-test splits. Consult the dataset's versioned manifests,
+source locks, attribution and audit for exact composition, counts and checksums.
+
+Sources combine the original Wikipedia, ManyThings/Tatoeba and BanglaTLit data
+with expanded Wikimedia material. Source-specific CC BY, CC BY-SA, GFDL and
+upstream MIT notices remain applicable; the corpus is not uniformly licensed
+under the tokenizer's license. BanglaTLit's repository notice does not establish
+every original commenter's rights. No comprehensive rights/privacy review is
+claimed.
+
+Preparation uses normalization, corruption/PII/repetition/boilerplate heuristics,
+canonical and approximate deduplication, and group/split exclusions. These do not
+guarantee complete PII removal or absence of near duplicates. Language buckets
+are source labels or script proxies, not independently verified annotations.
+No synthetic transliteration is generated, and BanglishRev evaluation sources
+are excluded from acquisition. Larger size alone is not evidence of better
+linguistic quality.
+
+## Evaluation and limitations
+
+{benchmarks}
+
+The preregistered [corpus-v2 protocol](https://github.com/iamaber/banglatok/blob/main/research/reports/CORPUS_V2_PROTOCOL.md)
+defines growth/audit gates, validation-only selection, vocabulary budgets and
+held-out testing. Publishing a candidate does not assert that it passed promotion
+gates or improved over v1. Comparisons depend on the actual vocabulary, training
+mixture, corpus and machine; tokenizer metrics do not establish downstream
+accuracy. Read the measured reports and selection record before choosing a model.
+
+## License
+
+Tokenizer files are licensed under CC BY-SA 4.0; see
+[MODEL_LICENSE.md](https://github.com/iamaber/banglatok/blob/main/MODEL_LICENSE.md).
+This does not relicense source data or remove its attribution requirements.
+"""
+
+
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def benchmark_card(
+    reports: list[tuple[Path, dict]], model: Path, model_hash: str, vocab_size: int
+) -> str:
+    if not reports:
+        return (
+            "No published comparison is attached to this artifact. Historical v1 "
+            "benchmark results do not measure this model, and no improvement is claimed."
+        )
+    candidate = f"banglatok {model.stem}"
+    sections = []
+    for index, (path, report) in enumerate(reports, 1):
+        metadata = report["candidates"].get(candidate)
+        expected_source = f"{model.name} sha256 {model_hash}"
+        if (
+            metadata is None
+            or metadata["source"] != expected_source
+            or metadata["vocab_size"] != vocab_size
+        ):
+            raise ValueError(
+                f"{path}: benchmark candidate does not match {model.name} hash/vocabulary"
+            )
+        corpora = report["corpora"]
+        if not corpora or any(candidate not in c["candidates"] for c in corpora.values()):
+            raise ValueError(f"{path}: benchmark does not measure {candidate} in every corpus")
+        sections.extend(
+            [
+                f"### Measured report {index}",
+                "",
+                f"Raw results: [benchmark-{index}.json](benchmark-{index}.json); "
+                f"SHA-256 `{sha256(path)}`.",
+                f"Recorded {report['created_utc']}; CPU {report['cpu_model']}; "
+                f"platform {report['platform']}; Python {report['python']}.",
+                f"{report['repeats']} timing repeats; batch size {report['batch_size']}. "
+                "The compare_popular.py harness uses NFC/whitespace-normalized input, "
+                "excludes special tokens from counts, and requires single-thread settings.",
+                f"Package versions: `{json.dumps(report['packages'], sort_keys=True)}`.",
+                f"Candidate stress round trips: {metadata['stress_round_trips']}"
+                f"/{metadata['stress_cases']}.",
+            ]
+        )
+        for label, corpus in corpora.items():
+            sections.extend(
+                [
+                    "",
+                    f"#### {label} ({corpus['records']:,} records)",
+                    "",
+                    f"Corpus SHA-256: `{corpus['source_sha256']}`; "
+                    f"ordered normalized input SHA-256: `{corpus['ordered_text_sha256']}`.",
+                    "",
+                    "| Tokenizer | Vocab | Tokens/word | Exact round trip | Texts with UNK "
+                    "| Single MB/s | Batch MB/s |",
+                    "|---|---:|---:|---:|---:|---:|---:|",
+                ]
+            )
+            for name, row in corpus["candidates"].items():
+                quality, speed = row["quality"]["all"], row["speed"]
+                vocabulary = report["candidates"][name]["vocab_size"]
+                sections.append(
+                    f"| {name} | {vocabulary:,} | {quality['tokens_per_word']:.3f}"
+                    f" | {quality['round_trip_percent']:.2f}%"
+                    f" | {quality['texts_with_unknowns']:,}"
+                    f" | {speed['single_MB_per_second']:.1f}"
+                    f" | {speed['batch_MB_per_second']:.1f} |"
+                )
+    return "\n".join(sections)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--namespace", default="iamaber")
+    parser.add_argument(
+        "--model",
+        type=Path,
+        action="append",
+        default=[],
+        help="native JSON model with a versioned stem; repeat for multiple models",
+    )
+    parser.add_argument(
+        "--training",
+        type=Path,
+        default=Path("data/processed/expanded-v2/train.jsonl"),
+        help="exact corpus-v2 training JSONL used by custom models",
+    )
+    parser.add_argument(
+        "--benchmark",
+        type=Path,
+        action="append",
+        default=[],
+        help="measured compare_popular.py JSON report for custom models; repeatable",
+    )
     parser.add_argument("--dry-run", type=Path, help="write folders here instead of uploading")
     args = parser.parse_args()
+    if args.benchmark and not args.model:
+        parser.error("--benchmark requires --model; bundled v1 cards remain unchanged")
+    names = set()
+    for model in args.model:
+        if model.stem in {"bn-bpe-28k", "bn-bpe-58k"}:
+            parser.error(f"{model.stem} is an immutable v1 ID; use a new versioned stem")
+        match = re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*-v([0-9]+)", model.stem)
+        if not match or int(match[1]) < 2:
+            parser.error(f"{model.stem}: custom model stem must end in -v2 or a later version")
+        if model.stem in names:
+            parser.error(f"duplicate custom model ID: {model.stem}")
+        names.add(model.stem)
+        if not model.is_file():
+            parser.error(f"model file does not exist: {model}")
+    if args.model and not args.training.is_file():
+        parser.error(f"exact custom training file does not exist: {args.training}")
+    training_hash = sha256(args.training) if args.model else None
+    reports = [(path, json.loads(path.read_text(encoding="utf-8"))) for path in args.benchmark]
     guide = (Path(__file__).resolve().parents[1] / "docs" / "USAGE.md").read_text(encoding="utf-8")
-    for name in available_models():
+    models = [(path.stem, path) for path in args.model]
+    if not models:
+        models = [(name, None) for name in available_models()]
+    for name, model in models:
         repo = f"{args.namespace}/banglatok-{name}"
         with tempfile.TemporaryDirectory() as temporary:
             folder = args.dry_run / name if args.dry_run else Path(temporary)
-            with Tokenizer.from_pretrained(name) as tok:
+            tokenizer = Tokenizer(model) if model else Tokenizer.from_pretrained(name)
+            with tokenizer as tok:
+                if model:
+                    model_hash = sha256(model)
+                    provenance = {
+                        "model_file": model.name,
+                        "model_sha256": model_hash,
+                        "training_sha256": training_hash,
+                        "vocab_size": tok.vocab_size,
+                        "dataset": "iamaber/banglatok-training-corpus",
+                        "dataset_config": "v2",
+                        "data_version": "v2",
+                        "repository": repo,
+                        "banglatok_version": __version__,
+                    }
+                    sidecar = model.with_suffix(".provenance.json")
+                    if sidecar.is_file():
+                        training_provenance = json.loads(sidecar.read_text(encoding="utf-8"))
+                        if training_provenance["training_sha256"] != training_hash:
+                            parser.error(f"{sidecar}: training SHA-256 does not match --training")
+                        provenance["training_provenance"] = training_provenance
+                    try:
+                        benchmarks = benchmark_card(reports, model, model_hash, tok.vocab_size)
+                    except (KeyError, TypeError, ValueError) as error:
+                        parser.error(f"invalid benchmark: {error}")
+                    card = CUSTOM_CARD.format(
+                        name=name,
+                        vocab=tok.vocab_size,
+                        repo=repo,
+                        model_sha256=model_hash,
+                        training_sha256=training_hash,
+                        package_version=__version__,
+                        benchmarks=benchmarks,
+                    )
+                else:
+                    card = CARD.format(name=name, vocab=tok.vocab_size, repo=repo)
                 tok.save_huggingface(folder)
-                card = CARD.format(name=name, vocab=tok.vocab_size, repo=repo)
+            if model:
+                shutil.copyfile(model, folder / model.name)
+                (folder / "model_provenance.json").write_text(
+                    json.dumps(provenance, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+                )
+                for index, (path, _) in enumerate(reports, 1):
+                    shutil.copyfile(path, folder / f"benchmark-{index}.json")
             (folder / "README.md").write_text(card, encoding="utf-8")
             (folder / "USAGE.md").write_text(guide, encoding="utf-8")
             if args.dry_run:
@@ -191,7 +469,7 @@ def main() -> None:
             from huggingface_hub import HfApi
 
             api = HfApi()
-            api.create_repo(repo, repo_type="model", exist_ok=True)
+            api.create_repo(repo, repo_type="model", exist_ok=model is None)
             api.upload_folder(
                 repo_id=repo,
                 folder_path=folder,
