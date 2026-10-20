@@ -12,7 +12,7 @@
 ```python
 from banglatok import Tokenizer
 
-tok = Tokenizer.from_pretrained()          # bundled model; no download, no network
+tok = Tokenizer.from_pretrained()
 tok.tokenize("meetingটা ১০টায়, don't be late 🙂")
 # ['meeting', 'টা', ' ১০', 'টায়', ',', " don't", ' be', ' late', ' 🙂']
 ```
@@ -140,12 +140,25 @@ The [full report](https://github.com/iamaber/banglatok/blob/main/benchmarks/POPU
 
 Both are BPE vocabularies with *space fusion*: a space and the token after it can share a single ID. That removes most standalone space tokens without overloading a literal marker such as `▁`. They were learned from 563k records of Bengali Wikipedia, Tatoeba and BanglaTLit. On the Hub they are [`iamaber/banglatok-bn-bpe-58k`](https://huggingface.co/iamaber/banglatok-bn-bpe-58k) and [`iamaber/banglatok-bn-bpe-28k`](https://huggingface.co/iamaber/banglatok-bn-bpe-28k). [docs/MODELS.md](https://github.com/iamaber/banglatok/blob/main/docs/MODELS.md) covers the build commands, checksums, behavior and limitations. Their vocabulary IDs differ from those of pretrained encoders such as BanglaBERT or XLM-R, so pairing one with such an encoder means adapting its embeddings.
 
+## Training data
+
+The corpus used for both tokenizer models is available as
+[`iamaber/banglatok-training-corpus`](https://huggingface.co/datasets/iamaber/banglatok-training-corpus).
+It contains 563,476 training records, 14,779 validation records and 16,712 test records
+from Bengali Wikipedia, Tatoeba and BanglaTLit. Only the training split was used to
+learn the vocabularies, merges and word caches.
+
+Each record retains its source and attribution. The dataset card explains the
+source-specific licenses, filtering and privacy limitations; the software's MIT
+license does not apply to all corpus text.
+
 ## Documentation
 
 | Document | Contents |
 |---|---|
 | [User guide](https://github.com/iamaber/banglatok/blob/main/docs/USAGE.md) | Install, API, command line, Hugging Face, guides, troubleshooting |
 | [Models](https://github.com/iamaber/banglatok/blob/main/docs/MODELS.md) | How the bundled models were built, checksums, limitations |
+| [Training dataset](https://huggingface.co/datasets/iamaber/banglatok-training-corpus) | Downloadable splits, sources, attribution, licenses and data limitations |
 | [Training and research](https://github.com/iamaber/banglatok/blob/main/docs/TRAINING_AND_RESEARCH.md) | Training your own models, corpus format, model contract |
 | [Benchmarks](https://github.com/iamaber/banglatok/blob/main/benchmarks/POPULAR_COMPARISON.md) | Full comparison with popular tokenizers |
 | [Changelog](https://github.com/iamaber/banglatok/blob/main/CHANGELOG.md) | Release notes |
@@ -182,4 +195,4 @@ If you use banglatok or its models, please cite it with the metadata in [CITATIO
 - Bundled model files (`bn-bpe-58k`, `bn-bpe-28k`): [CC BY-SA 4.0](https://github.com/iamaber/banglatok/blob/main/MODEL_LICENSE.md), because they are learned from Wikipedia and Tatoeba text.
 - Native wheels include BSD-3-Clause Go components ([notices](https://github.com/iamaber/banglatok/blob/main/THIRD_PARTY_NOTICES.md)).
 
-The SPDX expression is `MIT AND BSD-3-Clause AND CC-BY-SA-4.0`. Research corpora keep their own terms and are not distributed.
+The SPDX expression is `MIT AND BSD-3-Clause AND CC-BY-SA-4.0`. Corpus text keeps its source-specific terms and is published separately on Hugging Face, not included in the Python package.

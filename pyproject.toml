@@ -1,6 +1,6 @@
 [project]
 name = "banglatok"
-version = "0.2.1"
+version = "0.2.2"
 description = "Fast, lossless subword tokenizers for Bangla, English and Banglish (romanized Bengali), including code-mixed text."
 readme = "README.md"
 authors = [
@@ -56,6 +56,7 @@ Repository = "https://github.com/iamaber/banglatok"
 Documentation = "https://github.com/iamaber/banglatok/blob/main/docs/USAGE.md"
 Issues = "https://github.com/iamaber/banglatok/issues"
 Changelog = "https://github.com/iamaber/banglatok/blob/main/CHANGELOG.md"
+Dataset = "https://huggingface.co/datasets/iamaber/banglatok-training-corpus"
 
 [project.scripts]
 banglatok = "banglatok.__main__:main"
