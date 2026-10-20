@@ -32,6 +32,8 @@ make matrix
 
 Research reports refer to frozen local artifacts and their checksums. A fresh clone does not contain those datasets, trained vocabularies or checkpoints. Reproduction requires their documented source inputs, not just installing the Python wheel. In restricted environments, `BNTOK_GO` selects a local Go executable, while `GOCACHE`/`GOMODCACHE` can select writable caches.
 
+The [corpus v2 workflow](../data/CORPUS.md#corpus-v2-expansion) adds pinned Wikimedia sources, stronger filtering and exhaustive signature-radius leakage checks while preserving v1 evaluation files. Its [protocol](../research/reports/CORPUS_V2_PROTOCOL.md) fixes growth and model-promotion gates before candidate scores; its [source report](../research/reports/CORPUS_V2_SOURCES.md) documents acquisition and limitations. Extra-validation is for selection; extra-test and all BanglishRev reviews remain evaluation-only.
+
 ## Model contract
 
 Models are versioned JSON with `version`, `algorithm`, `normalization`, learned `pieces`, and BPE merge information where applicable. The supported normalization is `nfc-whitespace-v1`. Piece scores must be finite and nonpositive. Version 2 BPE may include `space_fusion` and training-word caches. Training writes a `.meta.json` sidecar with parameters, corpus/model hashes, toolchain and duration.
