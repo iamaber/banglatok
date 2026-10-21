@@ -39,11 +39,12 @@ func (r *Registry) EncodeInto(handle uint64, text string, out []uint32) (int, er
 }
 
 // EncodeBinary accepts repeated little-endian uint32 byte lengths followed by
-// UTF-8 text. data may alias caller-owned memory for the duration of the call.
+// UTF-8 text and encodes it with up to threads workers (see Threads). data may
+// alias caller-owned memory for the duration of the call.
 // The response is native-endian uint32 words: status 1 followed by an error
 // message in the remaining bytes, or status 0, one ID count per text, then all
 // IDs in input order.
-func (r *Registry) EncodeBinary(handle uint64, data []byte) []byte {
+func (r *Registry) EncodeBinary(handle uint64, data []byte, threads int) []byte {
 	model, err := r.model(handle)
 	if err != nil {
 		return EncodeError(err.Error())
@@ -61,24 +62,25 @@ func (r *Registry) EncodeBinary(handle uint64, data []byte) []byte {
 		texts = append(texts, unsafe.String(unsafe.SliceData(data), int(n)))
 		data = data[int(n):]
 	}
-	buffer := scratch.Get().(*[]int)
-	ids := (*buffer)[:0]
-	ends := make([]int, len(texts))
-	for i, text := range texts {
-		ids = model.AppendEncode(ids, text)
-		ends[i] = len(ids)
+	counts := make([]int, len(texts))
+	chunks := encodeChunks(model, texts, counts, Threads(threads))
+	defer releaseChunks(chunks)
+	total := 0
+	for _, c := range chunks {
+		total += len(c.ids)
 	}
-	output := make([]byte, 4*(1+len(texts)+len(ids)))
+	output := make([]byte, 4*(1+len(texts)+total))
 	words := unsafe.Slice((*uint32)(unsafe.Pointer(unsafe.SliceData(output))), len(output)/4)
-	previous := 0
-	for i, end := range ends {
-		words[1+i] = uint32(end - previous)
-		previous = end
+	for i, count := range counts {
+		words[1+i] = uint32(count)
 	}
-	for i, id := range ids {
-		words[1+len(texts)+i] = uint32(id)
+	ids := words[1+len(texts):]
+	for _, c := range chunks {
+		for i, id := range c.ids {
+			ids[i] = uint32(id)
+		}
+		ids = ids[len(c.ids):]
 	}
-	release(buffer, ids)
 	return output
 }
 

@@ -197,6 +197,12 @@ Without text arguments the command reads standard input line by line. `--model` 
 
 **Threads.** One tokenizer can be shared by any number of threads. Native calls release the GIL, so threads encode in parallel.
 
+**Batch workers.** `encode_batch` and `tok(...)` split a large batch (from about 8 KB of text) across native worker threads. `num_threads` sets the limit; without it, the `BANGLATOK_NUM_THREADS` environment variable applies, else every CPU. IDs and their order never depend on it. Pass `num_threads=1` for single-threaded timings, or when you already parallelize across threads or processes:
+
+```python
+tok.encode_batch(texts, num_threads=4)
+```
+
 **Processes.** The Go runtime inside banglatok does not survive `fork()`. A process forked after its parent created a tokenizer (or called `normalize`) cannot use banglatok, and any call raises `RuntimeError` instead of hanging. Use the `spawn` or `forkserver` start method and create the tokenizer inside each worker:
 
 ```python
@@ -374,11 +380,11 @@ Everything is importable from `banglatok`.
 |---|---|
 | `Tokenizer.from_pretrained(name="bn-bpe-58k")` | Load a bundled model, offline |
 | `Tokenizer(path)` | Load a JSON model file |
-| `encode(text)` / `encode_batch(texts)` | Token IDs, without control tokens |
+| `encode(text)` / `encode_batch(texts, num_threads=None)` | Token IDs, without control tokens |
 | `decode(ids, skip_special_tokens=False)` / `decode_batch(batch, skip_special_tokens=False)` | Normalized text |
 | `count_tokens(text)` | `len(encode(text))`, without building the list |
 | `tokenize(text)` | Token strings |
-| `tok(texts, add_special_tokens=True, max_length=None, padding=False)` | `{"input_ids", "attention_mask"}` |
+| `tok(texts, add_special_tokens=True, max_length=None, padding=False, num_threads=None)` | `{"input_ids", "attention_mask"}` |
 | `id_to_token(id)`, `token_to_id(token)`, `get_vocab()` | Vocabulary lookups |
 | `vocab_size`, `algorithm`, `closed` | Properties |
 | `save_huggingface(directory)` | Write a Hugging Face tokenizer with identical IDs (BPE models) |

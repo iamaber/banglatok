@@ -9,6 +9,7 @@ from typing import Literal, overload
 from ._hf import tokenizer_config, tokenizer_json
 from ._native import NativeHandle
 from ._native import normalize as _normalize
+from ._native import threads as _threads
 
 PAD_ID = 0
 UNK_ID = 1
@@ -90,12 +91,19 @@ class Tokenizer:
         self._native.check_open()
         return self._native.encode_one(_text(text).encode("utf-8"))
 
-    def encode_batch(self, texts: Sequence[str]) -> list[list[int]]:
-        """Encode a batch in one native call, preserving input order."""
+    def encode_batch(
+        self, texts: Sequence[str], *, num_threads: int | None = None
+    ) -> list[list[int]]:
+        """Encode a batch in one native call, preserving input order.
+
+        Large batches are split across ``num_threads`` workers; the default is
+        ``BANGLATOK_NUM_THREADS`` or every CPU. IDs never depend on it.
+        """
         self._native.check_open()
         if isinstance(texts, (str, bytes)):
             raise TypeError("texts must be a sequence of strings, not a single string")
-        return self._native.encode([_text(s).encode("utf-8") for s in texts])
+        threads = _threads(num_threads)
+        return self._native.encode([_text(s).encode("utf-8") for s in texts], threads)
 
     def count_tokens(self, text: str) -> int:
         """Return ``len(encode(text))`` without building the ID list."""
@@ -172,6 +180,7 @@ class Tokenizer:
         add_special_tokens: bool = True,
         max_length: int | None = None,
         padding: bool | Literal["longest", "max_length"] = False,
+        num_threads: int | None = None,
     ) -> dict[str, list[int]]: ...
 
     @overload
@@ -182,6 +191,7 @@ class Tokenizer:
         add_special_tokens: bool = True,
         max_length: int | None = None,
         padding: bool | Literal["longest", "max_length"] = False,
+        num_threads: int | None = None,
     ) -> dict[str, list[list[int]]]: ...
 
     def __call__(
@@ -191,12 +201,14 @@ class Tokenizer:
         add_special_tokens: bool = True,
         max_length: int | None = None,
         padding: bool | Literal["longest", "max_length"] = False,
+        num_threads: int | None = None,
     ) -> dict[str, list[int]] | dict[str, list[list[int]]]:
         """Prepare encoder inputs: ``input_ids`` and ``attention_mask``.
 
         ``add_special_tokens`` wraps each sequence in ``<s>``/``</s>``;
         ``max_length`` truncates (keeping both controls); ``padding`` pads with
-        ``<pad>`` to the longest sequence or to ``max_length``.
+        ``<pad>`` to the longest sequence or to ``max_length``. ``num_threads``
+        is as for :meth:`encode_batch`.
         """
         single = isinstance(texts, str)
         if padding not in (False, True, "longest", "max_length"):
@@ -207,7 +219,10 @@ class Tokenizer:
             raise ValueError("max_length is too small")
         if padding == "max_length" and max_length is None:
             raise ValueError("padding='max_length' requires max_length")
-        batch = self.encode_batch([texts] if single else texts)  # type: ignore[list-item]
+        batch = self.encode_batch(
+            [texts] if single else texts,  # type: ignore[list-item]
+            num_threads=num_threads,
+        )
         reserve = 2 if add_special_tokens else 0
         if max_length is not None:
             batch = [ids[: max_length - reserve] for ids in batch]
