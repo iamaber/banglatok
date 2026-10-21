@@ -74,4 +74,6 @@ uv pip install --only-binary=:all: banglatok==X.Y.Z       # and: python -m pip i
 
 Run `examples/quickstart.py` and `banglatok --list-models` outside the repository checkout. Verify the published metadata, licenses and files. Update the changelog and public installation instructions only after the release is actually visible and installable. Re-upload the Hugging Face model cards with `python tools/publish_huggingface.py` when their text or the models change. If a release is broken, follow PyPI's yanking procedure and publish a new version rather than silently replacing artifacts.
 
+After changing encoder code, regenerate the profile-guided optimization input with `go run ./tools/pgo_profile -corpus data/processed/train.jsonl -out cmd/bntok-shared/default.pgo src/banglatok/pretrained/*.json`; a stale profile still builds correctly, only less optimized.
+
 A new or retrained bundled model needs a `docs/MODELS.md` entry with its build command, checksums and limitations, a regenerated `.bntok` sidecar (`go run ./tools/compile_model src/banglatok/pretrained/*.json`), a rerun of `benchmarks/compare_popular.py`, and a new minor version, because IDs change.

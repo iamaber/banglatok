@@ -37,6 +37,7 @@ class DistributionTests(unittest.TestCase):
                 "tokenizer/model.go",
                 "internal/native/native.go",
                 "cmd/bntok-shared/main.go",
+                "cmd/bntok-shared/default.pgo",
                 *(f"src/banglatok/{name}" for name in package_data),
                 *notices,
             ]

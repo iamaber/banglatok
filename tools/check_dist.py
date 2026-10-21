@@ -58,6 +58,7 @@ def check(directory: Path, version: str) -> None:
             "go.sum",
             "tokenizer/model.go",
             "cmd/bntok-shared/main.go",
+            "cmd/bntok-shared/default.pgo",
             "internal/native/native.go",
             *(f"src/{NAME}/{name}" for name in PACKAGE_DATA),
             *NOTICES,
