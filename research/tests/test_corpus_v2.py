@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-PREPARER = Path(__file__).resolve().parents[1] / "tools" / "prepare_corpus_v2.py"
+PREPARER = Path(__file__).resolve().parents[2] / "tools" / "prepare_corpus_v2.py"
 
 
 def row(text, group, bucket="english", source="fixture", split=""):

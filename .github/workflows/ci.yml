@@ -76,8 +76,11 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.12'
         run: |
           python -m pip install ruff mypy tokenizers
-          ruff check src tests tools examples setup.py benchmarks
-          ruff format --check src tests tools benchmarks
+          ruff check src tests research/tests tools examples setup.py benchmarks
+          ruff format --check src tests research/tests tools benchmarks
           mypy --strict src/banglatok
-      - run: python -m unittest discover -s tests -v
+      - name: Installed tokenizer tests
+        run: python -m unittest discover -s tests -v
+      - name: Research tooling tests from checkout
+        run: python -m unittest discover -s research/tests -v
       - run: python examples/quickstart.py

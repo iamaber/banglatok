@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 SPEC = importlib.util.spec_from_file_location(
-    "select_corpus_v2", Path(__file__).resolve().parents[1] / "benchmarks/select_corpus_v2.py"
+    "select_corpus_v2", Path(__file__).resolve().parents[2] / "benchmarks/select_corpus_v2.py"
 )
 assert SPEC is not None and SPEC.loader is not None
 SELECTION = importlib.util.module_from_spec(SPEC)

@@ -18,12 +18,15 @@ python -m twine check --strict dist/X.Y.Z/*
 python tools/check_dist.py dist/X.Y.Z --version X.Y.Z
 python -m pip install --force-reinstall --no-deps dist/X.Y.Z/*.whl
 python -m unittest discover -s tests -v
+python -m unittest discover -s research/tests -v
 python examples/quickstart.py
 go test -race ./...
 go vet ./...
 ```
 
 `python -m build` builds the wheel from the generated sdist. For source changes, verify this path rather than only building directly from a checkout containing ignored artifacts. The archive gate requires native code, the bundled models and demo, type marker, correct version/platform tags and license notices; it rejects excluded data/model/cache paths and unexpected Python runtime dependencies.
+
+Research tooling tests require the repository checkout and run separately in source CI. Inference wheel tests use `tests/`; source archives intentionally omit `research/` and acquisition/publication scripts. Keep both suites in CI rather than skipping research tests or shipping their external provenance inputs.
 
 ## 2. Run the hosted wheel workflow without publishing
 
