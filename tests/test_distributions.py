@@ -26,6 +26,8 @@ class DistributionTests(unittest.TestCase):
                 "data/demo-unigram.json",
                 "pretrained/bn-bpe-58k.json",
                 "pretrained/bn-bpe-28k.json",
+                "pretrained/bn-bpe-58k.bntok",
+                "pretrained/bn-bpe-28k.bntok",
             ]
             source = [
                 "pyproject.toml",
