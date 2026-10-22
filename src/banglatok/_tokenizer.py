@@ -1,13 +1,14 @@
 """Small, typed Python interface; all text processing stays in Go."""
 
 import os
-from collections.abc import Sequence
+from array import array
+from collections.abc import Callable, Iterable, Sequence
 from importlib.resources import as_file, files
 from pathlib import Path
-from typing import Literal, overload
+from typing import Any, Literal, cast, overload
 
 from ._hf import tokenizer_config, tokenizer_json
-from ._native import NativeHandle
+from ._native import _MAX_PAYLOAD, NativeHandle
 from ._native import normalize as _normalize
 from ._native import threads as _threads
 
@@ -28,6 +29,53 @@ def _text(value: str) -> str:
     if not isinstance(value, str):
         raise TypeError("text must be a string")
     return value
+
+
+def _utf8(texts: Iterable[str]) -> tuple[bytes, "array[int]"]:
+    """One UTF-8 payload for a batch, with each text's code-point count."""
+    items = texts if type(texts) is list else list(texts)
+    try:
+        data = "".join(items).encode("utf-8")
+    except (TypeError, UnicodeEncodeError):
+        data = None
+    if data is None:
+        # Raise for the first invalid text, exactly as encoding one by one does.
+        for text in items:
+            _text(text).encode("utf-8")
+        raise TypeError("texts must be strings")
+    if 4 * len(items) + len(data) > _MAX_PAYLOAD:
+        raise ValueError("encode input exceeds 2 GiB")
+    return data, array("I", map(len, items))
+
+
+def _padded_lists(ids: memoryview, rows: "array[int]") -> tuple[list[list[int]], list[list[int]]]:
+    width = len(ids) // len(rows) if rows else 0
+    if not width:
+        return [[] for _ in rows], [[] for _ in rows]
+    mask = [[1] * n + [0] * (width - n) for n in rows]
+    return cast(list[list[int]], ids.cast("B").cast("I", (len(rows), width)).tolist()), mask
+
+
+def _ragged_lists(ids: memoryview, rows: "array[int]") -> tuple[list[list[int]], list[list[int]]]:
+    batch = []
+    offset = 0
+    for n in rows:
+        batch.append(ids[offset : offset + n].tolist())
+        offset += n
+    return batch, [[1] * n for n in rows]
+
+
+def _arrays(np: Any, padded: bool) -> Callable[[memoryview, "array[int]"], tuple[Any, Any]]:
+    def build(ids: memoryview, rows: "array[int]") -> tuple[Any, Any]:
+        lengths = np.frombuffer(rows, dtype=np.uint32)
+        if not padded and len(rows) and lengths.min() != lengths.max():
+            raise ValueError("return_tensors='np' needs padding when sequence lengths differ")
+        width = len(ids) // len(rows) if rows else 0
+        values = np.frombuffer(ids, dtype=np.uint32).reshape(len(rows), width)
+        mask = np.arange(width) < lengths[:, None]
+        return values.astype(np.int64), mask.astype(np.int64)
+
+    return build
 
 
 def normalize(text: str) -> str:
@@ -181,6 +229,7 @@ class Tokenizer:
         max_length: int | None = None,
         padding: bool | Literal["longest", "max_length"] = False,
         num_threads: int | None = None,
+        return_tensors: None = None,
     ) -> dict[str, list[int]]: ...
 
     @overload
@@ -192,7 +241,20 @@ class Tokenizer:
         max_length: int | None = None,
         padding: bool | Literal["longest", "max_length"] = False,
         num_threads: int | None = None,
+        return_tensors: None = None,
     ) -> dict[str, list[list[int]]]: ...
+
+    @overload
+    def __call__(
+        self,
+        texts: str | Sequence[str],
+        *,
+        add_special_tokens: bool = True,
+        max_length: int | None = None,
+        padding: bool | Literal["longest", "max_length"] = False,
+        num_threads: int | None = None,
+        return_tensors: Literal["np"],
+    ) -> dict[str, Any]: ...
 
     def __call__(
         self,
@@ -202,13 +264,15 @@ class Tokenizer:
         max_length: int | None = None,
         padding: bool | Literal["longest", "max_length"] = False,
         num_threads: int | None = None,
-    ) -> dict[str, list[int]] | dict[str, list[list[int]]]:
+        return_tensors: Literal["np"] | None = None,
+    ) -> dict[str, list[int]] | dict[str, list[list[int]]] | dict[str, Any]:
         """Prepare encoder inputs: ``input_ids`` and ``attention_mask``.
 
         ``add_special_tokens`` wraps each sequence in ``<s>``/``</s>``;
         ``max_length`` truncates (keeping both controls); ``padding`` pads with
         ``<pad>`` to the longest sequence or to ``max_length``. ``num_threads``
-        is as for :meth:`encode_batch`.
+        is as for :meth:`encode_batch`. ``return_tensors="np"`` returns 2-D
+        int64 NumPy arrays, also for a single text, instead of lists.
         """
         single = isinstance(texts, str)
         if padding not in (False, True, "longest", "max_length"):
@@ -219,23 +283,39 @@ class Tokenizer:
             raise ValueError("max_length is too small")
         if padding == "max_length" and max_length is None:
             raise ValueError("padding='max_length' requires max_length")
-        batch = self.encode_batch(
-            [texts] if single else texts,  # type: ignore[list-item]
-            num_threads=num_threads,
-        )
-        reserve = 2 if add_special_tokens else 0
-        if max_length is not None:
-            batch = [ids[: max_length - reserve] for ids in batch]
-        if add_special_tokens:
-            batch = [[BOS_ID, *ids, EOS_ID] for ids in batch]
+        if return_tensors not in (None, "np"):
+            raise ValueError("return_tensors must be None or 'np'")
         width = 0
         if padding == "max_length":
             width = max_length or 0
         elif padding:
-            width = max(map(len, batch), default=0)
-        input_ids = [ids + [PAD_ID] * (width - len(ids)) for ids in batch]
-        attention_mask = [[1] * len(ids) + [0] * (width - len(ids)) for ids in batch]
-        if single:
+            width = -1
+        build: Callable[[memoryview, array[int]], tuple[Any, Any]]
+        if return_tensors == "np":
+            try:
+                import numpy
+            except ImportError:
+                raise ImportError("return_tensors='np' requires NumPy: pip install numpy") from None
+            build = _arrays(numpy, padded=width != 0)
+        elif width:
+            build = _padded_lists
+        else:
+            build = _ragged_lists
+        self._native.check_open()
+        if isinstance(texts, bytes):
+            raise TypeError("texts must be a sequence of strings, not a single string")
+        threads = _threads(num_threads)
+        data, runes = _utf8([texts] if single else texts)  # type: ignore[list-item]
+        input_ids, attention_mask = self._native.encode_rows(
+            data,
+            runes,
+            threads,
+            build,
+            max_length=max_length or 0,
+            special=bool(add_special_tokens),
+            width=width,
+        )
+        if single and return_tensors is None:
             return {"input_ids": input_ids[0], "attention_mask": attention_mask[0]}
         return {"input_ids": input_ids, "attention_mask": attention_mask}
 

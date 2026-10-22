@@ -7,9 +7,13 @@ import struct
 import sys
 import threading
 import weakref
+from array import array
+from collections.abc import Callable
 from functools import lru_cache
 from pathlib import Path
-from typing import TypedDict, cast
+from typing import TypedDict, TypeVar, cast
+
+T = TypeVar("T")
 
 
 class Merge(TypedDict):
@@ -29,9 +33,13 @@ class Response(TypedDict, total=False):
     error: str
 
 
-# Status codes returned by bntok_encode_into instead of an ID count.
+# Status codes returned by bntok_encode_into and bntok_encode_batch instead of an ID count.
 _CLOSED = -1
 _INVALID = -2
+_TOO_LARGE = -4
+# Per-thread batch buffers grow to at most this many IDs; larger batches use
+# a native allocation for the call.
+_MAX_KEPT_IDS = 1 << 20
 _MAX_PAYLOAD = 2**31 - 1
 # Batch worker limit; more workers than CPUs only add scheduling.
 _MAX_THREADS = 1024
@@ -80,6 +88,21 @@ def library() -> ctypes.CDLL:
         ctypes.c_size_t,
     ]
     lib.bntok_encode_into.restype = ctypes.c_longlong
+    lib.bntok_encode_batch.argtypes = [
+        ctypes.c_ulonglong,
+        ctypes.c_char_p,
+        ctypes.c_size_t,
+        ctypes.c_void_p,
+        ctypes.c_size_t,
+        ctypes.c_int,
+        ctypes.c_longlong,
+        ctypes.c_int,
+        ctypes.c_longlong,
+        ctypes.c_void_p,
+        ctypes.c_size_t,
+        ctypes.POINTER(ctypes.c_void_p),
+    ]
+    lib.bntok_encode_batch.restype = ctypes.c_longlong
     return lib
 
 
@@ -134,10 +157,20 @@ class _Buffers(threading.local):
 
     def __init__(self) -> None:
         self.grow(1024)
+        self.batch: _IDs | None = _IDs(1024)
 
     def grow(self, size: int) -> None:
         self.capacity = size
         self.ids = (ctypes.c_uint32 * size)()
+        self.address = ctypes.addressof(self.ids)
+
+
+class _IDs:
+    """A reusable uint32 output buffer."""
+
+    def __init__(self, size: int) -> None:
+        self.ids = (ctypes.c_uint32 * size)()
+        self.view = memoryview(self.ids).cast("B").cast("I")
         self.address = ctypes.addressof(self.ids)
 
 
@@ -151,6 +184,7 @@ class NativeHandle:
         self.vocab_size = response["vocabulary"]
         self.algorithm = response.get("algorithm", "")
         self._encode_into = self._lib.bntok_encode_into
+        self._encode_batch = self._lib.bntok_encode_batch
         self._buffers = _Buffers()
         self._finalizer = weakref.finalize(self, release, self._lib, self._handle)
 
@@ -187,6 +221,60 @@ class NativeHandle:
             raise ValueError("encode input exceeds 2 GiB")
         return count
 
+    def encode_rows(
+        self,
+        data: bytes,
+        runes: array[int],
+        threads: int,
+        build: Callable[[memoryview, array[int]], T],
+        *,
+        max_length: int = 0,
+        special: bool = False,
+        width: int = 0,
+    ) -> T:
+        """Encode ``data`` cut into texts of ``runes[i]`` code points.
+
+        ``build`` receives the uint32 IDs and, in ``runes``, each row's unpadded
+        length. Rows are truncated to ``max_length`` IDs (0 keeps all), wrapped
+        in ``<s>``/``</s>`` with ``special`` and padded to ``width`` (-1: the
+        longest row, 0: unpadded).
+        """
+        if 4 * len(runes) + len(data) > _MAX_PAYLOAD:
+            raise ValueError("encode input exceeds 2 GiB")
+        buffers = self._buffers
+        # Borrow the buffer so a re-entrant call on this thread cannot overwrite it.
+        out, buffers.batch = buffers.batch or _IDs(1024), None
+        allocated = ctypes.c_void_p()
+        size: int = self._encode_batch(
+            self._handle,
+            data,
+            len(data),
+            runes.buffer_info()[0],
+            len(runes),
+            threads,
+            max_length,
+            special,
+            width,
+            out.address,
+            len(out.view),
+            ctypes.byref(allocated),
+        )
+        if allocated.value is None:
+            try:
+                if size < 0:
+                    raise _batch_error(size)
+                return build(out.view[:size], runes)
+            finally:
+                buffers.batch = out
+        try:
+            ids = (ctypes.c_uint32 * size).from_address(allocated.value)
+            return build(memoryview(ids).cast("B").cast("I"), runes)
+        finally:
+            self._lib.bntok_free(allocated)
+            if size <= _MAX_KEPT_IDS:
+                out = _IDs(min(max(size, 2 * len(out.view)), _MAX_KEPT_IDS))
+            buffers.batch = out
+
     def encode(self, texts: list[bytes], threads: int) -> list[list[int]]:
         return encode(self._lib, self._handle, texts, threads)
 
@@ -204,6 +292,14 @@ class NativeHandle:
 
     def close(self) -> None:
         self._finalizer()
+
+
+def _batch_error(status: int) -> Exception:
+    if status == _CLOSED:
+        return ValueError("unknown or closed tokenizer handle")
+    if status == _TOO_LARGE:
+        return MemoryError("encoded batch is too large")
+    return RuntimeError("invalid native batch request")
 
 
 def encode(lib: ctypes.CDLL, handle: int, texts: list[bytes], threads: int) -> list[list[int]]:
