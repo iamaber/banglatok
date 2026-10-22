@@ -89,24 +89,6 @@ func bntok_encode_batch(handle C.ulonglong, data *C.char, length C.size_t, runes
 	return C.longlong(size)
 }
 
-// bntok_encode encodes a length-prefixed batch with up to threads workers;
-// threads <= 0 uses every available CPU.
-//
-//export bntok_encode
-func bntok_encode(handle C.ulonglong, data *C.char, length C.size_t, threads C.int, outputLength *C.size_t) *C.char {
-	if outputLength == nil {
-		return nil
-	}
-	var response []byte
-	if uint64(length) > math.MaxInt32 || (data == nil && length != 0) {
-		response = native.EncodeError("invalid encode input size")
-	} else {
-		response = registry.EncodeBinary(uint64(handle), unsafe.Slice((*byte)(unsafe.Pointer(data)), int(length)), int(threads))
-	}
-	*outputLength = C.size_t(len(response))
-	return (*C.char)(C.CBytes(response))
-}
-
 //export bntok_call
 func bntok_call(request *C.char) *C.char {
 	return C.CString(string(registry.Call([]byte(C.GoString(request)))))

@@ -109,7 +109,12 @@ def closed_errors(model: str) -> str:
     actions: list[Callable[[], object]] = [
         lambda: closed.encode("a"),
         lambda: closed.encode(None),  # type: ignore[arg-type]
+        lambda: closed.encode("\ud800"),
+        lambda: closed.encode(b"a"),  # type: ignore[arg-type]
         lambda: closed.count_tokens("a"),
+        lambda: closed.count_tokens(None),  # type: ignore[arg-type]
+        lambda: closed.count_tokens("\ud800"),
+        lambda: closed.tokenize("a"),
         lambda: closed.encode_batch(["a"]),
         lambda: closed.encode_batch("a"),
         lambda: closed(["a"], padding="x"),  # type: ignore[call-overload]

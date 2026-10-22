@@ -8,7 +8,7 @@ import (
 	"github.com/iamaber/banglatok/tokenizer"
 )
 
-// Binary encoding operates on handles created and released through the JSON control path.
+// Batch encoding operates on handles created and released through the JSON control path.
 func TestWireContracts(t *testing.T) {
 	for _, algorithm := range []string{"unigram", "bpe"} {
 		t.Run(algorithm, func(t *testing.T) {
@@ -31,14 +31,14 @@ func TestWireContracts(t *testing.T) {
 				t.Fatal(loaded)
 			}
 			for _, texts := range [][]string{nil, {"", "ab", "আমি\tভালো 🙂", "a\x00b"}} {
-				got, message, ok := parseBinary(t, registry.EncodeBinary(loaded.Handle, frame(texts), 1), len(texts))
-				if !ok || len(got) != len(texts) {
-					t.Fatalf("binary encode failed: %s", message)
+				got, err := encodeTexts(&registry, loaded.Handle, texts, 1)
+				if err != nil || len(got) != len(texts) {
+					t.Fatalf("batch encode failed: %v", err)
 				}
 				for i, text := range texts {
 					want := model.Encode(text)
 					if !slices.Equal(got[i], want) {
-						t.Fatalf("binary/direct mismatch for %q: %v != %v", text, got[i], want)
+						t.Fatalf("batch/direct mismatch for %q: %v != %v", text, got[i], want)
 					}
 					out := make([]uint32, len(want))
 					if n, err := registry.EncodeInto(loaded.Handle, text, out); err != nil || n != len(want) {
@@ -69,8 +69,8 @@ func TestWireContracts(t *testing.T) {
 			if closed.Error != "unknown or closed tokenizer handle" {
 				t.Fatal(closed)
 			}
-			if _, message, ok := parseBinary(t, registry.EncodeBinary(loaded.Handle, nil, 1), 0); ok || message != closed.Error {
-				t.Fatalf("binary close error: %q", message)
+			if _, err := encodeTexts(&registry, loaded.Handle, nil, 1); err == nil || err.Error() != closed.Error {
+				t.Fatalf("batch close error: %v", err)
 			}
 			if _, err := registry.EncodeInto(loaded.Handle, "", nil); err == nil || err.Error() != closed.Error {
 				t.Fatalf("encode into close error: %v", err)

@@ -36,10 +36,9 @@ func TestParallelMatchesSerial(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			r := Registry{models: map[uint64]*tokenizer.Tokenizer{1: model}}
 			texts := mixedBatch()
-			input := frame(texts)
-			want, message, ok := parseBinary(t, r.EncodeBinary(1, input, 1), len(texts))
-			if !ok {
-				t.Fatal(message)
+			want, err := encodeTexts(&r, 1, texts, 1)
+			if err != nil {
+				t.Fatal(err)
 			}
 			for i, text := range texts[:50] {
 				if !slices.Equal(want[i], model.Encode(text)) {
@@ -47,9 +46,9 @@ func TestParallelMatchesSerial(t *testing.T) {
 				}
 			}
 			for _, threads := range []int{0, 2, 3, 8, 64} {
-				got, message, ok := parseBinary(t, r.EncodeBinary(1, input, threads), len(texts))
-				if !ok {
-					t.Fatal(message)
+				got, err := encodeTexts(&r, 1, texts, threads)
+				if err != nil {
+					t.Fatal(err)
 				}
 				for i := range want {
 					if !slices.Equal(got[i], want[i]) {
@@ -65,14 +64,17 @@ func TestParallelConcurrentCalls(t *testing.T) {
 	_, model := loadTestModel(t, "bpe")
 	r := Registry{models: map[uint64]*tokenizer.Tokenizer{1: model}}
 	texts := mixedBatch()
-	input := frame(texts)
-	want := r.EncodeBinary(1, input, 1)
+	want, err := encodeTexts(&r, 1, texts, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
 	var workers sync.WaitGroup
 	for worker := range 8 {
 		workers.Add(1)
 		go func() {
 			defer workers.Done()
-			if got := r.EncodeBinary(1, input, 1+worker); !slices.Equal(got, want) {
+			got, err := encodeTexts(&r, 1, texts, 1+worker)
+			if err != nil || !slices.EqualFunc(got, want, slices.Equal) {
 				t.Errorf("worker %d: concurrent parallel result differs", worker)
 			}
 		}()
