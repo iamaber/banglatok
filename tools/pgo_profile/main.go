@@ -8,12 +8,12 @@ package main
 
 import (
 	"bufio"
-	"encoding/binary"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
 	"runtime/pprof"
+	"unicode/utf8"
 
 	"github.com/iamaber/banglatok/internal/native"
 )
@@ -50,11 +50,14 @@ func main() {
 		}
 		for i := 0; i < len(texts); i += 64 {
 			var batch []byte
+			var runes []uint32
 			for _, text := range texts[i:min(i+64, len(texts))] {
-				batch = binary.LittleEndian.AppendUint32(batch, uint32(len(text)))
 				batch = append(batch, text...)
+				runes = append(runes, uint32(utf8.RuneCountInString(text)))
 			}
-			registry.EncodeBinary(loaded.Handle, batch)
+			encoded, err := registry.EncodeBatch(loaded.Handle, string(batch), runes, 0, native.Layout{})
+			check(err)
+			encoded.Write(make([]uint32, encoded.Size()), make([]uint32, len(runes)))
 		}
 	}
 	pprof.StopCPUProfile()
