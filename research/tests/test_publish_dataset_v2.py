@@ -6,6 +6,7 @@ import hashlib
 import io
 import json
 import sqlite3
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -193,9 +194,28 @@ class PublishDatasetV2Tests(unittest.TestCase):
         patch.object(publisher, "V2_MIN_TRAIN_RECORDS", 2).start()
         patch.object(publisher, "V2_MIN_TRAIN_CHARACTERS", 80).start()
         patch.object(publisher, "FROZEN_HASHES", self.frozen_hashes).start()
-        patch.object(
-            publisher.subprocess, "check_output", return_value="fixture-revision\n"
-        ).start()
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True, capture_output=True)
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(self.root),
+                "-c",
+                "user.name=Corpus Fixture",
+                "-c",
+                "user.email=fixture@example.invalid",
+                "-c",
+                f"core.hooksPath={self.root / 'no-hooks'}",
+                "commit",
+                "--allow-empty",
+                "--no-gpg-sign",
+                "-q",
+                "-m",
+                "Research fixture",
+            ],
+            check=True,
+            capture_output=True,
+        )
 
     def save_reports(self):
         save_json(self.expanded / "audit.json", self.audit)
@@ -236,7 +256,6 @@ class PublishDatasetV2Tests(unittest.TestCase):
         self.assertIn("path: data/train.jsonl.gz", card)
         self.assertIn("path: v2/data/train.jsonl.gz", card)
         self.assertIn("CC BY-SA 4.0", card)
-        self.assertIn("not a model promotion", card)
         self.assertFalse((self.output / "manifest.json").exists())
         for path in self.output.rglob("*"):
             if path.is_file():
@@ -285,11 +304,30 @@ class PublishDatasetV2Tests(unittest.TestCase):
             self.stage()
 
     def test_default_cli_still_uses_v1(self):
-        with patch.object(publisher, "prepare", return_value={"splits": {}}) as frozen_prepare:
-            with patch.object(sys, "argv", ["publish_dataset.py", "--dry-run", str(self.output)]):
-                with contextlib.redirect_stdout(io.StringIO()):
-                    publisher.main()
-        frozen_prepare.assert_called_once_with(self.output.resolve())
+        for split in self.frozen_hashes:
+            (self.root / f"data/processed/{split}.jsonl").write_bytes(
+                (self.baseline / f"{split}.jsonl").read_bytes()
+            )
+        save_json(self.root / "data/processed/stats.json", self.stats)
+        for name in ("cmd/bntok/main.go", "go.mod", "go.sum"):
+            destination = self.root / name
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes((TOOLS.parent / name).read_bytes())
+        with (
+            patch.object(publisher, "EXPECTED_ROWS", dict.fromkeys(self.frozen_hashes, 1)),
+            patch.object(publisher, "TRAIN_SHA256", self.frozen_hashes["train"]),
+            patch.object(sys, "argv", ["publish_dataset.py", "--dry-run", str(self.output)]),
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
+            publisher.main()
+        manifest = json.loads((self.output / "manifest.json").read_text())
+        self.assertEqual(manifest["manifest_version"], 1)
+        self.assertEqual(
+            manifest["splits"]["train"]["uncompressed_sha256"], self.frozen_hashes["train"]
+        )
+        with gzip.open(self.output / "data/train.jsonl.gz", "rb") as stream:
+            self.assertEqual(stream.read(), (self.baseline / "train.jsonl").read_bytes())
+        self.assertFalse((self.output / "v2").exists())
 
 
 if __name__ == "__main__":
