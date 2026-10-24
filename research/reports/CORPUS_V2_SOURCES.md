@@ -82,6 +82,8 @@ uv pip install --python .venv/corpus-v2/bin/python pyarrow==22.0.0 mwparserfromh
 
 Selectors: `--source bn-wikipedia|en-wikipedia|bn-wikibooks|bn-wikivoyage|all`; `--bn-quota`, `--en-quota`, `--books-quota`, `--voyage-quota` (zero means all pinned material), `--en-shards 1..8`, `--max-paragraphs 10..20`, `--batch-size`, `--raw`, `--output`, `--lock`. Defaults: all Bengali material, 3,200,000 English records, first eight English shards maximum, twenty paragraphs/page.
 
+Continuation selectors (default `0`/unset leaves the commands above byte-for-byte unchanged): `--en-offset N` re-reads English shards in the identical pinned order and extraction, **skips the first N qualifying records** that the default run would emit, and only then writes; `--en-quota` counts emitted (new) records only. Skipped rows are never written or counted as records, but each shard's sidecar records the requested `record_offset` setting, `skipped_records`, `skipped_normalized_characters`, `skipped_bytes` and the SHA-256 of the skipped rows exactly as they would have been serialized, so the skipped prefix can be matched to the prior candidate files. A shard lying wholly inside the offset produces provenance only (`"output": null`), no candidate file. The per-article 20-paragraph cap counts skipped paragraphs, so an article split at the offset continues with its next qualifying paragraph under the same group. `--en-offset` requires `--source en-wikipedia` and `--raw`/`--output` outside `data/raw/expanded-v2`. `--reuse-artifacts DIR` hard-links checksum-verified files from a prior artifact directory instead of re-downloading; neither link is written.
+
 Candidates: `data/raw/expanded-v2/candidates/*.jsonl`. Downloaded artifacts: `data/raw/expanded-v2/artifacts/`; metadata: `data/raw/expanded-v2/metadata/*.json`; acquisition summaries: `data/raw/expanded-v2/acquisition-<selector>.json`. Frozen raw/processed data and published model files are not rewritten. Candidate hashes/counts and final preparation acceptance are distinct measurements.
 
 ## Measured candidate supply
@@ -106,6 +108,31 @@ Final source-lock SHA-256: **`37b99fb6577c8a92240977cfa8c454db6405a6b9a6d571be12
 |---|---:|---|
 | `bnwikibooks-20261101-pages-articles.xml.bz2` | 19,137,711 | `8665bf7f5c2df76d9e90b47309611ca9de6f227a2410e4ff813031a56667605d` |
 | `bnwikivoyage-20261101-pages-articles.xml.bz2` | 21,363,536 | `803f150c0a096daed5baf406d4f933cc98f90baa6f9fea0ee9e072bf23ed22bd` |
+
+## Attempt 1 shortfall and English continuation
+
+Preparing the seven-file supply above accepted **2,372,517 unique training records** (558,268,779 normalized characters). The character gate and the leakage audit passed; the record gate (2,817,380) **failed**, about 4.2× the original 563,476 records. That output is kept unchanged at `data/processed/expanded-v2-attempt1/` and is not used for model candidates. No gate was lowered.
+
+To close the gap with genuinely new text, the same pinned English snapshot was read again with `--en-offset 3200000 --en-quota 1800000`, skipping exactly the 3,200,000 passages already acquired:
+
+```sh
+.venv/corpus-v2/bin/python tools/acquire_corpus_v2.py --source en-wikipedia \
+  --en-offset 3200000 --en-quota 1800000 \
+  --raw data/raw/expanded-v2-extension \
+  --output data/raw/expanded-v2-extension/candidates \
+  --reuse-artifacts data/raw/expanded-v2/artifacts
+```
+
+The SHA-256 of each shard's skipped rows equals the original candidate file for that shard (`168d3970…`, `5f3aa243…`, `5b557ed3…`), so the continuation re-derived the identical prefix and emitted none of it. The first three shard downloads were hard-linked from the verified prior artifacts; shard `00003` was downloaded and checked against the lock.
+
+| Candidate basename under `data/raw/expanded-v2-extension/candidates/` | Records | Normalized characters | Bytes | SHA-256 |
+|---|---:|---:|---:|---|
+| `en-wikipedia-train-00002-of-00041.jsonl` | 959,924 | 275,621,066 | 645,755,666 | `331f3c9ab3d7210d545390d9e70e1e24ca6c510e56e5e4a2d40a1db45024273e` |
+| `en-wikipedia-train-00003-of-00041.jsonl` | 840,076 | 244,088,280 | 568,318,689 | `d8c05afe9e3aef436aa0ea6adf39b4a6354f8023f9b327365697efa07ee936d2` |
+
+Total supply is now **5,863,101 candidates** (863,101 Bengali, 5,000,000 English). The extra volume is English only, which makes the corpus more English-heavy. Bucket-weighted training (equal sentence mass within each bucket, then a fixed mixture) keeps English from dominating the learned vocabulary; the per-bucket validation gates check that Bengali and Banglish do not regress.
+
+The final corpus is prepared fresh from all nine candidate files (not appended to attempt 1), so deduplication, near-duplicate grouping and holdout protection apply across every source together.
 
 ## Focused proof
 
