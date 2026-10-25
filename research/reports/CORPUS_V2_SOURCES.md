@@ -134,6 +134,8 @@ Total supply is now **5,863,101 candidates** (863,101 Bengali, 5,000,000 English
 
 The final corpus is prepared fresh from all nine candidate files (not appended to attempt 1), so deduplication, near-duplicate grouping and holdout protection apply across every source together.
 
+`tools/acquire_corpus_v2.py --verify --raw data/raw/expanded-v2-extension --output data/raw/expanded-v2-extension/candidates` passed on both extension files: 1,800,000 records and 519,709,346 normalized characters, with schema, normalization, filters, attribution, counts and hashes rechecked against the sidecars (`data/raw/expanded-v2-extension/verification.json`).
+
 ## Focused proof
 
 The final `.venv/corpus-v2/bin/python tools/acquire_corpus_v2.py --verify` run **passed across all seven complete files**. It streamed every row to check the exact six-string-field schema, permitted source buckets, NFC/whitespace normalization, length/word/script/privacy filters, empty new-material split, source/group prefixes and URL/contributor/license attribution; then independently recomputed record counts, normalized characters, SHA-256 and byte counts against provenance sidecars. Results are retained at **`data/raw/expanded-v2/verification.json`** and match the table above. A separate SHA-256 command confirmed the final source-lock digest.
