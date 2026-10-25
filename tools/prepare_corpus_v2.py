@@ -683,6 +683,12 @@ def parser() -> argparse.ArgumentParser:
         required=True,
         help="repeatable JSONL path/glob (shell quote globs)",
     )
+    result.add_argument(
+        "--reserved-candidates",
+        action="append",
+        default=[],
+        help="repeatable JSONL path/glob of source holdouts used only for leakage exclusion",
+    )
     result.add_argument("--baseline-dir", type=Path, default=DEFAULT_BASELINE)
     result.add_argument("--output", type=Path, default=Path("data/processed/expanded-v2"))
     result.add_argument("--min-train-records", type=int, default=2817380)
@@ -707,6 +713,15 @@ def prepare(args: argparse.Namespace) -> bool:
             raise ValueError(f"candidate path/glob has no matches: {pattern}")
         candidates.update(Path(match).resolve() for match in matches)
     candidates = sorted(candidates)
+    reserved_candidates = set()
+    for pattern in args.reserved_candidates:
+        matches = glob.glob(pattern, recursive=True)
+        if not matches:
+            raise ValueError(f"reserved candidate path/glob has no matches: {pattern}")
+        reserved_candidates.update(Path(match).resolve() for match in matches)
+    reserved_candidates = sorted(reserved_candidates)
+    if set(candidates) & set(reserved_candidates):
+        raise ValueError("candidate and reserved candidate paths must be disjoint")
     baseline_hashes = {
         split: digest_file(args.baseline_dir / f"{split}.jsonl") for split in FROZEN_HASHES
     }
@@ -729,7 +744,7 @@ def prepare(args: argparse.Namespace) -> bool:
     forbidden = {path.resolve() for path in destinations} | {
         (args.baseline_dir / f"{split}.jsonl").resolve() for split in FROZEN_HASHES
     }
-    if any(path in forbidden for path in candidates):
+    if any(path in forbidden for path in candidates + reserved_candidates):
         raise ValueError("candidate paths must not include baseline or output files")
     before, reasons = Counter(), Counter()
     with tempfile.TemporaryDirectory(prefix="banglatok-corpus-v2-") as temporary:
@@ -763,6 +778,21 @@ def prepare(args: argparse.Namespace) -> bool:
                     index.db.commit()
             if not reserved_count:
                 raise ValueError("reserved evaluation contained no recognized complete text fields")
+            reserved_candidate_count = 0
+            reserved_candidate_hashes = {}
+            for path in reserved_candidates:
+                reserved_candidate_hashes[str(path)] = digest_file(path)
+                for number, record in enumerate(read_records(path), 1):
+                    if record["split"] not in {"", "validation", "test"}:
+                        raise ValueError(
+                            f"{path}:{number}: reserved candidate split must be "
+                            "validation, test or empty"
+                        )
+                    index.stage(record, "reserved", before, reasons)
+                    reserved_candidate_count += 1
+                    if number % 10000 == 0:
+                        index.db.commit()
+                index.db.commit()
             candidate_hashes = {}
             for path in candidates:
                 candidate_hashes[str(path)] = digest_file(path)
@@ -856,6 +886,8 @@ def prepare(args: argparse.Namespace) -> bool:
                 "near_group_links": index.near_links,
                 "candidate_source_sha256": candidate_hashes,
                 "reserved_complete_text_strings": reserved_count,
+                "reserved_candidate_records": reserved_candidate_count,
+                "reserved_candidate_source_sha256": reserved_candidate_hashes,
                 "frozen_sha256": baseline_hashes,
                 "output_source_bucket_records": distribution(after),
                 "output_source_bucket_characters": distribution(chars),

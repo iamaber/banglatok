@@ -1,6 +1,6 @@
 # Corpus v2 and tokenizer refresh protocol
 
-This protocol is recorded before inspecting new candidate scores. The task updates tokenizers, not an embedding or language model.
+This protocol was recorded before inspecting new candidate scores. The primary task refreshes tokenizers; matched encoder evaluation is now the final promotion gate because token count alone does not establish downstream quality.
 
 ## Immutable baseline
 
@@ -22,6 +22,12 @@ Use bounded-memory preparation, stronger corruption/PII/repetition/boilerplate f
 
 Preserve original validation/test bytes. New source groups receive deterministic held-out assignments into separate extra-validation/extra-test files. Exclude frozen heldout groups and exact/near text matches from training, independent of input ordering. Report remaining limitations of approximate deduplication.
 
+### Source priority
+
+Acquisition priority is natural Banglish/code-mixed text, then Bengali text from target domains, then additional general Bengali, and only then English volume. A source is eligible only when the exact artifact is revision-pinnable and its first-party terms permit transforming and publicly redistributing the retained text with the required attribution. Repository code licenses do not automatically license collected user content. Reject research-only, noncommercial, no-derivatives, ambiguous upstream-rights and synthetic-transliteration sources.
+
+Small, high-value Banglish/code-mixed sources need not move the fivefold size totals materially. Measure and report their accepted rows separately, retain source groups, and give each language bucket equal sentence mass according to the declared training mixtures rather than duplicating minority records.
+
 ## Candidate training
 
 Retain the original `bn-bpe-58k` and `bn-bpe-28k` artifacts and IDs. New models get new explicit identifiers.
@@ -42,6 +48,14 @@ Promotion to default requires:
 `benchmarks/select_corpus_v2.py` applies these gates and records every rejected candidate, checking both single/batch throughput on both validation corpora. Native byte-fallback metrics count unmerged byte IDs 4–259, including ordinary ASCII punctuation and spaces; they are not unknown-token counts or a directly comparable metric for other tokenizer families.
 
 If no candidate passes, retain the published default and report the negative result; do not describe a larger corpus or a retrained candidate as a demonstrated quality improvement.
+
+## Matched encoder promotion gate
+
+An intrinsic winner is eligible for an experimental v2 model ID, but it does not replace the package default until a matched encoder comparison also passes. Reuse the repository's pinned `intfloat/multilingual-e5-small` body, reviewed alignment data, hard negatives, objectives, seeds 17/29/43, equal-data and equal-compute budgets, and source-backed retrieval evaluator. Compare the candidate with the original E5 tokenizer under identical training exposure; do not compare only against unchanged E5 or an old custom-tokenizer checkpoint.
+
+The primary downstream metric remains Banglish→Bengali nDCG@10. Promotion requires at least +0.03 absolute development gain over the matched adapted-original control, a paired 95% interval above zero, no more than 0.01 English-query mean nDCG loss, and no more than 1.25× latency or peak memory in every seed under both budgets. Freeze candidate identity, tokenizer hash, initialization method, corpus/alignment hashes and thresholds before scoring it.
+
+The existing source-backed benchmark is agent-authored and has been used for earlier model decisions. A new candidate has not been scored on it, but its reserved split is not a never-observed benchmark. Report that limitation and treat the result as project evidence, not independent natural-traffic validation. If the encoder gate fails, retain the current package default even when the v2 tokenizer has better intrinsic compression; the experimental model may still be published with that negative downstream result.
 
 ## Final benchmarks
 
