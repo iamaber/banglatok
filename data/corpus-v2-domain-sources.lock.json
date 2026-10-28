@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "repository": "ai4bharat/Pralekha",
+  "source": "Pralekha scoped Bengali alignable documents",
+  "revision": "4c16a270141891dd5c3e98f6f4f207f11bd11236",
+  "license": "CC BY 4.0",
+  "license_evidence": "https://huggingface.co/datasets/ai4bharat/Pralekha/blob/4c16a270141891dd5c3e98f6f4f207f11bd11236/README.md#license",
+  "source_declarations": {
+    "pralekha-ben": {
+      "language": "bn",
+      "bucket": "bangla",
+      "record_source": "pralekha-ben-alignable",
+      "group": "pralekha:<n_id>",
+      "license": "CC BY 4.0",
+      "attribution_marker": "Pralekha; AI4Bharat; CC BY 4.0"
+    }
+  },
+  "upstream_policies": [
+    "https://www.pmindia.gov.in/en/website-policies/",
+    "https://newindiasamachar.pib.gov.in/Documents/CopyrightPolicy.pdf"
+  ],
+  "scope": "alignable Bengali documents only; official dev/test Bengali targets are exclusion-only; unalignable Sangraha is prohibited",
+  "artifacts": [
+    {
+      "path": "alignable/ben-00000-of-00002.parquet",
+      "bytes": 116708254,
+      "sha256": "86e5f81f87018b0b4abd02d7572a16a08be63a4607bcd95fe5153d2850c9dd74"
+    },
+    {
+      "path": "alignable/ben-00001-of-00002.parquet",
+      "bytes": 114582060,
+      "sha256": "8914ed011dc9e62a85f5259e9caf2d09489fd19d69695616b887b49e762c5dae"
+    },
+    {
+      "path": "dev/eng_ben-00000-of-00001.parquet",
+      "bytes": 4281452,
+      "sha256": "30218c9a8d71b9d953646cb98abb3e5d343b6a8495644bc2d961885b583fe3a0"
+    },
+    {
+      "path": "test/eng_ben-00000-of-00001.parquet",
+      "bytes": 4987905,
+      "sha256": "acf64f78fd833670c1eea17023848ff182d6efe60f7f98a3930cc69cfd48d65a"
+    }
+  ]
+}

@@ -140,6 +140,14 @@ The final corpus is prepared fresh from all nine candidate files (not appended t
 
 Vashantor v2 (`10.17632/bj5jgk878b.2`) is **evaluation-only**. Although Mendeley labels the package CC BY 4.0, the accompanying paper says its seed sentences came from Facebook, YouTube, Instagram, news portals and student conversations before regional forms were produced. The package does not establish redistribution grants from those platforms, publishers or original commenters. Its 46,875 official-train forms therefore remain outside corpus v2; the local conversion probe was deleted and no Vashantor output is passed to preparation. See `CORPUS_V2_BANGLISH_SOURCES.md`.
 
+### Scoped Bengali domain source
+
+Pralekha revision `4c16a270141891dd5c3e98f6f4f207f11bd11236` contributes Bengali alignable documents from Indian Press Information Bureau news bulletins and Mann Ki Baat podcast scripts. The dataset card is CC BY 4.0; the pinned domain lock also records the first-party PIB and PM India reproduction policies. Unalignable Sangraha material is prohibited.
+
+`tools/acquire_pralekha_v2.py` checksum-verified two Bengali alignable Parquet shards (231,290,314 bytes total) and the official English–Bengali dev/test shards. It emitted **731,001 Bengali candidate paragraphs / 226,359,565 normalized characters**. The official dev/test Bengali targets emitted **30,298 exclusion-only paragraphs / 6,031,276 characters** and are passed through `--reserved-candidates`; they never become corpus rows.
+
+The acquisition rejected 519,278 lines outside the 12–2,000-character range, 362,571 lines below eight words, 12,239 gross script mismatches and 154 privacy-pattern matches. A second conversion reproduced both output SHA-256 values exactly: candidates `14c0c830…` and reserved holdouts `390395d3…`. Each candidate retains its Pralekha `n_id`, `doc_id`, pinned revision, source card and CC BY attribution.
+
 ## Focused proof
 
 The final `.venv/corpus-v2/bin/python tools/acquire_corpus_v2.py --verify` run **passed across all seven complete files**. It streamed every row to check the exact six-string-field schema, permitted source buckets, NFC/whitespace normalization, length/word/script/privacy filters, empty new-material split, source/group prefixes and URL/contributor/license attribution; then independently recomputed record counts, normalized characters, SHA-256 and byte counts against provenance sidecars. Results are retained at **`data/raw/expanded-v2/verification.json`** and match the table above. A separate SHA-256 command confirmed the final source-lock digest.
