@@ -34,9 +34,13 @@ def row(text, source, group, split):
             "CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/); "
             "GFDL where applicable; snapshot 20231101"
         )
+    if source == "pralekha-ben-alignable":
+        attribution = (
+            "Pralekha; AI4Bharat; CC BY 4.0; pinned dataset card; n_id=fixture; doc_id=fixture"
+        )
     return dict(
         text=text,
-        bucket="english",
+        bucket="bangla" if source == "pralekha-ben-alignable" else "english",
         source=source,
         group=group,
         attribution=attribution,
@@ -85,8 +89,16 @@ class PublishDatasetV2Tests(unittest.TestCase):
             "wiki-en:123",
             "train",
         )
+        domain = row(
+            "সরকারি জনসেবার নথিতে নাগরিক সহায়তার বিস্তারিত প্রক্রিয়া ব্যাখ্যা করা হয়েছে।",
+            "pralekha-ben-alignable",
+            "pralekha:fixture",
+            "train",
+        )
         (self.expanded / "train.jsonl").write_bytes(
-            (self.baseline / "train.jsonl").read_bytes() + (json.dumps(train) + "\n").encode()
+            (self.baseline / "train.jsonl").read_bytes()
+            + (json.dumps(train, ensure_ascii=False) + "\n").encode()
+            + (json.dumps(domain, ensure_ascii=False) + "\n").encode()
         )
         for split, text, group in (
             (
@@ -178,13 +190,22 @@ class PublishDatasetV2Tests(unittest.TestCase):
                 {**entry, "sha256": publisher.sha256(path), "bytes": path.stat().st_size}
             )
         save_json(self.root / "data/corpus-v2-sources.lock.json", self.lock)
+        domain_lock = json.loads(
+            (TOOLS.parent / "data/corpus-v2-domain-sources.lock.json").read_text()
+        )
+        save_json(self.root / "data/corpus-v2-domain-sources.lock.json", domain_lock)
         (self.root / "docs").mkdir()
         (self.root / "docs/DATASET.md").write_bytes((TOOLS.parent / "docs/DATASET.md").read_bytes())
         reports = self.root / "research/reports"
         reports.mkdir(parents=True)
         for name in ("CORPUS_V2_PROTOCOL.md", "CORPUS_V2_SOURCES.md"):
             (reports / name).write_bytes((TOOLS.parent / "research/reports" / name).read_bytes())
-        for name in ("prepare_corpus_v2.py", "acquire_corpus_v2.py", "publish_dataset.py"):
+        for name in (
+            "prepare_corpus_v2.py",
+            "acquire_corpus_v2.py",
+            "acquire_pralekha_v2.py",
+            "publish_dataset.py",
+        ):
             path = self.root / "tools" / name
             path.parent.mkdir(exist_ok=True)
             path.write_bytes((TOOLS / name).read_bytes())
@@ -237,7 +258,7 @@ class PublishDatasetV2Tests(unittest.TestCase):
         self.stage()
         manifest = json.loads((self.output / "v2/manifest.json").read_text())
         self.assertEqual(manifest["corpus_version"], "v2")
-        self.assertEqual(manifest["splits"]["train"]["rows"], 2)
+        self.assertEqual(manifest["splits"]["train"]["rows"], 3)
         for split in ("train", "validation", "test", "extra-validation", "extra-test"):
             entry = manifest["splits"][split]
             self.assertEqual(entry["path"], f"v2/data/{split}.jsonl.gz")
@@ -249,6 +270,7 @@ class PublishDatasetV2Tests(unittest.TestCase):
         self.assertTrue((self.output / "v2/independent-audit.json").is_file())
         self.assertTrue((self.output / "v2/PROTOCOL.md").is_file())
         self.assertTrue((self.output / "v2/frozen-v1-sources.lock.json").is_file())
+        self.assertTrue((self.output / "v2/domain-sources.lock.json").is_file())
         card = (self.output / "README.md").read_text()
         self.assertIn("config_name: default\n  default: true", card)
         self.assertIn("config_name: v2", card)
