@@ -66,6 +66,7 @@ def reserved_records(paths: list[tuple[str, Path]]):
     import pyarrow.parquet as pq
 
     for split, path in paths:
+        corpus_split = "validation" if split == "dev" else split
         parquet = pq.ParquetFile(path, pre_buffer=False)
         required = {"src_lang", "tgt_lang", "src_txt", "tgt_txt"}
         if set(parquet.schema_arrow.names) != required:
@@ -87,7 +88,7 @@ def reserved_records(paths: list[tuple[str, Path]]):
                             "source": f"pralekha-ben-{split}",
                             "group": group,
                             "attribution": ATTRIBUTION + "; official evaluation exclusion",
-                            "split": split,
+                            "split": corpus_split,
                         }
 
 
