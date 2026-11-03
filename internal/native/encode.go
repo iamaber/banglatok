@@ -1,10 +1,6 @@
 package native
 
-import (
-	"encoding/binary"
-	"sync"
-	"unsafe"
-)
+import "sync"
 
 // Scratch ID buffers are reused across calls; returned data never aliases them.
 var scratch = sync.Pool{New: func() any { return new([]int) }}
@@ -36,54 +32,4 @@ func (r *Registry) EncodeInto(handle uint64, text string, out []uint32) (int, er
 	}
 	release(buffer, ids)
 	return len(ids), nil
-}
-
-// EncodeBinary accepts repeated little-endian uint32 byte lengths followed by
-// UTF-8 text. data may alias caller-owned memory for the duration of the call.
-// The response is native-endian uint32 words: status 1 followed by an error
-// message in the remaining bytes, or status 0, one ID count per text, then all
-// IDs in input order.
-func (r *Registry) EncodeBinary(handle uint64, data []byte) []byte {
-	model, err := r.model(handle)
-	if err != nil {
-		return EncodeError(err.Error())
-	}
-	var texts []string
-	for len(data) > 0 {
-		if len(data) < 4 {
-			return EncodeError("truncated text length")
-		}
-		n := uint64(binary.LittleEndian.Uint32(data))
-		data = data[4:]
-		if n > uint64(len(data)) {
-			return EncodeError("truncated text")
-		}
-		texts = append(texts, unsafe.String(unsafe.SliceData(data), int(n)))
-		data = data[int(n):]
-	}
-	buffer := scratch.Get().(*[]int)
-	ids := (*buffer)[:0]
-	ends := make([]int, len(texts))
-	for i, text := range texts {
-		ids = model.AppendEncode(ids, text)
-		ends[i] = len(ids)
-	}
-	output := make([]byte, 4*(1+len(texts)+len(ids)))
-	words := unsafe.Slice((*uint32)(unsafe.Pointer(unsafe.SliceData(output))), len(output)/4)
-	previous := 0
-	for i, end := range ends {
-		words[1+i] = uint32(end - previous)
-		previous = end
-	}
-	for i, id := range ids {
-		words[1+len(texts)+i] = uint32(id)
-	}
-	release(buffer, ids)
-	return output
-}
-
-// EncodeError builds the EncodeBinary error response for message.
-func EncodeError(message string) []byte {
-	output := binary.NativeEndian.AppendUint32(nil, 1)
-	return append(output, message...)
 }

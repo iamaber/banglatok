@@ -37,10 +37,10 @@ type node struct {
 type Tokenizer struct {
 	model           Model
 	trie            []node
-	mergeRanks      map[uint64]int
+	mergeRanks      mergeTable
 	characters      map[rune]int
 	denseCharacters []int32
-	encodedPieces   map[string][]int
+	cache           *wordCache
 	spaceFusion     []int
 }
 
@@ -73,9 +73,21 @@ func New(m Model) (*Tokenizer, error) {
 			t.spaceFusion[id] = base + i
 		}
 	}
+	// Only Unigram walks the trie; BPE needs just the duplicate check.
+	var seen map[string]struct{}
+	if m.Algorithm == "bpe" {
+		seen = make(map[string]struct{}, len(m.Pieces))
+	}
 	for i, p := range m.Pieces {
 		if p.Text == "" || !utf8.ValidString(p.Text) || math.IsNaN(p.Score) || math.IsInf(p.Score, 0) || p.Score > 0 {
 			return nil, fmt.Errorf("invalid piece %d", i)
+		}
+		if seen != nil {
+			if _, ok := seen[p.Text]; ok {
+				return nil, fmt.Errorf("duplicate piece %q", p.Text)
+			}
+			seen[p.Text] = struct{}{}
+			continue
 		}
 		n := 0
 		for j := range len(p.Text) {
@@ -103,32 +115,55 @@ func New(m Model) (*Tokenizer, error) {
 	return t, nil
 }
 
+// Load reads a JSON model. A compiled sidecar (see CompiledPath) replaces
+// parsing and cache segmentation when it matches the JSON bytes exactly.
 func Load(path string) (*Tokenizer, error) {
-	b, err := os.ReadFile(path)
+	source, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
+	if t, err := loadCompiled(CompiledPath(path), source); err == nil {
+		return t, nil
+	}
+	t, _, _, err := loadJSON(source)
+	return t, err
+}
+
+// loadJSON also returns the cache IDs and per-word ends for compilation.
+func loadJSON(source []byte) (*Tokenizer, []uint32, []uint32, error) {
 	var m Model
-	if err = json.Unmarshal(b, &m); err != nil {
-		return nil, err
+	if err := json.Unmarshal(source, &m); err != nil {
+		return nil, nil, nil, err
 	}
 	t, err := New(m)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
-	// Loaded models cache vocabulary strings and optional training words, never
-	// caller text. Compute their actual segmentation rather than assuming that
-	// every learned piece wins against competing Unigram paths or BPE merge ranks.
-	t.encodedPieces = make(map[string][]int, len(m.Pieces)+len(m.CacheWords))
+	words := cacheWords(m)
+	ids, ends := make([]uint32, 0, 2*len(words)), make([]uint32, len(words))
+	var buffer []int
+	for i, word := range words {
+		buffer = t.AppendEncode(buffer[:0], word)
+		for _, id := range buffer {
+			ids = append(ids, uint32(id))
+		}
+		ends[i] = uint32(len(ids))
+	}
+	t.cache = newWordCache(words, ids, ends, t.spaceFusion)
+	return t, ids, ends, nil
+}
+
+// cacheWords lists vocabulary strings and optional training words, never
+// caller text. Load computes their actual segmentation rather than assuming
+// that every learned piece wins against competing Unigram paths or BPE ranks.
+func cacheWords(m Model) []string {
+	words := make([]string, 0, len(m.Pieces)+len(m.CacheWords))
 	for _, piece := range m.Pieces {
 		if !strings.Contains(piece.Text, " ") && piece.Text == Normalize(piece.Text) {
-			t.encodedPieces[piece.Text] = t.Encode(piece.Text)
+			words = append(words, piece.Text)
 		}
 	}
-	for _, word := range m.CacheWords {
-		t.encodedPieces[word] = t.Encode(word)
-	}
-	return t, nil
+	return append(words, m.CacheWords...)
 }
 
 func (m Model) Save(path string) error {
@@ -150,22 +185,50 @@ func (t *Tokenizer) Encode(text string) []int {
 
 // AppendEncode appends the IDs of text to dst, letting callers reuse buffers.
 func (t *Tokenizer) AppendEncode(dst []int, text string) []int {
-	s := Normalize(text)
 	if dst == nil {
-		dst = make([]int, 0, len(s)/4+8)
+		dst = make([]int, 0, len(text)/4+8)
 	}
+	if ids, ok := t.appendWords(dst, text, true); ok {
+		return ids
+	}
+	ids, _ := t.appendWords(dst, Normalize(text), false)
+	return ids
+}
+
+// appendWords encodes space-separated words. With verify it gives up, so the
+// caller can normalize first, unless it proves Normalize(s) == s on the way:
+// cached words are normalized, a single space between normalized words has
+// normalization boundaries on both sides, and alreadyNormalized checks the rest.
+func (t *Tokenizer) appendWords(dst []int, s string, verify bool) ([]int, bool) {
 	ids, first := dst, len(dst)
 	var local [128]viterbiState
 	scratch := local[:]
 	for len(s) > 0 {
-		w, rest, _ := strings.Cut(s, " ")
+		w, rest, found := strings.Cut(s, " ")
+		if verify && (w == "" || found && rest == "") {
+			return dst, false
+		}
 		if len(ids) > first {
 			ids = append(ids, ByteOffset+32)
 		}
 		start := len(ids)
-		if cached, ok := t.encodedPieces[w]; ok {
-			ids = append(ids, cached...)
-		} else if t.model.Algorithm == "bpe" {
+		if c := t.cache.find(w); c != nil {
+			// Hits carry their space-fused first ID precomputed.
+			cached := t.cache.ids[c.ids : c.ids+c.count]
+			if start > first && c.fused != 0 {
+				ids[start-1] = int(c.fused)
+				cached = cached[1:]
+			}
+			for _, id := range cached {
+				ids = append(ids, int(id))
+			}
+			s = rest
+			continue
+		}
+		if verify && !alreadyNormalized(w) {
+			return dst, false
+		}
+		if t.model.Algorithm == "bpe" {
 			ids = t.appendBPE(ids, w)
 		} else {
 			if len(scratch) < len(w)+1 {
@@ -182,7 +245,7 @@ func (t *Tokenizer) AppendEncode(dst []int, text string) []int {
 		}
 		s = rest
 	}
-	return ids
+	return ids, true
 }
 
 // Vocabulary returns learned piece texts in ID order, starting at PieceOffset,

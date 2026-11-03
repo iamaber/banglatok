@@ -88,7 +88,7 @@ def candidates(cache_dir: Path, sentencepiece_models: list[Path]) -> list[Candid
                 "bundled",
                 ours.vocab_size,
                 ours.encode,
-                ours.encode_batch,
+                lambda texts, ours=ours: ours.encode_batch(texts, num_threads=1),
                 ours.decode,
                 None,
                 "banglatok bundled model",

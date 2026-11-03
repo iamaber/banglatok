@@ -2,14 +2,80 @@
 
 import gc
 import json
+import multiprocessing
+import os
+import sys
 import tempfile
 import unittest
 import weakref
+from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from importlib.resources import as_file, files
 from pathlib import Path
 
-from banglatok import Tokenizer, _native, normalize
+from banglatok import BOS_ID, EOS_ID, PAD_ID, Tokenizer, _native, normalize
+
+try:
+    import numpy
+except ImportError:
+    numpy = None
+
+
+@contextmanager
+def environment(name: str, value: str) -> Iterator[None]:
+    previous = os.environ.get(name)
+    os.environ[name] = value
+    try:
+        yield
+    finally:
+        if previous is None:
+            del os.environ[name]
+        else:
+            os.environ[name] = previous
+
+
+def reference_call(
+    tok: Tokenizer, texts: list[str], special: bool, max_length: int | None, padding: object
+) -> dict[str, list[list[int]]]:
+    """The original list implementation of Tokenizer.__call__ for one batch."""
+    batch = [tok.encode(text) for text in texts]
+    reserve = 2 if special else 0
+    if max_length is not None:
+        batch = [ids[: max_length - reserve] for ids in batch]
+    if special:
+        batch = [[BOS_ID, *ids, EOS_ID] for ids in batch]
+    width = 0
+    if padding == "max_length":
+        width = max_length or 0
+    elif padding:
+        width = max(map(len, batch), default=0)
+    return {
+        "input_ids": [ids + [PAD_ID] * (width - len(ids)) for ids in batch],
+        "attention_mask": [[1] * len(ids) + [0] * (width - len(ids)) for ids in batch],
+    }
+
+
+def _use_in_forked_child(tok: Tokenizer) -> None:
+    attempts = [
+        lambda: tok.encode("ami"),
+        lambda: tok.encode(None),
+        lambda: tok.count_tokens("ami"),
+        lambda: tok.encode_batch(["ami"]),
+        lambda: tok(["ami"], padding=True),
+    ]
+    for attempt in attempts:
+        try:
+            attempt()
+        except RuntimeError as error:
+            if "forkserver" not in str(error):
+                os._exit(2)
+        else:
+            os._exit(1)
+    os._exit(0)
+
+
+MIXED = ["", "a", "আমি ভালো আছি।", "ami valo asi 🙂", "a\0b", "বাংলা " * 400] * 40
 
 
 class TokenizerTests(unittest.TestCase):
@@ -103,6 +169,117 @@ class TokenizerTests(unittest.TestCase):
             expected = tok.encode(text)
             with ThreadPoolExecutor(max_workers=8) as pool:
                 self.assertEqual(list(pool.map(tok.encode, [text] * 200)), [expected] * 200)
+
+    def test_num_threads(self) -> None:
+        texts = [("আমি hello 🙂 a\0b " * (i % 50)) for i in range(2000)]
+        with Tokenizer.from_pretrained("bn-bpe-28k") as tok:
+            expected = [tok.encode(text) for text in texts]
+            for threads in (None, 1, 2, 3, 10, 5000):
+                self.assertEqual(tok.encode_batch(texts, num_threads=threads), expected)
+            with environment("BANGLATOK_NUM_THREADS", "3"):
+                self.assertEqual(tok.encode_batch(texts), expected)
+            for bad in (0, -1, 1.0, True, "2"):
+                with self.assertRaisesRegex(ValueError, "num_threads"):
+                    tok.encode_batch(texts, num_threads=bad)  # type: ignore[arg-type]
+            for setting in ("0", "x", "-2"):
+                with environment("BANGLATOK_NUM_THREADS", setting):
+                    with self.assertRaisesRegex(ValueError, "BANGLATOK_NUM_THREADS"):
+                        tok.encode_batch(texts)
+            with environment("BANGLATOK_NUM_THREADS", " "):
+                self.assertEqual(tok.encode_batch(texts[:3]), expected[:3])
+
+    def test_call_matches_reference(self) -> None:
+        with Tokenizer.from_pretrained("bn-bpe-28k") as tok:
+            for texts in (MIXED, [], [""], MIXED[:5]):
+                for special in (True, False):
+                    for max_length in (None, 2, 7, 600):
+                        for padding in (False, True, "longest", "max_length"):
+                            if padding == "max_length" and max_length is None:
+                                continue
+                            want = reference_call(tok, texts, special, max_length, padding)
+                            for threads in (1, 4):
+                                got = tok(
+                                    texts,
+                                    add_special_tokens=special,
+                                    max_length=max_length,
+                                    padding=padding,
+                                    num_threads=threads,
+                                )
+                                self.assertEqual(got, want)
+                                self.assertIs(type(got["input_ids"]), list)
+            single = tok("আমি ভালো", max_length=8, padding="max_length")
+            self.assertEqual(
+                single,
+                {
+                    k: v[0]
+                    for k, v in reference_call(tok, ["আমি ভালো"], True, 8, "max_length").items()
+                },
+            )
+            # More IDs than a per-thread buffer keeps: the call uses a native allocation.
+            big = tok(MIXED[:6] * 100, max_length=2000, padding="max_length")
+            self.assertEqual(big, reference_call(tok, MIXED[:6] * 100, True, 2000, "max_length"))
+            self.assertEqual(tok(["a"]), reference_call(tok, ["a"], True, None, False))
+            with self.assertRaisesRegex(ValueError, "return_tensors"):
+                tok("a", return_tensors="pt")  # type: ignore[call-overload]
+
+    @unittest.skipIf(numpy is None, "NumPy is not installed")
+    def test_call_numpy(self) -> None:
+        with Tokenizer.from_pretrained("bn-bpe-28k") as tok:
+            for padding, max_length in ((True, None), ("longest", 9), ("max_length", 600)):
+                want = tok(MIXED, padding=padding, max_length=max_length)
+                got = tok(MIXED, padding=padding, max_length=max_length, return_tensors="np")
+                for name in ("input_ids", "attention_mask"):
+                    self.assertEqual(got[name].dtype, numpy.int64)
+                    self.assertEqual(got[name].tolist(), want[name])
+            single = tok("আমি ভালো", return_tensors="np")
+            self.assertEqual(single["input_ids"].tolist(), [tok("আমি ভালো")["input_ids"]])
+            same = tok(["ab", "ab"], return_tensors="np")
+            self.assertEqual(same["attention_mask"].shape, (2, len(tok("ab")["input_ids"])))
+            empty = tok([], padding=True, return_tensors="np")
+            self.assertEqual(empty["input_ids"].shape, (0, 0))
+            with self.assertRaisesRegex(ValueError, "needs padding"):
+                tok(["a", "আমি ভালো আছি"], return_tensors="np")
+
+    def test_call_numpy_missing(self) -> None:
+        saved = sys.modules.get("numpy")
+        sys.modules["numpy"] = None  # type: ignore[assignment]
+        try:
+            with Tokenizer(self.path) as tok, self.assertRaisesRegex(ImportError, "requires NumPy"):
+                tok("a", return_tensors="np")
+        finally:
+            if saved is None:
+                del sys.modules["numpy"]
+            else:
+                sys.modules["numpy"] = saved
+
+    @unittest.skipUnless(hasattr(os, "fork"), "fork is not available")
+    def test_forked_child_hot_paths_fail_fast(self) -> None:
+        with Tokenizer(self.path) as tok:
+            tok.encode("loaded in the parent")
+            child = multiprocessing.get_context("fork").Process(
+                target=_use_in_forked_child, args=(tok,)
+            )
+            child.start()
+            child.join(timeout=60)
+            if child.is_alive():
+                child.kill()
+                child.join()
+                self.fail("a forked child hung in the Go runtime")
+            self.assertEqual(child.exitcode, 0)
+
+    @unittest.skipUnless(os.environ.get("BANGLATOK_TEST_HUGE"), "needs about 10 GB of memory")
+    def test_input_over_2_gib(self) -> None:
+        huge = "a" * 2**31
+        with Tokenizer(self.path) as tok:
+            for action in (
+                lambda: tok.encode(huge),
+                lambda: tok.count_tokens(huge),
+                lambda: tok.encode_batch([huge]),
+                lambda: tok.encode_batch(["a" * 2**30, "a" * (2**30 - 4)]),
+                lambda: tok(huge),
+            ):
+                with self.assertRaisesRegex(ValueError, "exceeds 2 GiB"):
+                    action()
 
     def test_bpe_model(self) -> None:
         path = Path(self.directory.name) / "bpe.json"
