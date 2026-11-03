@@ -148,6 +148,33 @@ Pralekha revision `4c16a270141891dd5c3e98f6f4f207f11bd11236` contributes Bengali
 
 The acquisition rejected 519,278 lines outside the 12–2,000-character range, 362,571 lines below eight words, 12,239 gross script mismatches and 154 privacy-pattern matches. A second conversion reproduced both output SHA-256 values exactly: candidates `14c0c830…` and reserved holdouts `3f40c466…`. The source `dev` label is serialized as corpus `validation`; source identity remains in every row. Each candidate retains its Pralekha `n_id`, `doc_id`, pinned revision, source card and CC BY attribution.
 
+## Accepted corpus
+
+The final preparation read all nine candidate files fresh (no Vashantor) with the frozen v1 splits, BanglishRev and Pralekha dev/test as exclusions. It passed every gate:
+
+| Gate | Required | Measured |
+|---|---:|---:|
+| Unique training records | 2,817,380 | **3,047,265** (5.4× v1) |
+| Normalized training characters | 329,839,300 | **719,996,744** (10.9× v1) |
+| Leakage into frozen holdouts, extra holdouts or reserved evaluation | none | **none** |
+
+| Training source | Bucket | Records |
+|---|---|---:|
+| Wikipedia en `20231101` | english | 1,723,311 |
+| Wikipedia bn `20231101` | bangla | 699,952 |
+| BanglaTLit (frozen v1) | banglish | 216,332 |
+| Tatoeba fra (frozen v1) | english | 161,848 |
+| Pralekha Bengali alignable | bangla | 127,304 |
+| Wikibooks bn `20261101` | bangla | 37,364 |
+| Wikivoyage bn `20261101` | bangla | 33,307 |
+| BanglaTLit (frozen v1) | bangla | 33,287 |
+| Tatoeba ben (frozen v1) | bangla / english | 5,715 / 4,902 |
+| BanglaTLit (frozen v1) | code-mixed | 3,943 |
+
+By bucket: Bangla 936,929, English 1,890,061, Banglish 216,332, code-mixed 3,943. New extra-validation and extra-test splits hold 50,253 and 49,123 records. Preparation recorded 323,569 exact and 238,600 near-duplicate group links. Pralekha falls from 731,001 candidates to 127,304 accepted rows because government bulletins repeat heavily across documents; whole connected groups are removed rather than kept in part.
+
+Banglish and code-mixed text did not grow: every training row in those buckets is frozen v1 material. The growth is English and Bengali prose, so any tokenizer gain is expected mainly there.
+
 ## Focused proof
 
 The final `.venv/corpus-v2/bin/python tools/acquire_corpus_v2.py --verify` run **passed across all seven complete files**. It streamed every row to check the exact six-string-field schema, permitted source buckets, NFC/whitespace normalization, length/word/script/privacy filters, empty new-material split, source/group prefixes and URL/contributor/license attribution; then independently recomputed record counts, normalized characters, SHA-256 and byte counts against provenance sidecars. Results are retained at **`data/raw/expanded-v2/verification.json`** and match the table above. A separate SHA-256 command confirmed the final source-lock digest.
