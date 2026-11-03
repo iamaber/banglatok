@@ -19,16 +19,18 @@ EXTRA = "Held-out data/processed/expanded-v2/extra-validation.jsonl"
 def assess(report: dict, frozen_name: str = FROZEN, extra_name: str = EXTRA) -> dict:
     """Return observed gates and the lowest-extra-token passing model per size."""
     corpora = {label: report["corpora"][label] for label in (frozen_name, extra_name)}
-    baselines = {report["candidates"][name]["vocab_size"]: name for name in BASELINES}
+    baselines = sorted((report["candidates"][name]["vocab_size"], name) for name in BASELINES)
     outcomes, selected = {}, {}
     for name, metadata in sorted(report["candidates"].items()):
         if not name.startswith("banglatok ") or metadata["source"] == "bundled":
             continue
-        size = metadata["vocab_size"]
-        baseline = baselines.get(size)
-        if baseline is None:
+        # Fusion can fall short of its budget; the candidate then competes with the
+        # smallest baseline at least as large, so extra vocabulary never wins on size.
+        tier = next(((v, b) for v, b in baselines if metadata["vocab_size"] <= v), None)
+        if tier is None:
             outcomes[name] = {"passes": False, "gates": {"same_size_baseline": False}}
             continue
+        size, baseline = tier
         candidate = {key: corpus["candidates"][name] for key, corpus in corpora.items()}
         original = {key: corpus["candidates"][baseline] for key, corpus in corpora.items()}
         gates = {
@@ -65,7 +67,8 @@ def assess(report: dict, frozen_name: str = FROZEN, extra_name: str = EXTRA) -> 
         passes = all(gates.values())
         outcomes[name] = {
             "baseline": baseline,
-            "vocab_size": size,
+            "vocab_size": metadata["vocab_size"],
+            "baseline_vocab_size": size,
             "passes": passes,
             "gates": gates,
             "ratios_to_baseline": ratios,

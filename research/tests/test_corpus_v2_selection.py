@@ -82,6 +82,21 @@ class PromotionTests(unittest.TestCase):
         self.assertEqual(result["selected_by_vocabulary_size"], {"57925": NEW})
         self.assertFalse(result["published_default_retained"])
 
+    def test_underfilled_fusion_budget_competes_with_its_size_tier(self):
+        observed = report()
+        observed["candidates"][NEW]["vocab_size"] = 56081
+        result = SELECTION.assess(observed)
+        self.assertEqual(result["candidates"][NEW]["baseline"], OLD)
+        self.assertEqual(result["default_candidate"], NEW)
+        self.assertEqual(result["selected_by_vocabulary_size"], {"57925": NEW})
+
+    def test_larger_vocabulary_than_baseline_cannot_be_promoted(self):
+        observed = report()
+        observed["candidates"][NEW]["vocab_size"] = 60000
+        result = SELECTION.assess(observed)
+        self.assertFalse(result["candidates"][NEW]["passes"])
+        self.assertIsNone(result["default_candidate"])
+
 
 if __name__ == "__main__":
     unittest.main()
