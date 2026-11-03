@@ -1,0 +1,151 @@
+{
+  "benchmark_sha256": "3c9c6cfdb87f227616a44428c44b6010cf00ff86b2f8caed117f35ba96343c61",
+  "candidates": {
+    "banglatok bn-bpe-28k-balanced-v2": {
+      "baseline": "banglatok bn-bpe-28k",
+      "baseline_vocab_size": 27760,
+      "extra_validation_tokens": 3927004,
+      "frozen_validation_tokens": 428396,
+      "gates": {
+        "extra_batch_throughput_at_least_eighty_percent": true,
+        "extra_single_throughput_at_least_eighty_percent": true,
+        "extra_validation_at_least_one_percent_fewer_tokens": false,
+        "frozen_aggregate_no_regression": false,
+        "frozen_bangla_within_tolerance": false,
+        "frozen_banglish_within_tolerance": false,
+        "frozen_batch_throughput_at_least_eighty_percent": true,
+        "frozen_code-mixed_within_tolerance": false,
+        "frozen_english_within_tolerance": false,
+        "frozen_single_throughput_at_least_eighty_percent": true,
+        "normalized_round_trips_and_zero_unknowns": true,
+        "same_size_baseline": true,
+        "stress_round_trips": true
+      },
+      "passes": false,
+      "ratios_to_baseline": {
+        "extra_batch_throughput": 1.2048402841760333,
+        "extra_single_throughput": 1.2200857283005033,
+        "extra_validation_tokens": 1.0020628132240514,
+        "frozen_bangla_fertility": 1.160641967901605,
+        "frozen_banglish_fertility": 1.0814378930685056,
+        "frozen_batch_throughput": 0.9449937683484835,
+        "frozen_code-mixed_fertility": 1.05143391521197,
+        "frozen_english_fertility": 1.2311772883588203,
+        "frozen_single_throughput": 0.9599411411165574
+      },
+      "vocab_size": 25150
+    },
+    "banglatok bn-bpe-28k-v2": {
+      "baseline": "banglatok bn-bpe-28k",
+      "baseline_vocab_size": 27760,
+      "extra_validation_tokens": 3876324,
+      "frozen_validation_tokens": 419900,
+      "gates": {
+        "extra_batch_throughput_at_least_eighty_percent": true,
+        "extra_single_throughput_at_least_eighty_percent": true,
+        "extra_validation_at_least_one_percent_fewer_tokens": true,
+        "frozen_aggregate_no_regression": false,
+        "frozen_bangla_within_tolerance": false,
+        "frozen_banglish_within_tolerance": false,
+        "frozen_batch_throughput_at_least_eighty_percent": true,
+        "frozen_code-mixed_within_tolerance": false,
+        "frozen_english_within_tolerance": false,
+        "frozen_single_throughput_at_least_eighty_percent": true,
+        "normalized_round_trips_and_zero_unknowns": true,
+        "same_size_baseline": true,
+        "stress_round_trips": true
+      },
+      "passes": false,
+      "ratios_to_baseline": {
+        "extra_batch_throughput": 1.2171422148932465,
+        "extra_single_throughput": 1.1966402396200377,
+        "extra_validation_tokens": 0.9891306788605024,
+        "frozen_bangla_fertility": 1.1098253910833868,
+        "frozen_banglish_fertility": 1.1032979817565631,
+        "frozen_batch_throughput": 0.9251332370732043,
+        "frozen_code-mixed_fertility": 1.0935162094763091,
+        "frozen_english_fertility": 1.2419697080559011,
+        "frozen_single_throughput": 0.9304115586243471
+      },
+      "vocab_size": 25147
+    },
+    "banglatok bn-bpe-58k-balanced-v2": {
+      "baseline": "banglatok bn-bpe-58k",
+      "baseline_vocab_size": 57925,
+      "extra_validation_tokens": 3187813,
+      "frozen_validation_tokens": 353126,
+      "gates": {
+        "extra_batch_throughput_at_least_eighty_percent": true,
+        "extra_single_throughput_at_least_eighty_percent": true,
+        "extra_validation_at_least_one_percent_fewer_tokens": true,
+        "frozen_aggregate_no_regression": false,
+        "frozen_bangla_within_tolerance": false,
+        "frozen_banglish_within_tolerance": false,
+        "frozen_batch_throughput_at_least_eighty_percent": true,
+        "frozen_code-mixed_within_tolerance": false,
+        "frozen_english_within_tolerance": false,
+        "frozen_single_throughput_at_least_eighty_percent": true,
+        "normalized_round_trips_and_zero_unknowns": true,
+        "same_size_baseline": true,
+        "stress_round_trips": true
+      },
+      "passes": false,
+      "ratios_to_baseline": {
+        "extra_batch_throughput": 1.2535993994367671,
+        "extra_single_throughput": 1.2545914951859205,
+        "extra_validation_tokens": 0.9363684455871343,
+        "frozen_bangla_fertility": 1.0813751662115938,
+        "frozen_banglish_fertility": 1.0343980343980343,
+        "frozen_batch_throughput": 0.9699577112803335,
+        "frozen_code-mixed_fertility": 1.0240537672444288,
+        "frozen_english_fertility": 1.1294079845770744,
+        "frozen_single_throughput": 0.9739731370058854
+      },
+      "vocab_size": 55150
+    },
+    "banglatok bn-bpe-58k-v2": {
+      "baseline": "banglatok bn-bpe-58k",
+      "baseline_vocab_size": 57925,
+      "extra_validation_tokens": 3120023,
+      "frozen_validation_tokens": 343917,
+      "gates": {
+        "extra_batch_throughput_at_least_eighty_percent": true,
+        "extra_single_throughput_at_least_eighty_percent": true,
+        "extra_validation_at_least_one_percent_fewer_tokens": true,
+        "frozen_aggregate_no_regression": false,
+        "frozen_bangla_within_tolerance": false,
+        "frozen_banglish_within_tolerance": false,
+        "frozen_batch_throughput_at_least_eighty_percent": true,
+        "frozen_code-mixed_within_tolerance": false,
+        "frozen_english_within_tolerance": false,
+        "frozen_single_throughput_at_least_eighty_percent": true,
+        "normalized_round_trips_and_zero_unknowns": true,
+        "same_size_baseline": true,
+        "stress_round_trips": true
+      },
+      "passes": false,
+      "ratios_to_baseline": {
+        "extra_batch_throughput": 1.273977592001949,
+        "extra_single_throughput": 1.2782447349260027,
+        "extra_validation_tokens": 0.9164562308724217,
+        "frozen_bangla_fertility": 1.0329276586242249,
+        "frozen_banglish_fertility": 1.0387428495536604,
+        "frozen_batch_throughput": 0.961759881208421,
+        "frozen_code-mixed_fertility": 1.034311991510435,
+        "frozen_english_fertility": 1.1233834042895012,
+        "frozen_single_throughput": 0.9620607084591836
+      },
+      "vocab_size": 56081
+    }
+  },
+  "corpus_audit_sha256": "bc95fdc779f2fc00583fc919ef920e3d5ba02b999ba60b8c2e0c153d09d516f9",
+  "default_candidate": null,
+  "protocol_sha256": "06e87c1098b3c45a8abd39d3f0ddac7be9377271d12ea0825f7007ac1dfaf65c",
+  "published_default_retained": true,
+  "selected_by_vocabulary_size": {},
+  "selection_corpora": [
+    "Frozen v1 validation",
+    "Held-out data/processed/expanded-v2/extra-validation.jsonl"
+  ],
+  "throughput_gate": "both single and batch medians on both validation corpora"
+}
