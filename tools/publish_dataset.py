@@ -453,6 +453,10 @@ This repository preserves the original corpus at the root and adds an explicitly
 versioned expansion under `v2/`. The default configuration is still frozen v1;
 `v1` is an explicit name for the same root files. This is a **dataset release,
 not a model promotion** or evidence that any tokenizer or downstream model improved.
+Tokenizers trained on v2 were measured and **did not improve** on the published
+models for conversational, Banglish and review text; they only compressed
+Wikipedia-style text better. See the
+[results report](https://github.com/iamaber/banglatok/blob/main/research/reports/CORPUS_V2_RESULTS.md).
 Published v1 data, manifest and source notices are not replaced.
 
 ## Expanded v2

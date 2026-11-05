@@ -32,9 +32,11 @@ The small code-mixed bucket is oversampled by the proposed weighted mixture. Add
 
 ## Corpus v2 expansion
 
-The v2 acquisition provides 4,063,101 candidate passages: 863,101 Bengali and 3,200,000 English. It reads the full pinned Bengali Wikipedia snapshot and adds English Wikipedia, Bengali Wikibooks and Bengali Wikivoyage. These are **candidate counts, not accepted training counts**. The [source report](../research/reports/CORPUS_V2_SOURCES.md) records exact snapshots, licenses, extraction settings, checksums, exclusions and research-only dependencies; [`corpus-v2-sources.lock.json`](corpus-v2-sources.lock.json) pins the downloads.
+The audited v2 training split has **3,047,265 unique records and 719,996,744 normalized characters** (5.4× and 10.9× v1), with no leakage into frozen or new holdouts. It reads the full pinned Bengali Wikipedia snapshot and adds English Wikipedia, Bengali Wikibooks, Bengali Wikivoyage and scoped Bengali government text from Pralekha. The [source report](../research/reports/CORPUS_V2_SOURCES.md) records exact snapshots, licenses, extraction settings, checksums and exclusions; [`corpus-v2-sources.lock.json`](corpus-v2-sources.lock.json) and [`corpus-v2-domain-sources.lock.json`](corpus-v2-domain-sources.lock.json) pin the downloads.
 
-No new naturally authored Banglish/code-mixed source passed the provenance and non-benchmark requirements. Those buckets are retained, not synthetically expanded. English Wikipedia supplies much of the volume; that is not evidence of improved Banglish, conversational coverage or downstream accuracy.
+No new naturally authored Banglish/code-mixed source passed the redistribution-rights review, so those buckets are unchanged from v1 and were not synthetically expanded. English Wikipedia supplies most of the new volume.
+
+**Tokenizers trained on v2 were not better for this project's users.** Every candidate, including mixtures with most English Wikipedia removed, used more tokens than the published models on frozen v1 text and BanglishRev reviews, and fewer only on the Wikipedia-heavy extra splits. The published models remain the defaults. See the [results report](../research/reports/CORPUS_V2_RESULTS.md).
 
 The [preregistered protocol](../research/reports/CORPUS_V2_PROTOCOL.md) requires at least 2,817,380 canonically unique training records and 329,839,300 normalized characters: five times both v1 measures after filtering, deduplication and leakage exclusions. New material passes stronger corruption, script, privacy-pattern, boilerplate and repetition checks. These remain heuristics, not a comprehensive rights, privacy or linguistic-quality audit.
 
