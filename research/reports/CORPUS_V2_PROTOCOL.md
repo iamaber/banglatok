@@ -49,6 +49,17 @@ Promotion to default requires:
 
 If no candidate passes, retain the published default and report the negative result; do not describe a larger corpus or a retrained candidate as a demonstrated quality improvement.
 
+### Follow-up: user-text-weighted mixtures
+
+No full-corpus candidate passed. Every one regressed all frozen-v1 buckets while compressing the Wikipedia-heavy extra splits better, and same-data SentencePiece showed the same loss. The accepted corpus is about 57% English Wikipedia, whereas frozen-v1 English is conversational Tatoeba text. This follow-up was recorded after those results and before training or scoring any mixture.
+
+It tests whether the expanded Bengali sources help once English Wikipedia no longer dominates. The training files are deterministic subsets of the audited `expanded-v2/train.jsonl`, so no new text, holdout or leakage path is introduced. Whole source groups are kept or dropped by SHA-256 rank of the group name:
+
+- **m1**: every expanded-v2 training row except English Wikipedia, plus English Wikipedia groups up to 167,000 rows (about the size of the Tatoeba English already present).
+- **m2**: m1 with Bengali Wikipedia also reduced to groups up to 266,228 rows (twice the v1 sample); Pralekha, Wikibooks and Wikivoyage stay complete.
+
+These subsets are smaller than the fivefold growth gate and are judged as tokenizer candidates, not as a published corpus. Each trains the same native base/fusion sizes and plain/balanced variants. Selection uses the unchanged gates above, including at least 1% fewer extra-validation tokens; test data and BanglishRev are scored only after selection. If none passes, the published default stays and the negative result is reported.
+
 ## Matched encoder promotion gate
 
 An intrinsic winner is eligible for an experimental v2 model ID, but it does not replace the package default until a matched encoder comparison also passes. Reuse the repository's pinned `intfloat/multilingual-e5-small` body, reviewed alignment data, hard negatives, objectives, seeds 17/29/43, equal-data and equal-compute budgets, and source-backed retrieval evaluator. Compare the candidate with the original E5 tokenizer under identical training exposure; do not compare only against unchanged E5 or an old custom-tokenizer checkpoint.
