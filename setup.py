@@ -31,6 +31,8 @@ class GoBuildExt(build_ext):
                 go,
                 "build",
                 "-trimpath",
+                # cmd/bntok-shared/default.pgo: see tools/pgo_profile.
+                "-pgo=auto",
                 "-buildmode=c-shared",
                 "-ldflags=-s -w",
                 "-o",

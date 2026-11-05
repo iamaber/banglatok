@@ -94,7 +94,7 @@ def candidates(
                 "bundled",
                 ours.vocab_size,
                 ours.encode,
-                ours.encode_batch,
+                lambda texts, ours=ours: ours.encode_batch(texts, num_threads=1),
                 ours.decode,
                 UNK_ID,
                 "banglatok bundled model",
