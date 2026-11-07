@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "algorithm": "unigram",
+  "normalization": "nfc-whitespace-v1",
+  "pieces": [
+    {"text": "আমি", "score": -1},
+    {"text": "বাংলা", "score": -1},
+    {"text": "ভালো", "score": -1},
+    {"text": "আছি", "score": -1},
+    {"text": "hello", "score": -1},
+    {"text": "world", "score": -1},
+    {"text": "ami", "score": -1},
+    {"text": "valo", "score": -1},
+    {"text": "achi", "score": -1},
+    {"text": "meeting", "score": -1},
+    {"text": "টা", "score": -1}
+  ]
+}
