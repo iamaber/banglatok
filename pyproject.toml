@@ -50,3 +50,13 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.cibuildwheel]
+build = "cp311-*"
+test-command = "python -m unittest discover -s {project}/tests -v"
+
+[tool.cibuildwheel.linux]
+manylinux-x86_64-image = "manylinux_2_28"
+
+[tool.cibuildwheel.macos]
+environment = { MACOSX_DEPLOYMENT_TARGET = "14.0" }

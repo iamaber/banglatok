@@ -4,6 +4,7 @@ recursive-include internal/native *.go
 include cmd/bntok-shared/main.go
 recursive-include tests *.py
 recursive-include examples *.py
+include tools/check_dist.py
 include CHANGELOG.md CONTRIBUTING.md SECURITY.md
 prune data
 prune models
