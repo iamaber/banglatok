@@ -167,6 +167,47 @@ class VersionedModelPublishingTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("training SHA-256 does not match", result.stderr)
 
+    def test_restricted_training_requires_checksum_bound_summary(self) -> None:
+        marker = self.training.parent / ".restricted-corpus.json"
+        marker.write_text(json.dumps({"manifest_sha256": "a" * 64}), encoding="utf-8")
+        result = self.run_publisher(*self.custom_arguments())
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("requires restricted-summary.json", result.stderr)
+
+    def test_restricted_training_card_discloses_aggregates_without_raw_data(self) -> None:
+        marker = self.training.parent / ".restricted-corpus.json"
+        marker.write_text(json.dumps({"manifest_sha256": "a" * 64}), encoding="utf-8")
+        summary = {
+            "schema_version": 1,
+            "classification": "restricted-training-data",
+            "raw_redistribution_allowed": False,
+            "manifest_sha256": "a" * 64,
+            "training_sha256": hashlib.sha256(self.training.read_bytes()).hexdigest(),
+            "public_baseline_training_sha256": "b" * 64,
+            "sources": [
+                {
+                    "description": "Consented customer-support Banglish",
+                    "rights_basis": "written-contract",
+                    "records": 123,
+                    "buckets": {"banglish": 100, "code-mixed": 23},
+                }
+            ],
+        }
+        (self.training.parent / "restricted-summary.json").write_text(
+            json.dumps(summary), encoding="utf-8"
+        )
+        result = self.run_publisher(*self.custom_arguments())
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.output / self.model.stem
+        card = (folder / "README.md").read_text(encoding="utf-8")
+        self.assertIn("private, training-only natural text", card)
+        self.assertIn("Consented customer-support Banglish", card)
+        self.assertIn("123", card)
+        self.assertNotIn("partner-natural-banglish", card)
+        provenance = json.loads((folder / "model_provenance.json").read_text())
+        self.assertEqual(provenance["dataset_config"], "v2-plus-restricted")
+        self.assertEqual(provenance["restricted_training_summary"], summary)
+
     def test_original_bundled_cli_still_exports_both_v1_models(self) -> None:
         result = self.run_publisher("--dry-run", str(self.output))
         self.assertEqual(result.returncode, 0, result.stderr)

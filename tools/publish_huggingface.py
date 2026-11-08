@@ -242,7 +242,27 @@ bundled v1 IDs there still refer to v1, not this local model.
 
 ## Training data and provenance
 
-Dataset: [iamaber/banglatok-training-corpus, configuration `v2`](https://huggingface.co/datasets/iamaber/banglatok-training-corpus/tree/main/v2).
+{training_data}
+
+## Evaluation and limitations
+
+{benchmarks}
+
+The preregistered [corpus-v2 protocol](https://github.com/iamaber/banglatok/blob/main/research/reports/CORPUS_V2_PROTOCOL.md)
+defines growth/audit gates, validation-only selection, vocabulary budgets and
+held-out testing. Publishing a candidate does not assert that it passed promotion
+gates or improved over v1. Comparisons depend on the actual vocabulary, training
+mixture, corpus and machine; tokenizer metrics do not establish downstream
+accuracy. Read the measured reports and selection record before choosing a model.
+
+## License
+
+Tokenizer files are licensed under CC BY-SA 4.0; see
+[MODEL_LICENSE.md](https://github.com/iamaber/banglatok/blob/main/MODEL_LICENSE.md).
+This does not relicense source data or remove its attribution requirements.
+"""
+
+PUBLIC_TRAINING_DATA = """Dataset: [iamaber/banglatok-training-corpus, configuration `v2`](https://huggingface.co/datasets/iamaber/banglatok-training-corpus/tree/main/v2).
 The expanded data and its manifests live under `v2/`; the root v1 data is unchanged.
 Use the dataset's `v2` configuration, not its original default configuration.
 
@@ -272,25 +292,82 @@ guarantee complete PII removal or absence of near duplicates. Language buckets
 are source labels or script proxies, not independently verified annotations.
 No synthetic transliteration is generated, and BanglishRev evaluation sources
 are excluded from acquisition. Larger size alone is not evidence of better
-linguistic quality.
+linguistic quality."""
 
-## Evaluation and limitations
 
-{benchmarks}
+def load_restricted_summary(path: Path, training_hash: str, marker: Path | None) -> dict:
+    summary = json.loads(path.read_text(encoding="utf-8"))
+    if (
+        not isinstance(summary, dict)
+        or summary.get("schema_version") != 1
+        or summary.get("classification") != "restricted-training-data"
+        or summary.get("raw_redistribution_allowed") is not False
+        or summary.get("training_sha256") != training_hash
+        or not isinstance(summary.get("public_baseline_training_sha256"), str)
+    ):
+        raise ValueError("restricted summary does not match the training corpus")
+    sources = summary.get("sources")
+    if not isinstance(sources, list) or not sources:
+        raise ValueError("restricted summary requires aggregate source descriptions")
+    for source in sources:
+        if (
+            not isinstance(source, dict)
+            or not isinstance(source.get("description"), str)
+            or not source["description"].strip()
+            or source.get("rights_basis")
+            not in {
+                "direct-consent",
+                "first-party-terms",
+                "written-contract",
+            }
+            or not isinstance(source.get("records"), int)
+            or source["records"] < 0
+            or not isinstance(source.get("buckets"), dict)
+        ):
+            raise ValueError("restricted summary has an invalid aggregate source")
+    if marker is not None:
+        marker_data = json.loads(marker.read_text(encoding="utf-8"))
+        if marker_data.get("manifest_sha256") != summary.get("manifest_sha256"):
+            raise ValueError("restricted marker and summary manifest hashes differ")
+    return summary
 
-The preregistered [corpus-v2 protocol](https://github.com/iamaber/banglatok/blob/main/research/reports/CORPUS_V2_PROTOCOL.md)
-defines growth/audit gates, validation-only selection, vocabulary budgets and
-held-out testing. Publishing a candidate does not assert that it passed promotion
-gates or improved over v1. Comparisons depend on the actual vocabulary, training
-mixture, corpus and machine; tokenizer metrics do not establish downstream
-accuracy. Read the measured reports and selection record before choosing a model.
 
-## License
+def restricted_training_data(summary: dict) -> str:
+    def buckets(source: dict) -> str:
+        return ", ".join(
+            f"`{name}`: {count:,}" for name, count in sorted(source["buckets"].items())
+        )
 
-Tokenizer files are licensed under CC BY-SA 4.0; see
-[MODEL_LICENSE.md](https://github.com/iamaber/banglatok/blob/main/MODEL_LICENSE.md).
-This does not relicense source data or remove its attribution requirements.
-"""
+    rows = "\n".join(
+        f"| {source['description']} | `{source['rights_basis']}` | "
+        f"{source['records']:,} | {buckets(source)} |"
+        for source in summary["sources"]
+    )
+    return f"""The public baseline is
+[iamaber/banglatok-training-corpus, configuration `v2`](https://huggingface.co/datasets/iamaber/banglatok-training-corpus/tree/main/v2).
+Training additionally used private, training-only natural text. Its agreements
+permit transformation, commercial training and distribution of resulting model
+artifacts, but not redistribution of the retained rows. The raw text, agreements
+and private manifests are therefore not included in this repository.
+
+| Restricted source category | Rights basis | Accepted training records | Buckets |
+|---|---|---:|---|
+{rows}
+
+- Data version: `v2-plus-restricted-v1`.
+- Native model file: [`{{name}}.json`]({{name}}.json).
+- Native model SHA-256: `{{model_sha256}}`.
+- Exact combined training JSONL SHA-256: `{{training_sha256}}`.
+- Public baseline training SHA-256: `{summary["public_baseline_training_sha256"]}`.
+- Actual vocabulary size: {{vocab:,}}, including special and byte token IDs.
+- Exported with banglatok {{package_version}}.
+- Machine-readable export provenance: [model_provenance.json](model_provenance.json).
+
+The restricted preparation path applies the same normalization, quality,
+canonical/near-deduplication and holdout-protection pipeline as public v2.
+Rights evidence is checksum-verified locally. Privacy review and manual review
+are required, but neither they nor automated PII heuristics guarantee complete
+removal. BanglishRev and other benchmark surfaces remain evaluation-only."""
 
 
 def sha256(path: Path) -> str:
@@ -385,6 +462,11 @@ def main() -> None:
         help="exact corpus-v2 training JSONL used by custom models",
     )
     parser.add_argument(
+        "--restricted-summary",
+        type=Path,
+        help="checksum-bound aggregate summary for training-only restricted data",
+    )
+    parser.add_argument(
         "--benchmark",
         type=Path,
         action="append",
@@ -395,6 +477,8 @@ def main() -> None:
     args = parser.parse_args()
     if args.benchmark and not args.model:
         parser.error("--benchmark requires --model; bundled v1 cards remain unchanged")
+    if args.restricted_summary and not args.model:
+        parser.error("--restricted-summary requires --model")
     names = set()
     for model in args.model:
         if model.stem in V1_MODELS:
@@ -410,6 +494,28 @@ def main() -> None:
     if args.model and not args.training.is_file():
         parser.error(f"exact custom training file does not exist: {args.training}")
     training_hash = sha256(args.training) if args.model else None
+    if args.model:
+        assert training_hash is not None
+    restricted_summary = None
+    if args.model:
+        marker = args.training.parent / ".restricted-corpus.json"
+        summary_path = args.restricted_summary
+        if marker.is_file() and summary_path is None:
+            summary_path = args.training.parent / "restricted-summary.json"
+        if marker.is_file() and (summary_path is None or not summary_path.is_file()):
+            parser.error("restricted training data requires restricted-summary.json")
+        if summary_path is not None:
+            try:
+                restricted_summary = load_restricted_summary(
+                    summary_path,
+                    training_hash,
+                    marker if marker.is_file() else None,
+                )
+            except (OSError, ValueError, TypeError) as error:
+                parser.error(f"invalid restricted training summary: {error}")
+    training_data = (
+        restricted_training_data(restricted_summary) if restricted_summary else PUBLIC_TRAINING_DATA
+    )
     reports = [(path, json.loads(path.read_text(encoding="utf-8"))) for path in args.benchmark]
     guide = (Path(__file__).resolve().parents[1] / "docs" / "USAGE.md").read_text(encoding="utf-8")
     models = [(path.stem, path) for path in args.model]
@@ -429,11 +535,13 @@ def main() -> None:
                         "training_sha256": training_hash,
                         "vocab_size": tok.vocab_size,
                         "dataset": "iamaber/banglatok-training-corpus",
-                        "dataset_config": "v2",
-                        "data_version": "v2",
+                        "dataset_config": ("v2-plus-restricted" if restricted_summary else "v2"),
+                        "data_version": ("v2-plus-restricted-v1" if restricted_summary else "v2"),
                         "repository": repo,
                         "banglatok_version": __version__,
                     }
+                    if restricted_summary:
+                        provenance["restricted_training_summary"] = restricted_summary
                     sidecar = model.with_suffix(".provenance.json")
                     if sidecar.is_file():
                         training_provenance = json.loads(sidecar.read_text(encoding="utf-8"))
@@ -452,6 +560,13 @@ def main() -> None:
                         training_sha256=training_hash,
                         package_version=__version__,
                         benchmarks=benchmarks,
+                        training_data=training_data.format(
+                            name=name,
+                            model_sha256=model_hash,
+                            training_sha256=training_hash,
+                            vocab=tok.vocab_size,
+                            package_version=__version__,
+                        ),
                     )
                 else:
                     card = CARD.format(name=name, vocab=tok.vocab_size, repo=repo)
