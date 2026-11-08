@@ -1,0 +1,209 @@
+{
+ "created_utc": "2026-11-13T14:44:51.823720+00:00",
+ "python": "3.12.13",
+ "platform": "macOS-27.0.1-arm64-arm-64bit",
+ "cpu_model": "Apple M5",
+ "packages": {
+  "banglatok": "0.2.2",
+  "sentencepiece": "0.2.3",
+  "tiktoken": "0.14.0",
+  "tokenizers": "0.23.3",
+  "transformers": "5.22.2"
+ },
+ "repeats": 5,
+ "batch_size": 64,
+ "seed": 20261110,
+ "review_offset": 0,
+ "harness_sha256": "8477a0f3a2b892a2b43dc52590985718e975d955ac69a313cbe8770ebf34f4d3",
+ "candidates": {
+  "banglatok bn-bpe-58k": {
+   "source": "bundled",
+   "vocab_size": 57925,
+   "note": "banglatok bundled model",
+   "stress_round_trips": 16,
+   "stress_cases": 16
+  },
+  "banglatok bn-bpe-28k": {
+   "source": "bundled",
+   "vocab_size": 27760,
+   "note": "banglatok bundled model",
+   "stress_round_trips": 16,
+   "stress_cases": 16
+  }
+ },
+ "corpora": {
+  "Frozen v1 validation": {
+   "source": "data/processed/frozen-v1/validation.jsonl",
+   "source_sha256": "047e0acb94d621508467fcd0e7b3369204f7e040d4b9144b58614faac9f1cc2d",
+   "records": 14779,
+   "utf8_bytes": 3013257,
+   "ordered_text_sha256": "88b57174621deaf7538367891f377316b6fe8ebe5c1203e0d54ff81ff5ec33bd",
+   "candidates": {
+    "banglatok bn-bpe-58k": {
+     "speed": {
+      "single_MB_per_second": 71.11511305697333,
+      "batch_MB_per_second": 80.97251055821458,
+      "single_seconds": [
+       0.040227042001788504,
+       0.04009758299798705,
+       0.04237154200382065,
+       0.042982084007235244,
+       0.04317558299226221
+      ],
+      "batch_seconds": [
+       0.03797099999792408,
+       0.03721333300927654,
+       0.03628450000542216,
+       0.0373903750005411,
+       0.03585158399073407
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 330176,
+       "whitespace_words": 240495,
+       "tokens_per_word": 1.3729017235285557,
+       "characters_per_token": 4.516500290754022,
+       "exact_round_trips": 14779,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 83
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 197038,
+       "whitespace_words": 138501,
+       "tokens_per_word": 1.4226467678933725,
+       "characters_per_token": 4.662730031770521,
+       "exact_round_trips": 4925,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 138
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 105413,
+       "whitespace_words": 77760,
+       "tokens_per_word": 1.3556198559670782,
+       "characters_per_token": 4.264265318319373,
+       "exact_round_trips": 6160,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 47
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 2827,
+       "whitespace_words": 2023,
+       "tokens_per_word": 1.3974295600593178,
+       "characters_per_token": 4.019101521047046,
+       "exact_round_trips": 156,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 55
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 24898,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.1209760929269281,
+       "characters_per_token": 4.483653305486384,
+       "exact_round_trips": 3538,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 13
+      }
+     }
+    },
+    "banglatok bn-bpe-28k": {
+     "speed": {
+      "single_MB_per_second": 75.87487880161632,
+      "batch_MB_per_second": 83.85706832856039,
+      "single_seconds": [
+       0.039275916991755366,
+       0.039073583990102634,
+       0.039713500009384006,
+       0.040628375005326234,
+       0.042291917008697055
+      ],
+      "batch_seconds": [
+       0.035504667001077905,
+       0.03593324999383185,
+       0.036627666995627806,
+       0.03754645799926948,
+       0.03548587499244604
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 375838,
+       "whitespace_words": 240495,
+       "tokens_per_word": 1.562768456724672,
+       "characters_per_token": 3.9677733491557534,
+       "exact_round_trips": 14779,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.006766357669666418,
+       "sequence_p95": 95
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 226678,
+       "whitespace_words": 138501,
+       "tokens_per_word": 1.6366524429426503,
+       "characters_per_token": 4.053039995059071,
+       "exact_round_trips": 4925,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.02030456852791878,
+       "sequence_p95": 159
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 118618,
+       "whitespace_words": 77760,
+       "tokens_per_word": 1.5254372427983538,
+       "characters_per_token": 3.7895513328499892,
+       "exact_round_trips": 6160,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 52
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 3208,
+       "whitespace_words": 2023,
+       "tokens_per_word": 1.5857637172516066,
+       "characters_per_token": 3.541770573566085,
+       "exact_round_trips": 156,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 63
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 27334,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.2306514789968934,
+       "characters_per_token": 4.0840711202165805,
+       "exact_round_trips": 3538,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 14
+      }
+     }
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "repository": "wikimedia/wikipedia",
+  "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+  "snapshot": "20231101",
+  "license": "CC BY-SA 3.0; GFDL where applicable (pinned upstream card)",
+  "license_evidence": "https://huggingface.co/datasets/wikimedia/wikipedia/blob/b04c8d1ceb2f5cd4588862100d08de323dccfbaa/README.md#licensing-information",
+  "metadata_api": "https://huggingface.co/api/datasets/wikimedia/wikipedia/tree/b04c8d1ceb2f5cd4588862100d08de323dccfbaa/",
+  "source_declarations": {
+    "bn-wikipedia": {"language":"bn","bucket":"bangla","record_source":"wikipedia-bn-20231101","group":"wiki-bn:<original article-id>","license":"CC BY-SA 3.0; GFDL where applicable"},
+    "en-wikipedia": {"language":"en","bucket":"english","record_source":"wikipedia-en-20231101","group":"wiki-en:<original article-id>","license":"CC BY-SA 3.0; GFDL where applicable"},
+    "bn-wikibooks": {"language":"bn","bucket":"bangla","record_source":"wikibooks-bn-20261101","group":"wikibooks-bn:<root title before first slash>","license":"CC BY-SA 4.0"},
+    "bn-wikivoyage": {"language":"bn","bucket":"bangla","record_source":"wikivoyage-bn-20261101","group":"wikivoyage-bn:<original page-id>","license":"CC BY-SA 4.0"}
+  },
+  "artifacts": [
+    {"source":"license","path":"README.md","bytes":130835,"sha256":"a0f2055ac612f924721e9981fa2a49a18adec1c67cc8026f6c97d12f17211b21","raw":true},
+    {"source":"bn-wikipedia","path":"20231101.bn/train-00000-of-00002.parquet","bytes":192390559,"sha256":"98a8189cf1d0e4b41d647b3d88bd6201e571e002344b5648496c6bfda402841b","existing":"data/raw/wikipedia/bn-0.parquet"},
+    {"source":"bn-wikipedia","path":"20231101.bn/train-00001-of-00002.parquet","bytes":151495440,"sha256":"47c0095c58d6595f68d4bccc257ae6646f27a4669a7d259369c11626bd39565a","existing":"data/raw/wikipedia/bn-1.parquet"},
+    {"source":"en-wikipedia","path":"20231101.en/train-00000-of-00041.parquet","bytes":420296449,"sha256":"382e7f6f09e488b24793a7f7cfc659879d5a22da2cf2efec6491665f0c019677"},
+    {"source":"en-wikipedia","path":"20231101.en/train-00001-of-00041.parquet","bytes":351448367,"sha256":"6cd57a5825312ca966313d4a1b614690b5c4fb53cee9b124bc0e999977eb36cf"},
+    {"source":"en-wikipedia","path":"20231101.en/train-00002-of-00041.parquet","bytes":329024669,"sha256":"b18674f163d4f106e43396fd58412a79b80a418c72bb728c20af439e7ca4d5b7"},
+    {"source":"en-wikipedia","path":"20231101.en/train-00003-of-00041.parquet","bytes":330779424,"sha256":"0b8a6f452f5ef59d0986a067f70110feb16d7c1d281ba2db0b3df32933618fcc"},
+    {"source":"en-wikipedia","path":"20231101.en/train-00004-of-00041.parquet","bytes":306945391,"sha256":"1424300f113c13ee022b7929185fa4f7e20c6195ba563d728e8a3dc47c8e9aba"},
+    {"source":"en-wikipedia","path":"20231101.en/train-00005-of-00041.parquet","bytes":243974056,"sha256":"220d31bb222ba2d449c845733622a6a2b7a89db3e28b24bfcb3a9bb3e52c6c8d"},
+    {"source":"en-wikipedia","path":"20231101.en/train-00006-of-00041.parquet","bytes":266288728,"sha256":"b8becbe9989a2c63f129a707a4674a84fb093c163673b1f4ce97afbf5306f04c"},
+    {"source":"en-wikipedia","path":"20231101.en/train-00007-of-00041.parquet","bytes":228195804,"sha256":"adebba8b075444923ba42ed6214fe205efc756c773f440d98cbdd88a33597c2c"},
+    {"source":"license","path":"wikimedia/bnwikibooks-rightsinfo.json","bytes":162,"sha256":"7ae07721a04512fe73ffce0159a7746d239739205ec4d31437fa19f1fa61e57c","url":"https://bn.wikibooks.org/w/api.php?action=query&meta=siteinfo&siprop=rightsinfo&format=json"},
+    {"source":"license","path":"wikimedia/bnwikivoyage-rightsinfo.json","bytes":162,"sha256":"7ae07721a04512fe73ffce0159a7746d239739205ec4d31437fa19f1fa61e57c","url":"https://bn.wikivoyage.org/w/api.php?action=query&meta=siteinfo&siprop=rightsinfo&format=json"},
+    {"source":"bn-wikibooks","project":"wikibooks","format":"mediawiki-xml-bz2","revision":"20261101","output_name":"bn-wikibooks-20261101","path":"wikimedia/bnwikibooks-20261101-pages-articles.xml.bz2","bytes":19137711,"sha256":"8665bf7f5c2df76d9e90b47309611ca9de6f227a2410e4ff813031a56667605d","sha1":"5fc509592147e9ea1abec604370f9c3529189fec","url":"https://dumps.wikimedia.org/bnwikibooks/20261101/bnwikibooks-20261101-pages-articles.xml.bz2","license":"CC BY-SA 4.0","license_evidence":"https://bn.wikibooks.org/w/api.php?action=query&meta=siteinfo&siprop=rightsinfo&format=json"},
+    {"source":"bn-wikivoyage","project":"wikivoyage","format":"mediawiki-xml-bz2","revision":"20261101","output_name":"bn-wikivoyage-20261101","path":"wikimedia/bnwikivoyage-20261101-pages-articles.xml.bz2","bytes":21363536,"sha256":"803f150c0a096daed5baf406d4f933cc98f90baa6f9fea0ee9e072bf23ed22bd","sha1":"57ce1f51684010d16dc2b8af9e620daefef9b86a","url":"https://dumps.wikimedia.org/bnwikivoyage/20261101/bnwikivoyage-20261101-pages-articles.xml.bz2","license":"CC BY-SA 4.0","license_evidence":"https://bn.wikivoyage.org/w/api.php?action=query&meta=siteinfo&siprop=rightsinfo&format=json"}
+  ]
+}

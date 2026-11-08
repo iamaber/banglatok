@@ -10,6 +10,8 @@ import argparse
 import hashlib
 import json
 from collections import Counter
+from collections.abc import Iterator
+from itertools import islice
 from pathlib import Path
 
 from banglatok import Tokenizer, normalize
@@ -18,18 +20,20 @@ SPACE = 36
 
 
 def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
-def training_texts(path: Path) -> list[str]:
-    texts = []
+def training_texts(path: Path) -> Iterator[str]:
     with path.open(encoding="utf-8") as stream:
         for line in stream:
             record = json.loads(line)
             if record["split"] != "train":
                 raise ValueError("fusion and cache must use training records only")
-            texts.append(normalize(record["text"]))
-    return texts
+            yield normalize(record["text"])
 
 
 def main() -> None:
@@ -44,18 +48,18 @@ def main() -> None:
     base = json.loads(args.base.read_text(encoding="utf-8"))
     if base["algorithm"] != "bpe" or base.get("space_fusion"):
         raise ValueError("base must be an unfused BPE model")
-    texts = training_texts(args.training)
     starts: Counter[int] = Counter()
     words: Counter[str] = Counter()
     with Tokenizer(args.base) as tokenizer:
         base_vocab = tokenizer.vocab_size
-        for i in range(0, len(texts), 1024):
-            for ids in tokenizer.encode_batch(texts[i : i + 1024]):
+        if args.budget <= base_vocab:
+            parser.error("budget must exceed the base vocabulary")
+        texts = training_texts(args.training)
+        while batch := list(islice(texts, 1024)):
+            for ids in tokenizer.encode_batch(batch):
                 starts.update(b for a, b in zip(ids, ids[1:], strict=False) if a == SPACE)
-    for text in texts:
-        words.update(w for w in text.split() if len(w.encode()) <= 1024)
-    if args.budget <= base_vocab:
-        parser.error("budget must exceed the base vocabulary")
+            for text in batch:
+                words.update(w for w in text.split() if len(w.encode()) <= 1024)
     ranked = sorted(
         (token for token, count in starts.items() if count >= args.min_count),
         key=lambda token: (-starts[token], token),

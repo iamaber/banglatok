@@ -24,7 +24,7 @@ from importlib.metadata import version
 from pathlib import Path
 from time import perf_counter
 
-from banglatok import DEFAULT_MODEL, Tokenizer, available_models, normalize
+from banglatok import DEFAULT_MODEL, UNK_ID, Tokenizer, available_models, normalize
 
 SEED = 20261110
 
@@ -68,6 +68,7 @@ class Candidate:
     decode: Callable[[list[int]], str]
     unknown_id: int | None
     note: str
+    byte_fallback_ids: range | None = None
 
 
 def sha256(path: Path) -> str:
@@ -78,7 +79,12 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def candidates(cache_dir: Path, sentencepiece_models: list[Path]) -> list[Candidate]:
+def candidates(
+    cache_dir: Path,
+    sentencepiece_models: list[Path],
+    model_paths: list[Path],
+    native_only: bool,
+) -> list[Candidate]:
     result = []
     for name in sorted(available_models(), key=lambda n: n != DEFAULT_MODEL):
         ours = Tokenizer.from_pretrained(name)
@@ -90,10 +96,28 @@ def candidates(cache_dir: Path, sentencepiece_models: list[Path]) -> list[Candid
                 ours.encode,
                 lambda texts, ours=ours: ours.encode_batch(texts, num_threads=1),
                 ours.decode,
-                None,
+                UNK_ID,
                 "banglatok bundled model",
+                byte_fallback_ids=range(4, 260),
             )
         )
+    for path in model_paths:
+        native = Tokenizer(path)
+        result.append(
+            Candidate(
+                f"banglatok {path.stem}",
+                f"{path.name} sha256 {sha256(path)}",
+                native.vocab_size,
+                native.encode,
+                native.encode_batch,
+                native.decode,
+                UNK_ID,
+                "candidate JSON model",
+                byte_fallback_ids=range(4, 260),
+            )
+        )
+    if native_only:
+        return result
     import sentencepiece as spm
 
     for path in sentencepiece_models:
@@ -155,7 +179,7 @@ def candidates(cache_dir: Path, sentencepiece_models: list[Path]) -> list[Candid
     return result
 
 
-def quality(candidate: Candidate, texts: list[str]) -> dict[str, int | float]:
+def quality(candidate: Candidate, texts: list[str]) -> dict[str, int | float | None]:
     encoded = candidate.batch(texts)
     lengths = sorted(map(len, encoded))
     tokens = sum(lengths)
@@ -163,6 +187,10 @@ def quality(candidate: Candidate, texts: list[str]) -> dict[str, int | float]:
     characters = sum(len(text) for text in texts)
     exact = sum(candidate.decode(ids) == text for ids, text in zip(encoded, texts, strict=True))
     unknown = candidate.unknown_id
+    fallback = candidate.byte_fallback_ids
+    fallback_tokens = (
+        sum(token in fallback for ids in encoded for token in ids) if fallback is not None else None
+    )
     return {
         "texts": len(texts),
         "tokens": tokens,
@@ -172,6 +200,10 @@ def quality(candidate: Candidate, texts: list[str]) -> dict[str, int | float]:
         "exact_round_trips": exact,
         "round_trip_percent": 100 * exact / len(texts) if texts else 0,
         "texts_with_unknowns": sum(unknown in ids for ids in encoded) if unknown is not None else 0,
+        "byte_fallback_tokens": fallback_tokens,
+        "byte_fallback_token_percent": (
+            100 * fallback_tokens / tokens if fallback_tokens is not None and tokens else None
+        ),
         "over_510_token_percent": 100 * sum(n > 510 for n in lengths) / len(texts),
         "sequence_p95": lengths[math.ceil(0.95 * len(lengths)) - 1] if lengths else 0,
     }
@@ -302,11 +334,16 @@ def markdown(result: dict) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--validation", type=Path, default=Path("data/processed/validation.jsonl"))
+    parser.add_argument("--validation-label", default="In-domain validation")
+    parser.add_argument("--heldout", type=Path, action="append", default=[])
     parser.add_argument(
         "--reviews", type=Path, default=Path("data/raw/banglishrev/reviews-v1-head64m.json")
     )
     parser.add_argument("--review-limit", type=int, default=10000)
+    parser.add_argument("--review-offset", type=int, default=0)
     parser.add_argument("--sentencepiece", type=Path, action="append", default=[])
+    parser.add_argument("--model", type=Path, action="append", default=[])
+    parser.add_argument("--native-only", action="store_true")
     parser.add_argument("--hf-cache", type=Path, default=Path("models/hf-cache"))
     parser.add_argument("--repeats", type=int, default=5)
     parser.add_argument("--batch-size", type=int, default=64)
@@ -322,14 +359,17 @@ def main() -> None:
         parser.error(
             "set TOKENIZERS_PARALLELISM=false and RAYON_NUM_THREADS=1 for single-thread timing"
         )
-    engines = candidates(args.hf_cache, args.sentencepiece)
+    engines = candidates(args.hf_cache, args.sentencepiece, args.model, args.native_only)
     corpora = {}
     if args.validation.exists():
-        corpora["In-domain validation"] = (args.validation, load_validation(args.validation))
+        corpora[args.validation_label] = (args.validation, load_validation(args.validation))
+    for path in args.heldout:
+        corpora[f"Held-out {path}"] = (path, load_validation(path))
     if args.reviews.exists():
+        reviews = load_reviews(args.reviews, args.review_offset + args.review_limit)
         corpora["Unseen-source BanglishRev reviews"] = (
             args.reviews,
-            load_reviews(args.reviews, args.review_limit),
+            reviews[args.review_offset :],
         )
     if not corpora:
         parser.error("no corpus found")
@@ -351,6 +391,7 @@ def main() -> None:
         "repeats": args.repeats,
         "batch_size": args.batch_size,
         "seed": SEED,
+        "review_offset": args.review_offset,
         "harness_sha256": sha256(Path(__file__)),
         "candidates": {
             e.name: {
