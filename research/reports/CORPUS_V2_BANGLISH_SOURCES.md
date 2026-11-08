@@ -6,6 +6,19 @@
 
 No reviewed natural social/review Banglish corpus is presently rights-cleared for public v2 training redistribution. **BanglishRev is evaluation-only, and synthetic transliteration is prohibited.**
 
+### Post-v2 policy change
+
+The decision table below remains the historical public-v2 decision. Future
+training may separate raw-text redistribution from model training, but only
+with a direct, checksum-recorded grant from the rights holder or an authorized
+data controller. The grant must cover transformation, training, commercial use
+and distribution of model artifacts; platform terms and privacy obligations
+must also permit the use. This does not convert any rejected wrapper license
+into permission. The Bangladesh Romanized Corpus is therefore a
+**training-only candidate pending a sufficient written grant**, not accepted
+data. BanglishRev remains evaluation-only because it is a benchmark.
+
+
 ## Decision table
 
 | Candidate; exact artifact | Domain, scale, origin | Rights/access and leakage finding | Decision |

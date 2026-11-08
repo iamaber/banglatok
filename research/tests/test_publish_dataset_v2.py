@@ -333,6 +333,11 @@ class PublishDatasetV2Tests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "group/attribution mismatch"):
             self.stage()
 
+    def test_restricted_training_corpus_cannot_be_published(self):
+        (self.expanded / publisher.RESTRICTED_MARKER).write_text("{}\n")
+        with self.assertRaisesRegex(ValueError, "restricted training data"):
+            self.stage()
+
     def test_source_license_evidence_checksum_is_verified(self):
         (self.root / "data/raw/expanded-v2/artifacts/README.md").write_text("Changed notice")
         with self.assertRaisesRegex(ValueError, "notice.*mismatch"):

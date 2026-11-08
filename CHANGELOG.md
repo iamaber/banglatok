@@ -11,6 +11,11 @@
 - Run research tooling tests separately from inference wheel tests across the source-CI platform/Python matrix, keeping research scripts and provenance inputs out of distributions.
 - Built and audited corpus v2: 3,047,265 unique training records and 720M normalized characters (5.4× and 10.9× v1) with no holdout leakage, adding scoped CC BY 4.0 Pralekha Bengali government text. Sources without upstream redistribution rights, including Vashantor, were excluded.
 - Tokenizers trained on corpus v2, and on two user-text-weighted subsets of it, failed the promotion gates: they compressed Wikipedia-style text better but needed more tokens on frozen v1 test text and BanglishRev reviews (+1.8% to +5.7% at 58k, up to +11.7% at 28k). `bn-bpe-58k` and `bn-bpe-28k` remain the defaults. See `research/reports/CORPUS_V2_RESULTS.md`.
+- Added a restricted training-only corpus workflow for directly authorized
+  natural text that may produce public model artifacts but may not be
+  redistributed. Rights evidence, commercial/model grants, platform terms,
+  privacy review and retention/deletion attestations are mandatory; marked
+  private corpora are rejected by the public dataset publisher.
 
 ## 0.2.2 — 2026-11-13
 
