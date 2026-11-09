@@ -67,7 +67,7 @@ tok.decode(ids)                              # 'আমি বাংলায় 
 tok.tokenize("আমি বাংলায় গান গাই।")           # ['আমি', ' বাংলায়', ' গান', ' গাই', '।']
 ```
 
-Load a tokenizer once and reuse it; loading parses the model and takes a fraction of a second. `with Tokenizer.from_pretrained() as tok:` releases the native model at the end of the block; otherwise it is released when the object is garbage-collected.
+Load a tokenizer once and reuse it; loading takes a fraction of a second, and bundled models read a precomputed binary sidecar instead of parsing JSON. `with Tokenizer.from_pretrained() as tok:` releases the native model at the end of the block; otherwise it is released when the object is garbage-collected.
 
 ## Choosing a model
 
