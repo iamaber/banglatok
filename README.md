@@ -105,7 +105,7 @@ model = GPT2LMHeadModel(GPT2Config(vocab_size=tok.vocab_size, n_embd=256, n_laye
 
 ## Benchmarks
 
-Here are 10,000 naturally written e-commerce reviews from [BanglishRev](https://huggingface.co/datasets/BanglishRev/bangla-english-and-code-mixed-ecommerce-review-dataset), in Bengali, English, Banglish and mixed script. This source was never seen in training. Every tokenizer runs **single-threaded** (`RAYON_NUM_THREADS=1`, `num_threads=1`), on an Apple M5 (macOS) and on an AMD EPYC 9V74 GitHub-hosted Linux x86_64 VM, Python 3.12. Speed is MB/s for single calls / batches of 64.
+Here are 10,000 naturally written e-commerce reviews from [BanglishRev](https://huggingface.co/datasets/BanglishRev/bangla-english-and-code-mixed-ecommerce-review-dataset), in Bengali, English, Banglish and mixed script. This source was never seen in training. Every tokenizer runs **single-threaded** (`RAYON_NUM_THREADS=1`, `num_threads=1`), on an Apple M5 (macOS) and on an AMD EPYC 9V74 GitHub-hosted Linux x86_64 VM, Python 3.12. Speed is MB/s for single calls / batches of 64. The banglatok rows were measured with 0.2.0; the table predates the 0.2.3 encoder changes and has not been rerun.
 
 | Tokenizer | Vocab | Tokens / word ↓ | Lossless round trip ↑ | Texts with UNK ↓ | MB/s, Apple M5 ↑ | MB/s, Linux x86_64 ↑ |
 |---|---:|---:|---:|---:|---:|---:|
@@ -126,7 +126,7 @@ Here are 10,000 naturally written e-commerce reviews from [BanglishRev](https://
 What this shows:
 
 - **Against SentencePiece with the same data and vocabulary size, compression is a tie.** `bn-bpe-58k` is about 2% shorter than both SentencePiece models; `bn-bpe-28k` is about 1% longer. On the in-domain validation split, SentencePiece at the `bn-bpe-28k` size is 3–4.5% shorter. The gap to BanglaBERT, XLM-R and tiktoken comes from the training data and the vocabulary size, not from a better algorithm.
-- **The speed lead is real but depends on the CPU.** Against SentencePiece Unigram it is 1.3–1.7× on the M5 and 1.1–1.4× on the Linux VM. Hugging Face `tokenizers` was limited to one thread like everything else; its batch API can use all cores, which this table does not measure.
+- **The speed lead is real but depends on the CPU.** Against SentencePiece Unigram it is 1.3–1.7× on the M5 and 1.1–1.4× on the Linux VM. This table measures single-threaded calls: Hugging Face `tokenizers` was limited to one thread, and banglatok batches used one worker. Both can use multiple cores for batches outside this comparison.
 - BanglaBERT is about 3% shorter on Bengali-only text but lossy. Among lossless tokenizers, `bn-bpe-58k` is the most compact on Bengali, Latin and mixed script.
 
 The [full report](https://github.com/iamaber/banglatok/blob/main/benchmarks/POPULAR_COMPARISON.md) has the per-script breakdown, the in-domain validation split, more tokenizers, the method, limitations, and the commands to reproduce it. Shorter sequences cut compute and context use, but they do not by themselves make a downstream model more accurate.
