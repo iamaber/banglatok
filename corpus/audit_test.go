@@ -81,7 +81,7 @@ func TestAuditOfficialRereadsSavedAndRawHoldouts(t *testing.T) {
 					} else {
 						writeAuditRecords(t, train, leak)
 					}
-					if _, err := AuditOfficial(prepared, raw); err != nil {
+					if _, _, err := AuditOfficial(prepared, raw); err != nil {
 						t.Fatalf("initial independent audit failed: %v", err)
 					}
 					if corrupt == "saved training" {
@@ -89,9 +89,9 @@ func TestAuditOfficialRereadsSavedAndRawHoldouts(t *testing.T) {
 					} else {
 						writeHoldout()
 					}
-					count, err := AuditOfficial(prepared, raw)
-					if count != 2 || err == nil || !strings.Contains(err.Error(), "official holdout leaked") {
-						t.Fatalf("changed %s was not detected: count=%d, err=%v", corrupt, count, err)
+					count, overlap, err := AuditOfficial(prepared, raw)
+					if count != 2 || overlap != 1 || err == nil || !strings.Contains(err.Error(), "official holdout leaked") {
+						t.Fatalf("changed %s was not detected: count=%d, overlap=%d, err=%v", corrupt, count, overlap, err)
 					}
 				})
 			}

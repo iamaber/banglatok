@@ -4,10 +4,13 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/iamaber/banglatok/corpus"
 	"github.com/iamaber/banglatok/tokenizer"
 )
+
+var commands = []string{"audit", "fetch", "prepare", "prepare-records", "train", "encode", "evaluate"}
 
 func main() {
 	if err := run(os.Args[1:]); err != nil {
@@ -18,7 +21,7 @@ func main() {
 
 func run(args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("usage: bntok prepare|train|encode|evaluate [flags]")
+		return fmt.Errorf("usage: bntok %s [flags]", strings.Join(commands, "|"))
 	}
 	f := flag.NewFlagSet(args[0], flag.ContinueOnError)
 	switch args[0] {
@@ -32,12 +35,12 @@ func run(args []string) error {
 		if err != nil {
 			return err
 		}
-		n, err := corpus.AuditOfficial(*dir, *raw)
+		n, overlap, err := corpus.AuditOfficial(*dir, *raw)
 		if err != nil {
 			return err
 		}
 		report["official_heldout_keys_checked"] = n
-		report["official_heldout_train_overlap"] = 0
+		report["official_heldout_train_overlap"] = overlap
 		return writeJSON(os.Stdout, report)
 	case "fetch":
 		manifest := f.String("manifest", "data/sources.lock.json", "frozen download manifest")

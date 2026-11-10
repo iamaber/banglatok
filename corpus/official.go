@@ -10,17 +10,19 @@ import (
 
 // AuditOfficial independently checks both forms of official BanglaTLit holdouts
 // against the saved training corpus, including copies imported through PT rows.
-func AuditOfficial(prepared, raw string) (int, error) {
+// It returns the number of distinct holdout keys and the number of training
+// records that matched one; a nonzero overlap is also an error.
+func AuditOfficial(prepared, raw string) (int, int, error) {
 	heldout := map[string]bool{}
 	for _, split := range []string{"validation", "test"} {
 		f, err := os.Open(filepath.Join(raw, "banglatlit", split+".csv"))
 		if err != nil {
-			return 0, err
+			return 0, 0, err
 		}
 		r := csv.NewReader(f)
 		if _, err := r.Read(); err != nil {
 			f.Close()
-			return 0, err
+			return 0, 0, err
 		}
 		for {
 			row, err := r.Read()
@@ -29,11 +31,11 @@ func AuditOfficial(prepared, raw string) (int, error) {
 			}
 			if err != nil {
 				f.Close()
-				return 0, err
+				return 0, 0, err
 			}
 			if len(row) != 3 {
 				f.Close()
-				return 0, fmt.Errorf("unexpected holdout schema")
+				return 0, 0, fmt.Errorf("unexpected holdout schema")
 			}
 			for _, s := range row[1:] {
 				if k := Key(s); k != "" {
@@ -43,11 +45,18 @@ func AuditOfficial(prepared, raw string) (int, error) {
 		}
 		f.Close()
 	}
+	overlap := 0
 	err := Read(filepath.Join(prepared, "train.jsonl"), func(r Record) error {
 		if heldout[Key(r.Text)] {
-			return fmt.Errorf("official holdout leaked into training")
+			overlap++
 		}
 		return nil
 	})
-	return len(heldout), err
+	if err != nil {
+		return 0, 0, err
+	}
+	if overlap > 0 {
+		return len(heldout), overlap, fmt.Errorf("official holdout leaked into training: %d records", overlap)
+	}
+	return len(heldout), 0, nil
 }
