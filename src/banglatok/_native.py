@@ -273,6 +273,18 @@ class NativeHandle:
             out.size,
             ctypes.byref(allocated),
         )
+        # Every row emits at most one ID per UTF-8 byte plus the two specials.
+        # A fixed width is exact; padding to the longest row can repeat the
+        # longest row's size across every row.
+        if width > 0:
+            limit = width * len(runes)
+        elif width < 0:
+            limit = (len(data) + 2) * len(runes)
+        else:
+            limit = len(data) + 2 * len(runes)
+        if allocated.value is not None and not 0 <= size <= limit:
+            self._lib.bntok_free(allocated)
+            raise ValueError("native batch returned an inconsistent ID count")
         if allocated.value is None:
             try:
                 if size < 0:
