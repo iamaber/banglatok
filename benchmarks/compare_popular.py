@@ -16,6 +16,7 @@ import platform
 import random
 import re
 import statistics
+import sys
 from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -257,9 +258,20 @@ def script(text: str) -> str:
 def load_reviews(path: Path, limit: int) -> list[tuple[str, str]]:
     """Unique reviews of 12-2,000 characters from a raw BanglishRev byte prefix."""
     raw = path.read_text(encoding="utf-8", errors="ignore")
+    matches = REVIEW.findall(raw)
+    if not matches:
+        raise ValueError(
+            f"{path}: no 'Review Content' records found; expected raw BanglishRev JSON"
+        )
     seen, reviews = set(), []
-    for match in REVIEW.finditer(raw):
-        text = normalize(json.loads(match.group(1)))
+    for encoded in matches:
+        try:
+            value = json.loads(encoded)
+        except json.JSONDecodeError as error:
+            raise ValueError(f"{path}: malformed 'Review Content' value") from error
+        if not isinstance(value, str):
+            raise ValueError(f"{path}: 'Review Content' is not a string")
+        text = normalize(value)
         if (
             12 <= len(text) <= 2000
             and text not in seen
@@ -267,8 +279,15 @@ def load_reviews(path: Path, limit: int) -> list[tuple[str, str]]:
         ):
             seen.add(text)
             reviews.append(text)
+    if not reviews:
+        raise ValueError(f"{path}: no usable reviews after filtering")
     random.Random(SEED).shuffle(reviews)
-    return [(script(text), text) for text in reviews[:limit]]
+    kept = reviews[:limit]
+    print(
+        f"{path}: matched {len(matches)} review records, kept {len(kept)}",
+        file=sys.stderr,
+    )
+    return [(script(text), text) for text in kept]
 
 
 def load_validation(path: Path) -> list[tuple[str, str]]:
