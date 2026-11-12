@@ -11,7 +11,7 @@ The harness is [compare_popular.py](compare_popular.py). Every timing is **singl
 
 - Against tokenizers people use for Bangla today, `bn-bpe-58k` gives the shortest lossless sequences: 22% fewer tokens than BanglaBERT and `o200k_base`, 21% fewer than XLM-R, 8% fewer than MuRIL.
 - Against SentencePiece trained on **the same data at the same vocabulary size**, compression is a tie: `bn-bpe-58k` is about 2% shorter, `bn-bpe-28k` about 1% longer. Most of the advantage above therefore comes from the training data and vocabulary size, not from the algorithm.
-- It is the fastest tokenizer tested on both machines: 1.1–1.7× SentencePiece Unigram, 2.6–4.4× SentencePiece BPE, 1.3–5.9× tiktoken and 5–12× Hugging Face `tokenizers`, all single-threaded.
+- It is the fastest tokenizer tested on both machines: 1.1–1.7× SentencePiece Unigram, 2.6–4.4× SentencePiece BPE, 1.3–6.3× tiktoken and 5–12× Hugging Face `tokenizers`, combining single calls and batches of 64. On single calls alone the lead over tiktoken is 1.3–1.7×. All timings are single-threaded.
 - Both models reproduce every input exactly.
 
 ## Unseen-source corpus: BanglishRev product reviews
