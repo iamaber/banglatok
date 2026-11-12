@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Acquire checksum-pinned Wikimedia paragraphs outside runtime dependencies.
 
-Use a separate research environment with pyarrow==22.0.0 and
-mwparserfromhell==0.7.2. Candidate files are atomic, per-artifact JSONL;
-preparation handles deduplication, held-out exclusions and training acceptance.
+Use a separate research environment with tools/requirements-acquire.txt.
+Candidate files are atomic, per-artifact JSONL; preparation handles
+deduplication, held-out exclusions and training acceptance.
 """
 
 from __future__ import annotations

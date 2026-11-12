@@ -1,0 +1,3 @@
+# Research-only dependencies for tools/acquire_corpus_v2.py; not runtime deps.
+pyarrow==22.0.0
+mwparserfromhell==0.7.2
