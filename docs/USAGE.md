@@ -117,6 +117,8 @@ from banglatok import BOS_ID, EOS_ID
 tok.decode([BOS_ID, 4405, EOS_ID], skip_special_tokens=True)   # 'ami'
 ```
 
+**Decoding cost.** `decode` materializes its argument with `list(ids)` and checks each element, and `decode_batch` decodes rows one at a time; unlike `encode_batch`, there is no batched native decode. Pass a concrete sequence of integers for large batches rather than a lazy iterator.
+
 ## Tokens and the vocabulary
 
 ```python
@@ -244,6 +246,8 @@ go run ./cmd/bntok train -algorithm bpe -vocab 384 \
 ```python
 tok = Tokenizer("models/toy-bpe.json")
 ```
+
+**Trusted inputs.** `Tokenizer(path)` treats a model file as untrusted data: it is parsed as JSON into a bounded struct and never executed. The `_go` shared library is different: it is loaded with `ctypes.CDLL` from the installed package, so install banglatok from PyPI or build the wheel yourself and do not substitute an untrusted `_go` library.
 
 [TRAINING_AND_RESEARCH.md](https://github.com/iamaber/banglatok/blob/main/docs/TRAINING_AND_RESEARCH.md) describes the corpus format, training options and the model contract.
 

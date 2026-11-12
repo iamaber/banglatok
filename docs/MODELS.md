@@ -36,6 +36,8 @@ python benchmarks/build_fused_model.py --base models/bpe-16000.json --budget 320
 | Base `bpe-16000.json` | `77ac7594a514f76eb78b22c95b173c96fb83b08f0e75338af60261bebfa28306` |
 | Training split | `bda48c8388fcd1cd706b4578619367a609ccf75a7f3aa659fede8c88aa198b39` |
 
+The `bn-bpe-*` hashes identify the JSON files shipped in the package. The base `bpe-*.json` files are not distributed; their hashes identify locally rebuilt training artifacts and are not checked by the package tests.
+
 ## Behavior
 
 - Lossless: `decode(encode(text)) == normalize(text)` for any string. Normalization is NFC plus whitespace collapse and trim.
