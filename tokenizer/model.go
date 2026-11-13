@@ -37,7 +37,7 @@ type node struct {
 type Tokenizer struct {
 	model           Model
 	trie            []node
-	mergeRanks      map[uint64]int
+	mergeRanks      mergeTable
 	characters      map[rune]int
 	denseCharacters []int32
 	encodedPieces   map[string][]int
