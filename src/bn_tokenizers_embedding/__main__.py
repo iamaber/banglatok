@@ -1,6 +1,7 @@
 """Command line: ``bntokenize "আমি বাংলা বলি"`` or ``python -m bn_tokenizers_embedding``."""
 
 import argparse
+import io
 import json
 import sys
 from collections.abc import Sequence
@@ -28,6 +29,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--list-models", action="store_true", help="list bundled models")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     args = parser.parse_args(argv)
+    # Bangla must survive pipes and redirects on Windows, whose default is a legacy code page.
+    for stream in (sys.stdin, sys.stdout):
+        if isinstance(stream, io.TextIOWrapper):
+            stream.reconfigure(encoding="utf-8")
     if args.list_models:
         print("\n".join(available_models()))
         return 0
