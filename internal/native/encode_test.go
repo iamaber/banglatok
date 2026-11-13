@@ -5,7 +5,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/iamaber/bn-tokenizers-embedding/tokenizer"
+	"github.com/iamaber/banglatok/tokenizer"
 )
 
 func frame(texts []string) []byte {

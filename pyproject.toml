@@ -1,5 +1,5 @@
 [project]
-name = "bn-tokenizers-embedding"
+name = "banglatok"
 version = "0.2.0"
 description = "Fast, lossless Bangla, English and Banglish subword tokenizers with bundled models and a native Go engine"
 readme = "README.md"
@@ -35,6 +35,7 @@ classifiers = [
     "Natural Language :: Bengali",
     "Natural Language :: English",
     "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
@@ -50,14 +51,14 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/iamaber/bn-tokenizers-embedding"
-Repository = "https://github.com/iamaber/bn-tokenizers-embedding"
-Documentation = "https://github.com/iamaber/bn-tokenizers-embedding#readme"
-Issues = "https://github.com/iamaber/bn-tokenizers-embedding/issues"
-Changelog = "https://github.com/iamaber/bn-tokenizers-embedding/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/iamaber/banglatok"
+Repository = "https://github.com/iamaber/banglatok"
+Documentation = "https://github.com/iamaber/banglatok#readme"
+Issues = "https://github.com/iamaber/banglatok/issues"
+Changelog = "https://github.com/iamaber/banglatok/blob/main/CHANGELOG.md"
 
 [project.scripts]
-bntokenize = "bn_tokenizers_embedding.__main__:main"
+banglatok = "banglatok.__main__:main"
 
 [build-system]
 requires = ["setuptools>=77"]
@@ -65,10 +66,10 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["bn_tokenizers_embedding*"]
+include = ["banglatok*"]
 
 [tool.setuptools.package-data]
-bn_tokenizers_embedding = ["py.typed", "data/*.json", "pretrained/*.json"]
+banglatok = ["py.typed", "data/*.json", "pretrained/*.json"]
 
 [tool.ruff]
 target-version = "py310"

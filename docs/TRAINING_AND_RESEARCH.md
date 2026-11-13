@@ -42,8 +42,8 @@ Unigram uses substring seeding, EM, expected-count pruning and Viterbi decoding;
 
 ## Measurements and limits
 
-- [Intrinsic tokenizer results](../reports/RESULTS.md), [framework comparison](../reports/FRAMEWORK_COMPARISON.md) and [Python API benchmarks](../reports/PYTHON_API.md).
-- [Native performance changes](../reports/PERFORMANCE_IMPROVEMENTS.md) and [space-fusion experiment](../reports/SPEED_EXPERIMENT.md).
-- [Retrieval protocol](../experiments/retrieval/README.md), [expanded-label audit](../reports/LABEL_AUDIT.md), and [latest original-tokenizer comparison](../reports/ROUND2_ORIGINAL_COMPARISON.md).
+- [Intrinsic tokenizer results](../research/reports/RESULTS.md), [framework comparison](../research/reports/FRAMEWORK_COMPARISON.md) and [Python API benchmarks](../research/reports/PYTHON_API.md).
+- [Native performance changes](../research/reports/PERFORMANCE_IMPROVEMENTS.md) and [space-fusion experiment](../research/reports/SPEED_EXPERIMENT.md).
+- [Retrieval protocol](../research/experiments/retrieval/README.md), [expanded-label audit](../research/reports/LABEL_AUDIT.md), and [latest original-tokenizer comparison](../research/reports/ROUND2_ORIGINAL_COMPARISON.md).
 
 Tokenization speed, fertility or smaller vocabularies do not establish embedding quality. The completed retrieval experiments retain unchanged multilingual E5 under their declared gates. Labels and authored proxies are agent-generated where disclosed; independent human validation and natural-traffic generalization are not established.

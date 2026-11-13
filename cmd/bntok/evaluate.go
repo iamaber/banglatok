@@ -9,8 +9,8 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/iamaber/bn-tokenizers-embedding/corpus"
-	"github.com/iamaber/bn-tokenizers-embedding/tokenizer"
+	"github.com/iamaber/banglatok/corpus"
+	"github.com/iamaber/banglatok/tokenizer"
 )
 
 type metrics struct {

@@ -23,11 +23,11 @@ Format changed Go files with `gofmt`. Prefer the standard library and the existi
 
 ## Package changes
 
-Follow [docs/RELEASING.md](docs/RELEASING.md) to build from a source archive, inspect package contents and test installed wheels. Do not add corpora, private text, credentials or research checkpoints to distributions. The only bundled models are the documented ones in `src/bn_tokenizers_embedding/pretrained/` (see [docs/MODELS.md](docs/MODELS.md)). Performance changes must keep their IDs byte-for-byte identical; `go test ./tokenizer -bench Validation` with `BNTOK_MODEL`/`BNTOK_CORPUS` measures the native path.
+Follow [docs/RELEASING.md](docs/RELEASING.md) to build from a source archive, inspect package contents and test installed wheels. Do not add corpora, private text, credentials or research checkpoints to distributions. The only bundled models are the documented ones in `src/banglatok/pretrained/` (see [docs/MODELS.md](docs/MODELS.md)). Performance changes must keep their IDs byte-for-byte identical; `go test ./tokenizer -bench Validation` with `BNTOK_MODEL`/`BNTOK_CORPUS` measures the native path.
 
 ## Research changes
 
-Research environments are separate from the zero-dependency tokenizer API; see [experiments/retrieval/README.md](experiments/retrieval/README.md). Preserve frozen datasets and decisions. Report annotation origin, actual compute/data budgets, uncertainty and failed gates. Agent judgments must not be described as independent human review.
+Research environments are separate from the zero-dependency tokenizer API; see [research/experiments/retrieval/README.md](research/experiments/retrieval/README.md). Preserve frozen datasets and decisions. Report annotation origin, actual compute/data budgets, uncertainty and failed gates. Agent judgments must not be described as independent human review.
 
 ## Pull requests
 

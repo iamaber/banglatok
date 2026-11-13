@@ -24,7 +24,7 @@ from importlib.metadata import version
 from pathlib import Path
 from time import perf_counter
 
-from bn_tokenizers_embedding import DEFAULT_MODEL, Tokenizer, available_models, normalize
+from banglatok import DEFAULT_MODEL, Tokenizer, available_models, normalize
 
 SEED = 20261110
 
@@ -84,7 +84,7 @@ def candidates(cache_dir: Path, sentencepiece_models: list[Path]) -> list[Candid
         ours = Tokenizer.from_pretrained(name)
         result.append(
             Candidate(
-                f"bn-tokenizers-embedding {name}",
+                f"banglatok {name}",
                 "bundled",
                 ours.vocab_size,
                 ours.encode,
@@ -98,10 +98,13 @@ def candidates(cache_dir: Path, sentencepiece_models: list[Path]) -> list[Candid
 
     for path in sentencepiece_models:
         sp = spm.SentencePieceProcessor(model_file=str(path))
-        label = {
-            "bnlp.model": "BNLP bn_spm (SentencePiece)",
-            "sentencepiece-32000.model": "SentencePiece Unigram 32k, same training data",
-        }.get(path.name, f"SentencePiece {path.stem}")
+        if path.name == "bnlp.model":
+            label = "BNLP bn_spm (SentencePiece)"
+        elif match := re.fullmatch(r"sentencepiece-(unigram|bpe)-(\d+)\.model", path.name):
+            kind = "Unigram" if match[1] == "unigram" else "BPE"
+            label = f"SentencePiece {kind} {int(match[2]):,}, same training data"
+        else:
+            label = f"SentencePiece {path.stem}"
         result.append(
             Candidate(
                 label,
@@ -308,7 +311,9 @@ def main() -> None:
     parser.add_argument("--repeats", type=int, default=5)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--cpu-model", default=platform.processor())
-    parser.add_argument("--output", type=Path, default=Path("reports/popular-comparison.json"))
+    parser.add_argument(
+        "--output", type=Path, default=Path("benchmarks/results/popular-comparison.json")
+    )
     args = parser.parse_args()
     if (
         os.environ.get("TOKENIZERS_PARALLELISM") != "false"
@@ -336,7 +341,7 @@ def main() -> None:
         "packages": {
             name: version(name)
             for name in [
-                "bn-tokenizers-embedding",
+                "banglatok",
                 "sentencepiece",
                 "tiktoken",
                 "tokenizers",
