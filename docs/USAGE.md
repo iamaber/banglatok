@@ -44,7 +44,7 @@ banglatok has no Python dependencies. Prebuilt wheels cover CPython 3.10–3.15 
 | macOS x86_64 and arm64 | macOS 14 or newer |
 | Windows x86_64 | Windows 10 or newer |
 
-Elsewhere (Alpine/musl Linux, Windows on ARM, older macOS) the installer builds from source, which needs Go 1.24+ and a C compiler; on Windows that compiler is MinGW-w64 GCC. To install the development version from GitHub:
+Elsewhere (Alpine/musl Linux, Windows on ARM, older macOS) the installer builds from source, which needs Go 1.24.9+ and a C compiler; on Windows that compiler is MinGW-w64 GCC. To install the development version from GitHub:
 
 ```sh
 uv pip install git+https://github.com/iamaber/banglatok
@@ -237,7 +237,7 @@ tok = Tokenizer("models/toy-bpe.json")
 
 ### Count tokens and stay within a budget
 
-`count_tokens` is the fastest way to measure text, for example before sending it to a model with a context limit:
+`count_tokens` measures text for a model trained with the selected banglatok vocabulary. These counts are not the token counts of GPT, Claude, BanglaBERT or other models with different tokenizers. This recipe budgets independently encoded documents; if you concatenate them, count the final text too because separators can change tokenization:
 
 ```python
 from banglatok import Tokenizer
@@ -344,7 +344,7 @@ For real training, tokenize the corpus once with the Datasets guide above and us
 
 | Problem | Cause and fix |
 |---|---|
-| The install tries to build from source and fails | No wheel for your platform or Python version. Use CPython 3.10+ on a platform from [Install](#install), or install Go 1.24+ and a C compiler. |
+| The install tries to build from source and fails | No wheel for your platform or Python version. Use CPython 3.10+ on a platform from [Install](#install), or install Go 1.24.9+ and a C compiler. |
 | `RuntimeError: banglatok cannot run in a child process forked after the parent loaded it` | Use the `spawn` or `forkserver` start method. See [Threads and processes](#threads-and-processes). |
 | `RuntimeError: tokenizer is closed` | The tokenizer was used after `close()` or after its `with` block ended. |
 | `ValueError: invalid or reserved token ID 2` from `decode` | The IDs contain control tokens; pass `skip_special_tokens=True`. |

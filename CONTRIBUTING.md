@@ -4,7 +4,7 @@ Small, reproducible changes are welcome. Discuss API changes in an issue first. 
 
 ## Development
 
-Use Python 3.10+ and Go 1.24+ with a C compiler. We recommend [uv](https://docs.astral.sh/uv/) for the Python side:
+Use Python 3.10+ and Go 1.24.9+ with a C compiler. We recommend [uv](https://docs.astral.sh/uv/) for the Python side:
 
 ```sh
 uv venv .venv-dev
