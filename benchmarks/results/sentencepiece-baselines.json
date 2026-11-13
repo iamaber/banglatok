@@ -1,0 +1,42 @@
+{
+  "training_source_sha256": "bda48c8388fcd1cd706b4578619367a609ccf75a7f3aa659fede8c88aa198b39",
+  "normalized_training_sha256": "92a1e81bbd8f124b8f9501407d8344447ee8e6f28f3f5a82a7a923025c3fe8f3",
+  "sentencepiece_version": "0.2.3",
+  "settings": {
+    "character_coverage": 1.0,
+    "byte_fallback": true,
+    "normalization_rule_name": "identity",
+    "num_threads": 1,
+    "shuffle_input_sentence": false,
+    "input_sentence_size": 0,
+    "max_sentence_length": 5417,
+    "max_sentencepiece_length": 12,
+    "hard_vocab_limit": false
+  },
+  "models": {
+    "sentencepiece-unigram-27760": {
+      "model_type": "unigram",
+      "vocab_size": 27760,
+      "training_seconds": 59.05336666600488,
+      "sha256": "b34c0d9a3c9e5fca680f9ee4bc19390180ddc3dc473bab070dab37d43bbabc0c"
+    },
+    "sentencepiece-unigram-57925": {
+      "model_type": "unigram",
+      "vocab_size": 57925,
+      "training_seconds": 50.334386292001,
+      "sha256": "c2b4d67cba5e77de08daa3030890eca0be943ee5b6e678c0d23576e1321451b3"
+    },
+    "sentencepiece-bpe-27760": {
+      "model_type": "bpe",
+      "vocab_size": 27760,
+      "training_seconds": 4.026237708007102,
+      "sha256": "7d6b38bbd37057fe16a2997375d3c62e53a4e6f96adfb4b369cf450c185b5ba6"
+    },
+    "sentencepiece-bpe-57925": {
+      "model_type": "bpe",
+      "vocab_size": 57925,
+      "training_seconds": 4.334859041002346,
+      "sha256": "d79d9f97e51cde565dee51aea46dedf387acf9e8172de15ad276dd724c750357"
+    }
+  }
+}
