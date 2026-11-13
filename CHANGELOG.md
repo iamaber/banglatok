@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Research
+
+- Added reproducible corpus-v2 acquisition from pinned Bengali/English Wikipedia, Bengali Wikibooks and Wikivoyage, with source-specific attribution and rights limitations.
+- Added stronger quality filtering, disk-backed canonical/near deduplication, immutable v1 evaluation files, separate extra holdouts and independent growth/leakage audits. Fivefold growth counts only accepted unique training records and normalized characters.
+- Added validation-only promotion gates and versioned Hugging Face corpus/model publishing. Existing model IDs and v1 dataset artifacts remain unchanged until measured candidates are selected.
+- Streamed fusion training and made SentencePiece training sequential by default for larger corpora. Benchmarks can compare local candidates, extra holdouts and disjoint review samples.
+
 ## 0.2.2 — 2026-11-13
 
 - Added the full usage guide to both Hugging Face model repositories, with links from their model cards.
