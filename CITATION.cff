@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this software or its bundled models, please cite it as below."
-title: "banglatok: fast, lossless Bangla, English and Banglish tokenizers"
+title: "banglatok: fast, lossless subword tokenizers for Bangla, English and Banglish (romanized Bengali), including code-mixed text"
 type: software
 authors:
   - family-names: Islam
@@ -8,7 +8,7 @@ authors:
     email: aber.islam.dev@gmail.com
 repository-code: "https://github.com/iamaber/banglatok"
 license: MIT
-version: 0.2.0
+version: 0.2.1
 date-released: 2026-11-13
 keywords:
   - Bengali

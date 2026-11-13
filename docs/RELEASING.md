@@ -1,6 +1,6 @@
 # Release procedure
 
-The current candidate is `0.2.0`. A local green build is necessary but does not validate the hosted Linux, macOS and Windows wheel matrix.
+Examples below use `X.Y.Z` for the version being released. A local green build is necessary but does not validate the hosted Linux, macOS and Windows wheel matrix.
 
 ## 1. Prepare and review the candidate
 
@@ -13,10 +13,10 @@ From a clone with Go, a C compiler and Python installed:
 
 ```sh
 python -m pip install build twine
-python -m build --outdir dist/0.2.0
-python -m twine check --strict dist/0.2.0/*
-python tools/check_dist.py dist/0.2.0 --version 0.2.0
-python -m pip install --force-reinstall --no-deps dist/0.2.0/*.whl
+python -m build --outdir dist/X.Y.Z
+python -m twine check --strict dist/X.Y.Z/*
+python tools/check_dist.py dist/X.Y.Z --version X.Y.Z
+python -m pip install --force-reinstall --no-deps dist/X.Y.Z/*.whl
 python -m unittest discover -s tests -v
 python examples/quickstart.py
 go test -race ./...
@@ -56,10 +56,10 @@ See the [PyPA publishing guide](https://packaging.python.org/en/latest/guides/pu
 
 ## 4. Publish the reviewed tag explicitly
 
-After CI and platform tests pass, create/push the exact `v0.2.0` tag on the reviewed commit. Publishing requires repository/account authorization. Then dispatch `release.yml` from that tag with `publish=true`, for example with the authenticated GitHub CLI:
+After CI and platform tests pass, create/push the exact `vX.Y.Z` tag on the reviewed commit. Publishing requires repository/account authorization. Then dispatch `release.yml` from that tag with `publish=true`, for example with the authenticated GitHub CLI:
 
 ```sh
-gh workflow run release.yml --ref v0.2.0 -f publish=true
+gh workflow run release.yml --ref vX.Y.Z -f publish=true
 ```
 
 The workflow rejects publishing from a branch or a tag that disagrees with `pyproject.toml`. Ordinary pushes, pull requests and build-only dispatches do not upload to PyPI. Only the final protected publishing job has `id-token: write`.
@@ -69,9 +69,9 @@ The workflow rejects publishing from a branch or a tag that disagrees with `pypr
 In a clean environment on each claimed platform:
 
 ```sh
-python -m pip install --only-binary=:all: banglatok==0.2.0
+uv pip install --only-binary=:all: banglatok==X.Y.Z       # and: python -m pip install ...
 ```
 
-Run `examples/quickstart.py` and `banglatok --list-models` outside the repository checkout. Verify the published metadata, licenses and files. Update the changelog and public installation instructions only after the release is actually visible and installable. If a release is broken, follow PyPI's yanking procedure and publish a new version rather than silently replacing artifacts.
+Run `examples/quickstart.py` and `banglatok --list-models` outside the repository checkout. Verify the published metadata, licenses and files. Update the changelog and public installation instructions only after the release is actually visible and installable. Re-upload the Hugging Face model cards with `python tools/publish_huggingface.py` when their text or the models change. If a release is broken, follow PyPI's yanking procedure and publish a new version rather than silently replacing artifacts.
 
 A new or retrained bundled model needs a `docs/MODELS.md` entry with its build command, checksums and limitations, a rerun of `benchmarks/compare_popular.py`, and a new minor version, because IDs change.
