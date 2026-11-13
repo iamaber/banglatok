@@ -1,7 +1,6 @@
 package corpus
 
 import (
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -22,16 +21,9 @@ type Download struct {
 
 // VerifyManifest checks every required raw file without network access.
 func VerifyManifest(manifest, root string) error {
-	b, err := os.ReadFile(manifest)
+	entries, err := readManifest(manifest)
 	if err != nil {
 		return err
-	}
-	var entries []Download
-	if err := json.Unmarshal(b, &entries); err != nil {
-		return err
-	}
-	if len(entries) == 0 {
-		return fmt.Errorf("empty source manifest")
 	}
 	for _, e := range entries {
 		if !filepath.IsLocal(e.Path) {
@@ -46,18 +38,11 @@ func VerifyManifest(manifest, root string) error {
 
 // Fetch validates cached and newly downloaded files against a frozen manifest.
 func Fetch(manifest, root string) error {
-	b, err := os.ReadFile(manifest)
+	entries, err := readManifest(manifest)
 	if err != nil {
 		return err
 	}
-	var entries []Download
-	if err := json.Unmarshal(b, &entries); err != nil {
-		return err
-	}
 	client := http.Client{Timeout: 10 * time.Minute}
-	if len(entries) == 0 {
-		return fmt.Errorf("empty source manifest")
-	}
 	for _, entry := range entries {
 		if !filepath.IsLocal(entry.Path) || !strings.HasPrefix(entry.URL, "https://") || entry.Bytes <= 0 {
 			return fmt.Errorf("invalid manifest entry %q", entry.Path)
@@ -81,18 +66,27 @@ func Fetch(manifest, root string) error {
 	return nil
 }
 
+func readManifest(path string) ([]Download, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var entries []Download
+	if err := json.Unmarshal(b, &entries); err != nil {
+		return nil, err
+	}
+	if len(entries) == 0 {
+		return nil, fmt.Errorf("empty source manifest")
+	}
+	return entries, nil
+}
+
 func verify(path string, e Download) error {
-	f, err := os.Open(path)
+	hash, n, err := fileDigest(path)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
-	h := sha256.New()
-	n, err := io.Copy(h, f)
-	if err != nil {
-		return err
-	}
-	if n != e.Bytes || hex.EncodeToString(h.Sum(nil)) != e.SHA256 {
+	if n != e.Bytes || hash != e.SHA256 {
 		return fmt.Errorf("checksum mismatch: %s", path)
 	}
 	return nil
