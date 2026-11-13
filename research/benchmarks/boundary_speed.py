@@ -91,6 +91,8 @@ def cases(tok: Tokenizer, texts: dict[str, list[str]], threads: int | None) -> d
             lambda groups=groups: [tok(g, **batch_options) for g in groups],
             items,
         )
+    medium = repeated(texts["mixed"], 1_000)
+    result["mixed/encode_batch_1k"] = (lambda: tok.encode_batch(medium, **batch_options), medium)
     large = repeated(texts["mixed"], 10_000)
     result["mixed/encode_batch_10k"] = (lambda: tok.encode_batch(large, **batch_options), large)
     result["mixed/call_10k_pad_trunc128"] = (

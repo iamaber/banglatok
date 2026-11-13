@@ -56,13 +56,17 @@ def _padded_lists(ids: memoryview, rows: "array[int]") -> tuple[list[list[int]],
     return cast(list[list[int]], ids.cast("B").cast("I", (len(rows), width)).tolist()), mask
 
 
-def _ragged_lists(ids: memoryview, rows: "array[int]") -> tuple[list[list[int]], list[list[int]]]:
+def _id_lists(ids: memoryview, rows: "array[int]") -> list[list[int]]:
     batch = []
     offset = 0
     for n in rows:
         batch.append(ids[offset : offset + n].tolist())
         offset += n
-    return batch, [[1] * n for n in rows]
+    return batch
+
+
+def _ragged_lists(ids: memoryview, rows: "array[int]") -> tuple[list[list[int]], list[list[int]]]:
+    return _id_lists(ids, rows), [[1] * n for n in rows]
 
 
 def _arrays(np: Any, padded: bool) -> Callable[[memoryview, "array[int]"], tuple[Any, Any]]:
@@ -136,8 +140,7 @@ class Tokenizer:
 
     def encode(self, text: str) -> list[int]:
         """Encode one text into token IDs, without control IDs."""
-        self._native.check_open()
-        return self._native.encode_one(_text(text).encode("utf-8"))
+        return self._native.encode_one(text)
 
     def encode_batch(
         self, texts: Sequence[str], *, num_threads: int | None = None
@@ -151,12 +154,12 @@ class Tokenizer:
         if isinstance(texts, (str, bytes)):
             raise TypeError("texts must be a sequence of strings, not a single string")
         threads = _threads(num_threads)
-        return self._native.encode([_text(s).encode("utf-8") for s in texts], threads)
+        data, runes = _utf8(texts)
+        return self._native.encode_rows(data, runes, threads, _id_lists)
 
     def count_tokens(self, text: str) -> int:
         """Return ``len(encode(text))`` without building the ID list."""
-        self._native.check_open()
-        return self._native.count(_text(text).encode("utf-8"))
+        return self._native.count(text)
 
     def decode(self, ids: Sequence[int], *, skip_special_tokens: bool = False) -> str:
         """Decode IDs to normalized text. Control IDs raise unless skipped."""

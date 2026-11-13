@@ -2,6 +2,7 @@
 
 import gc
 import json
+import multiprocessing
 import os
 import sys
 import tempfile
@@ -53,6 +54,25 @@ def reference_call(
         "input_ids": [ids + [PAD_ID] * (width - len(ids)) for ids in batch],
         "attention_mask": [[1] * len(ids) + [0] * (width - len(ids)) for ids in batch],
     }
+
+
+def _use_in_forked_child(tok: Tokenizer) -> None:
+    attempts = [
+        lambda: tok.encode("ami"),
+        lambda: tok.encode(None),
+        lambda: tok.count_tokens("ami"),
+        lambda: tok.encode_batch(["ami"]),
+        lambda: tok(["ami"], padding=True),
+    ]
+    for attempt in attempts:
+        try:
+            attempt()
+        except RuntimeError as error:
+            if "forkserver" not in str(error):
+                os._exit(2)
+        else:
+            os._exit(1)
+    os._exit(0)
 
 
 MIXED = ["", "a", "আমি ভালো আছি।", "ami valo asi 🙂", "a\0b", "বাংলা " * 400] * 40
@@ -231,6 +251,35 @@ class TokenizerTests(unittest.TestCase):
                 del sys.modules["numpy"]
             else:
                 sys.modules["numpy"] = saved
+
+    @unittest.skipUnless(hasattr(os, "fork"), "fork is not available")
+    def test_forked_child_hot_paths_fail_fast(self) -> None:
+        with Tokenizer(self.path) as tok:
+            tok.encode("loaded in the parent")
+            child = multiprocessing.get_context("fork").Process(
+                target=_use_in_forked_child, args=(tok,)
+            )
+            child.start()
+            child.join(timeout=60)
+            if child.is_alive():
+                child.kill()
+                child.join()
+                self.fail("a forked child hung in the Go runtime")
+            self.assertEqual(child.exitcode, 0)
+
+    @unittest.skipUnless(os.environ.get("BANGLATOK_TEST_HUGE"), "needs about 10 GB of memory")
+    def test_input_over_2_gib(self) -> None:
+        huge = "a" * 2**31
+        with Tokenizer(self.path) as tok:
+            for action in (
+                lambda: tok.encode(huge),
+                lambda: tok.count_tokens(huge),
+                lambda: tok.encode_batch([huge]),
+                lambda: tok.encode_batch(["a" * 2**30, "a" * (2**30 - 4)]),
+                lambda: tok(huge),
+            ):
+                with self.assertRaisesRegex(ValueError, "exceeds 2 GiB"):
+                    action()
 
     def test_bpe_model(self) -> None:
         path = Path(self.directory.name) / "bpe.json"

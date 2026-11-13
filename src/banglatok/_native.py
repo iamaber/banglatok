@@ -3,7 +3,6 @@
 import ctypes
 import json
 import os
-import struct
 import sys
 import threading
 import weakref
@@ -72,14 +71,6 @@ def library() -> ctypes.CDLL:
     lib.bntok_call.restype = ctypes.c_void_p
     lib.bntok_free.argtypes = [ctypes.c_void_p]
     lib.bntok_free.restype = None
-    lib.bntok_encode.argtypes = [
-        ctypes.c_ulonglong,
-        ctypes.c_char_p,
-        ctypes.c_size_t,
-        ctypes.c_int,
-        ctypes.POINTER(ctypes.c_size_t),
-    ]
-    lib.bntok_encode.restype = ctypes.c_void_p
     lib.bntok_encode_into.argtypes = [
         ctypes.c_ulonglong,
         ctypes.c_char_p,
@@ -152,19 +143,6 @@ def normalize(text: str) -> str:
     return call(library(), {"op": "normalize", "text": text})["text"]
 
 
-class _Buffers(threading.local):
-    """Per-thread output buffer: ctypes releases the GIL during native calls."""
-
-    def __init__(self) -> None:
-        self.grow(1024)
-        self.batch: _IDs | None = _IDs(1024)
-
-    def grow(self, size: int) -> None:
-        self.capacity = size
-        self.ids = (ctypes.c_uint32 * size)()
-        self.address = ctypes.addressof(self.ids)
-
-
 class _IDs:
     """A reusable uint32 output buffer."""
 
@@ -172,6 +150,29 @@ class _IDs:
         self.ids = (ctypes.c_uint32 * size)()
         self.view = memoryview(self.ids).cast("B").cast("I")
         self.address = ctypes.addressof(self.ids)
+        self.size = size
+
+
+class _Buffers(threading.local):
+    """Per-thread output buffers: ctypes releases the GIL during native calls."""
+
+    def __init__(self) -> None:
+        self.one = _IDs(1024)
+        self.batch: _IDs | None = _IDs(1024)
+
+
+def _encode_error(status: int) -> ValueError:
+    if status == _CLOSED:
+        return ValueError("unknown or closed tokenizer handle")
+    return ValueError("encode input exceeds 2 GiB")
+
+
+def _batch_error(status: int) -> Exception:
+    if status == _CLOSED:
+        return ValueError("unknown or closed tokenizer handle")
+    if status == _TOO_LARGE:
+        return MemoryError("encoded batch is too large")
+    return RuntimeError("invalid native batch request")
 
 
 class NativeHandle:
@@ -197,28 +198,41 @@ class NativeHandle:
         if not self._finalizer.alive:
             raise RuntimeError("tokenizer is closed")
 
-    def encode_one(self, data: bytes) -> list[int]:
-        """Encode one UTF-8 payload straight into a reusable per-thread buffer."""
-        buffers = self._buffers
-        count = self._encode_into(self._handle, data, len(data), buffers.address, buffers.capacity)
-        if count > buffers.capacity:
-            buffers.grow(max(count, 2 * buffers.capacity))
-            count = self._encode_into(
-                self._handle, data, len(data), buffers.address, buffers.capacity
-            )
-        if count < 0:
-            if count == _CLOSED:
-                raise ValueError("unknown or closed tokenizer handle")
-            raise ValueError("encode input exceeds 2 GiB")
-        return buffers.ids[:count]
+    def _payload(self, text: str) -> bytes:
+        """UTF-8 for the per-text hot paths, which leave the closed-handle check
+        to the native call but raise exactly as check_open plus validation."""
+        if _forked:
+            raise RuntimeError(_FORKED)
+        if not isinstance(text, str):
+            self.check_open()
+            raise TypeError("text must be a string")
+        try:
+            return text.encode("utf-8")
+        except UnicodeEncodeError:
+            if not self._finalizer.alive:
+                raise RuntimeError("tokenizer is closed") from None
+            raise
 
-    def count(self, data: bytes) -> int:
+    def encode_one(self, text: str) -> list[int]:
+        """Encode one text straight into a reusable per-thread buffer."""
+        data = self._payload(text)
+        ids = self._buffers.one
+        count: int = self._encode_into(self._handle, data, len(data), ids.address, ids.size)
+        if count > ids.size:
+            ids = self._buffers.one = _IDs(max(count, 2 * ids.size))
+            count = self._encode_into(self._handle, data, len(data), ids.address, ids.size)
+        if count < 0:
+            self.check_open()
+            raise _encode_error(count)
+        return ids.view[:count].tolist()
+
+    def count(self, text: str) -> int:
         """Return the number of IDs without materializing them in Python."""
+        data = self._payload(text)
         count: int = self._encode_into(self._handle, data, len(data), None, 0)
         if count < 0:
-            if count == _CLOSED:
-                raise ValueError("unknown or closed tokenizer handle")
-            raise ValueError("encode input exceeds 2 GiB")
+            self.check_open()
+            raise _encode_error(count)
         return count
 
     def encode_rows(
@@ -256,7 +270,7 @@ class NativeHandle:
             special,
             width,
             out.address,
-            len(out.view),
+            out.size,
             ctypes.byref(allocated),
         )
         if allocated.value is None:
@@ -272,11 +286,8 @@ class NativeHandle:
         finally:
             self._lib.bntok_free(allocated)
             if size <= _MAX_KEPT_IDS:
-                out = _IDs(min(max(size, 2 * len(out.view)), _MAX_KEPT_IDS))
+                out = _IDs(min(max(size, 2 * out.size), _MAX_KEPT_IDS))
             buffers.batch = out
-
-    def encode(self, texts: list[bytes], threads: int) -> list[list[int]]:
-        return encode(self._lib, self._handle, texts, threads)
 
     def decode(self, ids: list[int]) -> str:
         return call(self._lib, {"op": "decode", "handle": self._handle, "ids": ids})["text"]
@@ -292,43 +303,3 @@ class NativeHandle:
 
     def close(self) -> None:
         self._finalizer()
-
-
-def _batch_error(status: int) -> Exception:
-    if status == _CLOSED:
-        return ValueError("unknown or closed tokenizer handle")
-    if status == _TOO_LARGE:
-        return MemoryError("encoded batch is too large")
-    return RuntimeError("invalid native batch request")
-
-
-def encode(lib: ctypes.CDLL, handle: int, texts: list[bytes], threads: int) -> list[list[int]]:
-    """Length-prefixed UTF-8 input; native-endian uint32 status, counts, then IDs."""
-    size = 4 * len(texts) + sum(map(len, texts))
-    if size > _MAX_PAYLOAD:
-        raise ValueError("encode input exceeds 2 GiB")
-    payload = b"".join([part for data in texts for part in (struct.pack("<I", len(data)), data)])
-    length = ctypes.c_size_t()
-    pointer = lib.bntok_encode(handle, payload, len(payload), threads, ctypes.byref(length))
-    if not pointer:
-        raise MemoryError("Go tokenizer returned a null response")
-    try:
-        response = ctypes.string_at(pointer, length.value)
-    finally:
-        lib.bntok_free(pointer)
-    if len(response) < 4:
-        raise RuntimeError("invalid native encode response")
-    if struct.unpack_from("=I", response)[0]:
-        raise ValueError(response[4:].decode("utf-8"))
-    if len(response) % 4 or len(response) < 4 * (1 + len(texts)):
-        raise RuntimeError("truncated native encode response")
-    words = memoryview(response).cast("I")
-    counts = words[1 : 1 + len(texts)].tolist()
-    if sum(counts) != len(words) - 1 - len(texts):
-        raise RuntimeError("native encode response count mismatch")
-    result = []
-    offset = 1 + len(texts)
-    for count in counts:
-        result.append(words[offset : offset + count].tolist())
-        offset += count
-    return result
