@@ -15,31 +15,40 @@ tok.tokenize("meetingটা ১০টায়, don't be late 🙂")
 # ['meeting', 'টা', ' ১০', 'টায়', ',', " don't", ' be', ' late', ' 🙂']
 ```
 
-- **Fewest tokens.** On unseen product reviews it produced 22% fewer tokens than BanglaBERT and GPT-4o's `o200k_base`, 21% fewer than XLM-R/mE5/BGE-M3, 8% fewer than MuRIL, and 62% fewer than Qwen3.
+- **Short sequences.** On unseen product reviews `bn-bpe-58k` produced 22% fewer tokens than BanglaBERT and GPT-4o's `o200k_base`, 21% fewer than XLM-R/mE5/BGE-M3, 8% fewer than MuRIL, and 62% fewer than Qwen3. Most of that comes from training on Bangla and Banglish text at this vocabulary size: SentencePiece trained on the same data with the same vocabulary size comes within about 2% (see [Benchmarks](#benchmarks)).
 - **Lossless.** `decode(encode(text))` gives back the normalized text exactly, for every input. There is no `[UNK]` and no lowercasing, and Bengali marks, ZWJ/ZWNJ, emoji and mixed scripts are kept.
-- **Fast.** In single-threaded runs on unseen text it was 1.3–1.8× faster than SentencePiece, 1.6–5.9× faster than tiktoken, and 6.7–12× faster than Hugging Face `tokenizers`.
-- **Tiny footprint.** The engine is native Go behind `ctypes`, with zero Python runtime dependencies and typed APIs. It is thread-safe, and two pretrained models ship inside the wheel.
+- **Fast.** Single-threaded, on unseen text, it was 1.1–1.7× faster than SentencePiece Unigram and 2.6–4.4× faster than SentencePiece BPE at the same vocabulary size, 1.3–5.9× faster than tiktoken, and 5–12× faster than Hugging Face `tokenizers`, on both an Apple M5 and a Linux x86_64 server CPU.
+- **Tiny footprint.** The engine is native Go behind `ctypes`, with zero Python runtime dependencies and typed APIs. It is thread-safe, two pretrained models ship inside the wheel, and they export to Hugging Face `tokenizers`/`transformers` with identical IDs.
 
 The vocabularies are meant for training or adapting encoders and LLMs on Bengali text, and for counting or segmenting such text.
 
 ## Benchmarks
 
-Here are 10,000 naturally written e-commerce reviews from [BanglishRev](https://huggingface.co/datasets/BanglishRev/bangla-english-and-code-mixed-ecommerce-review-dataset), in Bengali, English, Banglish and mixed script. This source was never seen in training. Measured on an Apple M5, single thread, Python 3.12.
+Here are 10,000 naturally written e-commerce reviews from [BanglishRev](https://huggingface.co/datasets/BanglishRev/bangla-english-and-code-mixed-ecommerce-review-dataset), in Bengali, English, Banglish and mixed script. This source was never seen in training. Every tokenizer runs **single-threaded** (`RAYON_NUM_THREADS=1`, `num_threads=1`), on an Apple M5 (macOS) and on an AMD EPYC 9V74 GitHub-hosted Linux x86_64 VM, Python 3.12. Speed is MB/s for single calls / batches of 64.
 
-| Tokenizer | Vocab | Tokens / word ↓ | Lossless round trip ↑ | Texts with UNK ↓ | MB/s, single calls ↑ | MB/s, batches of 64 ↑ |
+| Tokenizer | Vocab | Tokens / word ↓ | Lossless round trip ↑ | Texts with UNK ↓ | MB/s, Apple M5 ↑ | MB/s, Linux x86_64 ↑ |
 |---|---:|---:|---:|---:|---:|---:|
-| **bn-bpe-58k (this package)** | 57,925 | **1.379** | **100%** | **0** | 61.1 | 71.0 |
-| **bn-bpe-28k (this package)** | 27,760 | 1.587 | **100%** | **0** | **62.1** | **72.8** |
-| SentencePiece Unigram 32k, trained on our data | 32,000 | 1.518 | 100% | 0 | 45.7 | 43.6 |
-| BNLP `bn_spm` (SentencePiece) | 50,000 | 1.825 | 80.1% | 1,932 | 40.5 | 39.0 |
-| tiktoken `o200k_base` (GPT-4o) | 200,019 | 1.780 | 100% | 0 | 37.4 | 12.0 |
-| BanglaBERT (csebuetnlp) | 32,000 | 1.771 | 51.1% | 1,110 | 9.2 | 9.2 |
-| MuRIL (Google) | 197,258 | 1.498 | 47.9% | 1,617 | 8.8 | 8.8 |
-| XLM-R / multilingual-E5 / BGE-M3 | 250,002 | 1.740 | 98.2% | 109 | 6.5 | 6.5 |
-| mBERT cased | 119,547 | 2.122 | 48.0% | 1,706 | 8.1 | 8.1 |
-| Qwen3 | 151,669 | 3.588 | 100% | 0 | 6.0 | 6.0 |
+| **bn-bpe-58k (this package)** | 57,925 | **1.379** | **100%** | **0** | 58.5 / 71.6 | 24.4 / 29.7 |
+| **bn-bpe-28k (this package)** | 27,760 | 1.587 | **100%** | **0** | **61.6 / 72.9** | **26.1 / 33.6** |
+| SentencePiece Unigram, same data and size as 58k | 57,925 | 1.410 | 100% | 0 | 42.4 / 41.7 | 20.5 / 20.9 |
+| SentencePiece BPE, same data and size as 58k | 57,925 | 1.407 | 100% | 0 | 17.7 / 17.4 | 9.5 / 9.8 |
+| SentencePiece Unigram, same data and size as 28k | 27,760 | 1.572 | 100% | 0 | 46.4 / 43.2 | 22.8 / 23.4 |
+| SentencePiece BPE, same data and size as 28k | 27,760 | 1.578 | 100% | 0 | 16.6 / 16.4 | 9.8 / 9.8 |
+| BNLP `bn_spm` (SentencePiece) | 50,000 | 1.825 | 80.1% | 1,932 | 40.1 / 39.2 | 19.3 / 19.8 |
+| tiktoken `o200k_base` (GPT-4o) | 200,019 | 1.780 | 100% | 0 | 37.3 / 12.1 | 19.4 / 5.4 |
+| BanglaBERT (csebuetnlp) | 32,000 | 1.771 | 51.1% | 1,110 | 9.1 / 9.2 | 4.8 / 4.6 |
+| MuRIL (Google) | 197,258 | 1.498 | 47.9% | 1,617 | 8.8 / 8.9 | 4.6 / 4.4 |
+| XLM-R / multilingual-E5 / BGE-M3 | 250,002 | 1.740 | 98.2% | 109 | 6.5 / 6.4 | 3.7 / 3.5 |
+| mBERT cased | 119,547 | 2.122 | 48.0% | 1,706 | 8.1 / 8.1 | 4.2 / 4.1 |
+| Qwen3 | 151,669 | 3.588 | 100% | 0 | 6.0 / 6.0 | 3.3 / 3.1 |
 
-[Full report](benchmarks/POPULAR_COMPARISON.md): per-script breakdown, the in-domain validation split, more tokenizers, method, limitations, and the commands to reproduce it. BanglaBERT is about 3% shorter on Bengali-only text but lossy; among lossless tokenizers, `bn-bpe-58k` is the most compact on Bengali, Latin and mixed script. Shorter sequences cut compute and context use, but they do not by themselves make a downstream model more accurate.
+What this shows:
+
+- **Against SentencePiece with the same data and vocabulary size, compression is a tie.** `bn-bpe-58k` is about 2% shorter than both SentencePiece models; `bn-bpe-28k` is about 1% longer. On the in-domain validation split, SentencePiece at the 28k size is 3–4.5% shorter. The gap to BanglaBERT, XLM-R and tiktoken comes from the training data and the vocabulary size, not from a better algorithm.
+- **The speed lead is real but depends on the CPU.** Against SentencePiece Unigram it is 1.3–1.7× on the M5 and 1.1–1.4× on the Linux VM. Hugging Face `tokenizers` was limited to one thread like everything else; its batch API can use all cores, which this table does not measure.
+- BanglaBERT is about 3% shorter on Bengali-only text but lossy. Among lossless tokenizers, `bn-bpe-58k` is the most compact on Bengali, Latin and mixed script.
+
+[Full report](benchmarks/POPULAR_COMPARISON.md): per-script breakdown, the in-domain validation split, more tokenizers, method, limitations, and the commands to reproduce it. Shorter sequences cut compute and context use, but they do not by themselves make a downstream model more accurate.
 
 ## Install
 
@@ -47,7 +56,7 @@ Here are 10,000 naturally written e-commerce reviews from [BanglishRev](https://
 pip install banglatok
 ```
 
-Prebuilt wheels target Linux (x86_64, aarch64) and macOS (x86_64, arm64) for CPython 3.10–3.15, and need no compiler. Until the first PyPI release, or on other platforms, build from source. That needs Go 1.24+ and a C compiler:
+Prebuilt wheels target Linux (x86_64, aarch64), macOS (x86_64, arm64) and Windows (x86_64) for CPython 3.10–3.15, and need no compiler. On other platforms pip builds from source, which needs Go 1.24+ and a C compiler:
 
 ```sh
 pip install git+https://github.com/iamaber/banglatok
@@ -71,6 +80,17 @@ with Tokenizer.from_pretrained("bn-bpe-58k") as tok:
 
 Load a tokenizer once and reuse it. Calls from many threads at once are safe, because the native call releases the GIL. In worker processes, create a fresh tokenizer inside each worker.
 
+### Hugging Face
+
+```python
+tok.save_huggingface("bn-bpe-58k-hf")      # tokenizer.json + tokenizer_config.json
+
+from transformers import AutoTokenizer
+hf = AutoTokenizer.from_pretrained("bn-bpe-58k-hf")   # same IDs as tok.encode / tok(...)
+```
+
+The exported models are also on the Hub as [`iamaber/banglatok-bn-bpe-58k`](https://huggingface.co/iamaber/banglatok-bn-bpe-58k) and [`iamaber/banglatok-bn-bpe-28k`](https://huggingface.co/iamaber/banglatok-bn-bpe-28k). Only BPE models can be exported. With the `tokenizers` library alone, set `encode_special_tokens = True` so that literal `<s>` in text stays text; `transformers` does this from the saved configuration.
+
 ### Command line
 
 ```sh
@@ -93,6 +113,7 @@ $ banglatok --count --model bn-bpe-28k < lines.txt    # one count per line
 | `decode(ids, skip_special_tokens=False)` / `decode_batch(batch)` | Normalized text |
 | `tokenize(text)` | Token strings: fused IDs start with `" "`, fallback bytes look like `"<0xF0>"` |
 | `count_tokens(text)` | `len(encode(text))`, without building the list |
+| `save_huggingface(directory)` | Write a Hugging Face `tokenizer.json` with identical IDs (BPE models) |
 | `tok(texts, add_special_tokens=True, max_length=None, padding=False)` | `{"input_ids", "attention_mask"}` |
 | `id_to_token`, `token_to_id`, `get_vocab()`, `vocab_size`, `algorithm` | Vocabulary access |
 | `normalize(text)` | The shared normalization: NFC plus whitespace collapse and trim |

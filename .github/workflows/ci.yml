@@ -72,11 +72,12 @@ jobs:
         run: |
           python -m twine check --strict dist/*
           python tools/check_dist.py dist --version "$(python -c 'from importlib.metadata import version; print(version("banglatok"))')"
-      - name: Python style
+      - name: Python style, types and Hugging Face export dependencies
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.12'
         run: |
-          python -m pip install ruff
-          ruff check src tests tools examples setup.py benchmarks/compare_popular.py benchmarks/build_fused_model.py
-          ruff format --check src tests benchmarks/compare_popular.py benchmarks/build_fused_model.py
+          python -m pip install ruff mypy tokenizers
+          ruff check src tests tools examples setup.py benchmarks
+          ruff format --check src tests tools benchmarks
+          mypy --strict src/banglatok
       - run: python -m unittest discover -s tests -v
       - run: python examples/quickstart.py
