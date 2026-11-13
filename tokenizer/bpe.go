@@ -4,6 +4,7 @@ import (
 	"container/heap"
 	"fmt"
 	"io"
+	"math"
 	"sort"
 	"unicode/utf8"
 )
@@ -15,15 +16,26 @@ type Merge struct {
 	Result int `json:"result"`
 }
 
+// denseRunes covers Latin, Bengali and general punctuation with a slice lookup.
+const denseRunes = 0x2100
+
 func (t *Tokenizer) initBPE() error {
 	t.model.Merges = append([]Merge(nil), t.model.Merges...)
 	t.mergeRanks = map[uint64]int{}
 	t.characters = map[rune]int{}
+	t.denseCharacters = make([]int32, denseRunes)
+	for i := range t.denseCharacters {
+		t.denseCharacters[i] = -1
+	}
 	available := map[int]bool{}
 	for i, p := range t.model.Pieces {
 		if utf8.RuneCountInString(p.Text) == 1 {
 			r, _ := utf8.DecodeRuneInString(p.Text)
-			t.characters[r] = i
+			if r < denseRunes {
+				t.denseCharacters[r] = int32(i)
+			} else {
+				t.characters[r] = i
+			}
 			available[i] = true
 		}
 	}
@@ -51,22 +63,53 @@ func pairKey(left, right int) uint64 {
 	return uint64(uint32(left))<<32 | uint64(uint32(right))
 }
 
+func (t *Tokenizer) character(r rune) (int, bool) {
+	if r < denseRunes {
+		id := t.denseCharacters[r]
+		return int(id), id >= 0
+	}
+	id, ok := t.characters[r]
+	return id, ok
+}
+
+func (t *Tokenizer) rank(left, right int) int32 {
+	if rank, ok := t.mergeRanks[pairKey(left, right)]; ok {
+		return int32(rank)
+	}
+	return math.MaxInt32
+}
+
+// appendBPE applies the lowest-ranked merge to every non-overlapping
+// occurrence, matching training, until no merge applies. Pair ranks are kept
+// beside the word and recomputed only next to merged tokens.
 func (t *Tokenizer) appendBPE(ids []int, s string) []int {
 	start := len(ids)
 	for _, r := range s {
-		if id, ok := t.characters[r]; ok {
+		if id, ok := t.character(r); ok {
 			ids = append(ids, PieceOffset+id)
 		} else {
-			for _, b := range []byte(string(r)) {
+			var encoded [utf8.UTFMax]byte
+			for _, b := range encoded[:utf8.EncodeRune(encoded[:], r)] {
 				ids = append(ids, ByteOffset+int(b))
 			}
 		}
 	}
-	for {
-		best, pos := len(t.model.Merges), -1
-		for i := start; i+1 < len(ids); i++ {
-			rank, ok := t.mergeRanks[pairKey(ids[i], ids[i+1])]
-			if ok && rank < best {
+	word := ids[start:]
+	if len(word) < 2 {
+		return ids
+	}
+	var local [64]int32
+	ranks := local[:]
+	if len(word) > len(ranks) {
+		ranks = make([]int32, len(word))
+	}
+	for i := 0; i+1 < len(word); i++ {
+		ranks[i] = t.rank(word[i], word[i+1])
+	}
+	for len(word) > 1 {
+		best, pos := int32(math.MaxInt32), -1
+		for i, rank := range ranks[:len(word)-1] {
+			if rank < best {
 				best, pos = rank, i
 			}
 		}
@@ -74,20 +117,33 @@ func (t *Tokenizer) appendBPE(ids []int, s string) []int {
 			break
 		}
 		merge := t.model.Merges[best]
-		// Replace every non-overlapping occurrence in one pass, matching training.
-		// Repeated long words must not rescan/shift the entire slice per occurrence.
-		out := ids[:start]
-		for i := start; i < len(ids); i++ {
-			if i+1 < len(ids) && ids[i] == PieceOffset+merge.Left && ids[i+1] == PieceOffset+merge.Right {
-				out = append(out, PieceOffset+merge.Result)
+		left, right, result := PieceOffset+merge.Left, PieceOffset+merge.Right, PieceOffset+merge.Result
+		// Compact in place; an unmerged token keeps its old right-pair rank,
+		// which stays valid unless its right neighbour was merged.
+		n := 0
+		for i := 0; i < len(word); i++ {
+			if i+1 < len(word) && word[i] == left && word[i+1] == right {
+				word[n] = result
 				i++
 			} else {
-				out = append(out, ids[i])
+				word[n], ranks[n] = word[i], ranks[i]
+			}
+			n++
+		}
+		word = word[:n]
+		for i, id := range word {
+			if id != result {
+				continue
+			}
+			if i > 0 {
+				ranks[i-1] = t.rank(word[i-1], id)
+			}
+			if i+1 < len(word) {
+				ranks[i] = t.rank(id, word[i+1])
 			}
 		}
-		ids = out
 	}
-	return ids
+	return ids[:start+len(word)]
 }
 
 type pairItem struct {
