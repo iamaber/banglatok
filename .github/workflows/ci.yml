@@ -71,7 +71,7 @@ jobs:
       - name: Validate release archives
         run: |
           python -m twine check --strict dist/*
-          python tools/check_dist.py dist --version "$(python -c 'from importlib.metadata import version; print(version("bn-tokenizers-embedding"))')"
+          python tools/check_dist.py dist --version "$(python -c 'from importlib.metadata import version; print(version("banglatok"))')"
       - name: Python style
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.12'
         run: |

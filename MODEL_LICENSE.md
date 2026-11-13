@@ -1,6 +1,6 @@
 # Bundled model files
 
-The files in `src/bn_tokenizers_embedding/pretrained/` (`bn-bpe-58k.json` and `bn-bpe-28k.json`) are licensed under the Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA 4.0): https://creativecommons.org/licenses/by-sa/4.0/legalcode
+The files in `src/banglatok/pretrained/` (`bn-bpe-58k.json` and `bn-bpe-28k.json`) are licensed under the Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA 4.0): https://creativecommons.org/licenses/by-sa/4.0/legalcode
 
 They contain subword vocabularies, merge rules and frequent-word lists learned from:
 

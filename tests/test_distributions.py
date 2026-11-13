@@ -35,22 +35,22 @@ class DistributionTests(unittest.TestCase):
                 "tokenizer/model.go",
                 "internal/native/native.go",
                 "cmd/bntok-shared/main.go",
-                *(f"src/bn_tokenizers_embedding/{name}" for name in package_data),
+                *(f"src/banglatok/{name}" for name in package_data),
                 *notices,
             ]
-            with tarfile.open(root / "bn_tokenizers_embedding-0.1.0a1.tar.gz", "w:gz") as archive:
+            with tarfile.open(root / "banglatok-0.1.0a1.tar.gz", "w:gz") as archive:
                 for name in source:
-                    entry = tarfile.TarInfo(f"bn_tokenizers_embedding-0.1.0a1/{name}")
+                    entry = tarfile.TarInfo(f"banglatok-0.1.0a1/{name}")
                     entry.size = 1
                     archive.addfile(entry, io.BytesIO(b"x"))
-            info = "bn_tokenizers_embedding-0.1.0a1.dist-info"
+            info = "banglatok-0.1.0a1.dist-info"
             with zipfile.ZipFile(
-                root / "bn_tokenizers_embedding-0.1.0a1-py3-none-linux_x86_64.whl", "w"
+                root / "banglatok-0.1.0a1-py3-none-linux_x86_64.whl", "w"
             ) as archive:
                 version = "9.9.9" if wrong_version else "0.1.0a1"
                 archive.writestr(
                     f"{info}/METADATA",
-                    f"Name: bn-tokenizers-embedding\nVersion: {version}\n"
+                    f"Name: banglatok\nVersion: {version}\n"
                     "License-Expression: MIT AND BSD-3-Clause AND CC-BY-SA-4.0\n"
                     "Requires-Python: >=3.10\n",
                 )
@@ -61,9 +61,9 @@ class DistributionTests(unittest.TestCase):
                     archive.writestr(f"{info}/licenses/{name}", "notice")
                 for name in [*package_data, "py.typed"]:
                     if not (omit_model and name.startswith("pretrained/")):
-                        archive.writestr(f"bn_tokenizers_embedding/{name}", "fixture")
+                        archive.writestr(f"banglatok/{name}", "fixture")
                 if not omit_native:
-                    archive.writestr("bn_tokenizers_embedding/_go.so", b"native fixture")
+                    archive.writestr("banglatok/_go.so", b"native fixture")
                 if leak:
                     archive.writestr("data/raw/private.jsonl", "must not ship")
             return subprocess.run(

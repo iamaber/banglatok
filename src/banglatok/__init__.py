@@ -15,7 +15,7 @@ from ._tokenizer import (
 )
 
 try:
-    __version__ = version("bn-tokenizers-embedding")
+    __version__ = version("banglatok")
 except PackageNotFoundError:  # Imported from a source tree without installation.
     __version__ = "0+unknown"
 

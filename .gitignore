@@ -53,7 +53,7 @@ data/raw/
 data/processed/
 models/
 bin/
-src/bn_tokenizers_embedding/_go.*
+src/banglatok/_go.*
 research/reports/train-*.txt
 research/reports/*.stdout.txt
 research/reports/tests.txt

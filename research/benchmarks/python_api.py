@@ -12,7 +12,7 @@ from pathlib import Path
 from time import perf_counter
 from typing import TypedDict
 
-from bn_tokenizers_embedding import Tokenizer, normalize
+from banglatok import Tokenizer, normalize
 
 TEXTS = [
     "আমি আজ ভালো আছি। পাসপোর্ট নবায়ন করতে কী কী কাগজপত্র লাগবে?",
@@ -94,7 +94,7 @@ def benchmark(model: Path, iterations: int, repeats: int, batch_size: int) -> di
             "python": platform.python_version(),
             "platform": platform.platform(),
             "machine": platform.machine(),
-            "package_version": version("bn-tokenizers-embedding"),
+            "package_version": version("banglatok"),
             "model_sha256": hashlib.sha256(model.read_bytes()).hexdigest(),
             "vocabulary": tok.vocab_size,
             "load_seconds": load_seconds,

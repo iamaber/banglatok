@@ -1,6 +1,6 @@
 """Offline quickstart with the bundled pretrained model; nothing is downloaded."""
 
-from bn_tokenizers_embedding import Tokenizer
+from banglatok import Tokenizer
 
 texts = ["আমি বাংলায় গান গাই।", "ami banglay gaan gai", "I speak Bangla", "meetingটা ১০টায় 🙂"]
 

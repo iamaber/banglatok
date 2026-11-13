@@ -4,7 +4,7 @@ Original software, documentation and the hand-authored demo vocabulary are
 MIT-licensed; see LICENSE. Native wheels also contain Go runtime/standard-library
 code and golang.org/x/text v0.28.0, each under BSD-3-Clause. Their notices are
 included in third_party/licenses and in the distribution's license directory.
-The bundled pretrained vocabularies in src/bn_tokenizers_embedding/pretrained
+The bundled pretrained vocabularies in src/banglatok/pretrained
 are learned from Wikipedia, Tatoeba and BanglaTLit text and are distributed under
 CC BY-SA 4.0 with attribution; see MODEL_LICENSE.md. The distribution's SPDX
 expression is MIT AND BSD-3-Clause AND CC-BY-SA-4.0 to reflect all three.

@@ -11,7 +11,7 @@ import (
 	"math"
 	"unsafe"
 
-	"github.com/iamaber/bn-tokenizers-embedding/internal/native"
+	"github.com/iamaber/banglatok/internal/native"
 )
 
 var registry native.Registry

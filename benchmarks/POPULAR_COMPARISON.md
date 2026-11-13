@@ -1,6 +1,6 @@
 # Comparison with popular Bangla-capable tokenizers
 
-Measured 10 November 2026 on an Apple M5 (arm64), macOS 27.0.1, Python 3.12.13, with bn-tokenizers-embedding 0.2.0. Raw results, timing samples and hashes are in [results/popular-comparison.json](results/popular-comparison.json). The harness is [benchmarks/compare_popular.py](compare_popular.py).
+Measured 10 November 2026 on an Apple M5 (arm64), macOS 27.0.1, Python 3.12.13, with banglatok 0.2.0. Raw results, timing samples and hashes are in [results/popular-comparison.json](results/popular-comparison.json). The harness is [benchmarks/compare_popular.py](compare_popular.py).
 
 **Summary.** On text from a source it never trained on, the default `bn-bpe-58k` model:
 

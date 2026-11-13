@@ -8,7 +8,7 @@ BASE = Path(
     "614241f622f53c4eeff9890bdc4f31cfecc418b3"
 )
 HAS_RUNTIME = all(
-    importlib.util.find_spec(name) for name in ("torch", "transformers", "bn_tokenizers_embedding")
+    importlib.util.find_spec(name) for name in ("torch", "transformers", "banglatok")
 )
 
 

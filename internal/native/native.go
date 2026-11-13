@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/iamaber/bn-tokenizers-embedding/tokenizer"
+	"github.com/iamaber/banglatok/tokenizer"
 )
 
 type request struct {

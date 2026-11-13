@@ -14,7 +14,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/iamaber/bn-tokenizers-embedding/tokenizer"
+	"github.com/iamaber/banglatok/tokenizer"
 )
 
 type Record struct {
