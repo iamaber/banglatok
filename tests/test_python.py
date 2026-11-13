@@ -3,6 +3,7 @@
 import gc
 import json
 import os
+import sys
 import tempfile
 import unittest
 import weakref
@@ -12,7 +13,12 @@ from contextlib import contextmanager
 from importlib.resources import as_file, files
 from pathlib import Path
 
-from banglatok import Tokenizer, _native, normalize
+from banglatok import BOS_ID, EOS_ID, PAD_ID, Tokenizer, _native, normalize
+
+try:
+    import numpy
+except ImportError:
+    numpy = None
 
 
 @contextmanager
@@ -26,6 +32,30 @@ def environment(name: str, value: str) -> Iterator[None]:
             del os.environ[name]
         else:
             os.environ[name] = previous
+
+
+def reference_call(
+    tok: Tokenizer, texts: list[str], special: bool, max_length: int | None, padding: object
+) -> dict[str, list[list[int]]]:
+    """The original list implementation of Tokenizer.__call__ for one batch."""
+    batch = [tok.encode(text) for text in texts]
+    reserve = 2 if special else 0
+    if max_length is not None:
+        batch = [ids[: max_length - reserve] for ids in batch]
+    if special:
+        batch = [[BOS_ID, *ids, EOS_ID] for ids in batch]
+    width = 0
+    if padding == "max_length":
+        width = max_length or 0
+    elif padding:
+        width = max(map(len, batch), default=0)
+    return {
+        "input_ids": [ids + [PAD_ID] * (width - len(ids)) for ids in batch],
+        "attention_mask": [[1] * len(ids) + [0] * (width - len(ids)) for ids in batch],
+    }
+
+
+MIXED = ["", "a", "আমি ভালো আছি।", "ami valo asi 🙂", "a\0b", "বাংলা " * 400] * 40
 
 
 class TokenizerTests(unittest.TestCase):
@@ -137,6 +167,70 @@ class TokenizerTests(unittest.TestCase):
                         tok.encode_batch(texts)
             with environment("BANGLATOK_NUM_THREADS", " "):
                 self.assertEqual(tok.encode_batch(texts[:3]), expected[:3])
+
+    def test_call_matches_reference(self) -> None:
+        with Tokenizer.from_pretrained("bn-bpe-28k") as tok:
+            for texts in (MIXED, [], [""], MIXED[:5]):
+                for special in (True, False):
+                    for max_length in (None, 2, 7, 600):
+                        for padding in (False, True, "longest", "max_length"):
+                            if padding == "max_length" and max_length is None:
+                                continue
+                            want = reference_call(tok, texts, special, max_length, padding)
+                            for threads in (1, 4):
+                                got = tok(
+                                    texts,
+                                    add_special_tokens=special,
+                                    max_length=max_length,
+                                    padding=padding,
+                                    num_threads=threads,
+                                )
+                                self.assertEqual(got, want)
+                                self.assertIs(type(got["input_ids"]), list)
+            single = tok("আমি ভালো", max_length=8, padding="max_length")
+            self.assertEqual(
+                single,
+                {
+                    k: v[0]
+                    for k, v in reference_call(tok, ["আমি ভালো"], True, 8, "max_length").items()
+                },
+            )
+            # More IDs than a per-thread buffer keeps: the call uses a native allocation.
+            big = tok(MIXED[:6] * 100, max_length=2000, padding="max_length")
+            self.assertEqual(big, reference_call(tok, MIXED[:6] * 100, True, 2000, "max_length"))
+            self.assertEqual(tok(["a"]), reference_call(tok, ["a"], True, None, False))
+            with self.assertRaisesRegex(ValueError, "return_tensors"):
+                tok("a", return_tensors="pt")  # type: ignore[call-overload]
+
+    @unittest.skipIf(numpy is None, "NumPy is not installed")
+    def test_call_numpy(self) -> None:
+        with Tokenizer.from_pretrained("bn-bpe-28k") as tok:
+            for padding, max_length in ((True, None), ("longest", 9), ("max_length", 600)):
+                want = tok(MIXED, padding=padding, max_length=max_length)
+                got = tok(MIXED, padding=padding, max_length=max_length, return_tensors="np")
+                for name in ("input_ids", "attention_mask"):
+                    self.assertEqual(got[name].dtype, numpy.int64)
+                    self.assertEqual(got[name].tolist(), want[name])
+            single = tok("আমি ভালো", return_tensors="np")
+            self.assertEqual(single["input_ids"].tolist(), [tok("আমি ভালো")["input_ids"]])
+            same = tok(["ab", "ab"], return_tensors="np")
+            self.assertEqual(same["attention_mask"].shape, (2, len(tok("ab")["input_ids"])))
+            empty = tok([], padding=True, return_tensors="np")
+            self.assertEqual(empty["input_ids"].shape, (0, 0))
+            with self.assertRaisesRegex(ValueError, "needs padding"):
+                tok(["a", "আমি ভালো আছি"], return_tensors="np")
+
+    def test_call_numpy_missing(self) -> None:
+        saved = sys.modules.get("numpy")
+        sys.modules["numpy"] = None  # type: ignore[assignment]
+        try:
+            with Tokenizer(self.path) as tok, self.assertRaisesRegex(ImportError, "requires NumPy"):
+                tok("a", return_tensors="np")
+        finally:
+            if saved is None:
+                del sys.modules["numpy"]
+            else:
+                sys.modules["numpy"] = saved
 
     def test_bpe_model(self) -> None:
         path = Path(self.directory.name) / "bpe.json"

@@ -63,7 +63,7 @@ func (r *Registry) EncodeBinary(handle uint64, data []byte, threads int) []byte 
 		data = data[int(n):]
 	}
 	counts := make([]int, len(texts))
-	chunks := encodeChunks(model, texts, counts, Threads(threads))
+	chunks, _ := encodeChunks(model, texts, counts, Threads(threads))
 	defer releaseChunks(chunks)
 	total := 0
 	for _, c := range chunks {

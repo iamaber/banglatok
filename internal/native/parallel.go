@@ -34,11 +34,11 @@ func Threads(n int) int {
 }
 
 // encodeChunks encodes texts with up to threads workers. Chunks hold IDs in
-// input order and counts[i] receives the ID count of texts[i]. Callers must
-// pass the chunks to releaseChunks.
-func encodeChunks(model *tokenizer.Tokenizer, texts []string, counts []int, threads int) []chunk {
+// input order and counts[i] receives the ID count of texts[i]. It returns the
+// worker count used; callers must pass the chunks to releaseChunks.
+func encodeChunks(model *tokenizer.Tokenizer, texts []string, counts []int, threads int) ([]chunk, int) {
 	chunks, workers := split(texts, threads)
-	encode := func(c *chunk) {
+	parallel(chunks, workers, func(c *chunk) {
 		c.buffer = scratch.Get().(*[]int)
 		ids := (*c.buffer)[:0]
 		for i := c.first; i < c.last; i++ {
@@ -47,10 +47,18 @@ func encodeChunks(model *tokenizer.Tokenizer, texts []string, counts []int, thre
 			counts[i] = len(ids) - start
 		}
 		c.ids = ids
-	}
-	if len(chunks) == 1 {
-		encode(&chunks[0])
-		return chunks
+	})
+	return chunks, workers
+}
+
+// parallel runs task on every chunk with up to workers goroutines; a single
+// worker runs on the calling goroutine.
+func parallel(chunks []chunk, workers int, task func(*chunk)) {
+	if workers <= 1 {
+		for i := range chunks {
+			task(&chunks[i])
+		}
+		return
 	}
 	var next atomic.Int64
 	var done sync.WaitGroup
@@ -59,12 +67,11 @@ func encodeChunks(model *tokenizer.Tokenizer, texts []string, counts []int, thre
 		go func() {
 			defer done.Done()
 			for i := int(next.Add(1) - 1); i < len(chunks); i = int(next.Add(1) - 1) {
-				encode(&chunks[i])
+				task(&chunks[i])
 			}
 		}()
 	}
 	done.Wait()
-	return chunks
 }
 
 // split partitions texts into chunks of similar byte size, about four per

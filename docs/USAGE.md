@@ -149,8 +149,16 @@ batch["attention_mask"]     # [[1, 1, 1, 1, 1], [1, 1, 1, 0, 0]]
 | `add_special_tokens=True` | Wrap in `<s>` … `</s>` |
 | `max_length=None` | Truncate to this many IDs, keeping both control tokens |
 | `padding=False` | `True` or `"longest"` pads to the longest sequence; `"max_length"` pads to `max_length` |
+| `num_threads=None` | Native worker limit, as for `encode_batch` (see [Threads and processes](#threads-and-processes)) |
+| `return_tensors=None` | `"np"` returns 2-D `int64` NumPy arrays instead of lists |
 
-A single string returns flat lists; a list of strings returns nested lists. Convert with `torch.tensor(batch["input_ids"])` or `numpy.array(...)`.
+A single string returns flat lists; a list of strings returns nested lists. Convert with `torch.tensor(batch["input_ids"])`, or skip the lists with `return_tensors="np"` (needs NumPy, which banglatok does not install; unequal lengths need `padding`):
+
+```python
+batch = tok(texts, max_length=128, padding=True, return_tensors="np")
+batch["input_ids"].shape    # (len(texts), longest sequence)
+input_ids = torch.from_numpy(batch["input_ids"])
+```
 
 ## Hugging Face
 
@@ -384,7 +392,7 @@ Everything is importable from `banglatok`.
 | `decode(ids, skip_special_tokens=False)` / `decode_batch(batch, skip_special_tokens=False)` | Normalized text |
 | `count_tokens(text)` | `len(encode(text))`, without building the list |
 | `tokenize(text)` | Token strings |
-| `tok(texts, add_special_tokens=True, max_length=None, padding=False, num_threads=None)` | `{"input_ids", "attention_mask"}` |
+| `tok(texts, add_special_tokens=True, max_length=None, padding=False, num_threads=None, return_tensors=None)` | `{"input_ids", "attention_mask"}` as lists, or NumPy arrays with `"np"` |
 | `id_to_token(id)`, `token_to_id(token)`, `get_vocab()` | Vocabulary lookups |
 | `vocab_size`, `algorithm`, `closed` | Properties |
 | `save_huggingface(directory)` | Write a Hugging Face tokenizer with identical IDs (BPE models) |
