@@ -11,20 +11,17 @@ import (
 )
 
 type request struct {
-	Operation string   `json:"op"`
-	Handle    uint64   `json:"handle"`
-	Path      string   `json:"path"`
-	Text      string   `json:"text"`
-	Texts     []string `json:"texts"`
-	IDs       []int    `json:"ids"`
+	Operation string `json:"op"`
+	Handle    uint64 `json:"handle"`
+	Path      string `json:"path"`
+	Text      string `json:"text"`
+	IDs       []int  `json:"ids"`
 }
 
 type response struct {
 	Handle      uint64            `json:"handle,omitempty"`
 	Vocabulary  int               `json:"vocabulary,omitempty"`
 	Algorithm   string            `json:"algorithm,omitempty"`
-	IDs         []int             `json:"ids,omitempty"`
-	Batch       [][]int           `json:"batch,omitempty"`
 	Pieces      []string          `json:"pieces,omitempty"`
 	SpaceFusion []int             `json:"space_fusion,omitempty"`
 	Merges      []tokenizer.Merge `json:"merges,omitempty"`
@@ -80,17 +77,11 @@ func (r *Registry) call(req request) (response, error) {
 		r.mu.Unlock()
 		return response{}, nil
 	}
-	if req.Operation == "encode_batch" {
-		batch, err := r.encodeBatch(req.Handle, req.Texts)
-		return response{Batch: batch}, err
-	}
 	model, err := r.model(req.Handle)
 	if err != nil {
 		return response{}, err
 	}
 	switch req.Operation {
-	case "encode":
-		return response{IDs: model.Encode(req.Text)}, nil
 	case "decode":
 		text, err := model.Decode(req.IDs)
 		return response{Text: text}, err
@@ -112,16 +103,4 @@ func (r *Registry) model(handle uint64) (*tokenizer.Tokenizer, error) {
 		return nil, fmt.Errorf("unknown or closed tokenizer handle")
 	}
 	return model, nil
-}
-
-func (r *Registry) encodeBatch(handle uint64, texts []string) ([][]int, error) {
-	model, err := r.model(handle)
-	if err != nil {
-		return nil, err
-	}
-	batch := make([][]int, len(texts))
-	for i, text := range texts {
-		batch[i] = model.Encode(text)
-	}
-	return batch, nil
 }

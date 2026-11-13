@@ -140,14 +140,26 @@ func TestManifestTampering(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	b, _ := json.Marshal([]Download{{Path: "sample.txt", Bytes: 5, SHA256: h, URL: "https://example.org"}})
-	manifest := filepath.Join(dir, "lock.json")
-	os.WriteFile(manifest, b, 0644)
+	manifest := writeDownloadManifest(t, dir, Download{Path: "sample.txt", Bytes: 5, SHA256: h, URL: "https://example.org"})
 	if err := VerifyManifest(manifest, dir); err != nil {
 		t.Fatal(err)
 	}
-	os.WriteFile(p, []byte("other"), 0644)
-	if err := VerifyManifest(manifest, dir); err == nil {
-		t.Fatal("accepted changed raw data")
+	for _, tc := range []struct {
+		name  string
+		data  string
+		bytes int64
+	}{
+		{"changed content", "other", 5},
+		{"wrong size", "hello", 6},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if err := os.WriteFile(p, []byte(tc.data), 0644); err != nil {
+				t.Fatal(err)
+			}
+			writeDownloadManifest(t, dir, Download{Path: "sample.txt", Bytes: tc.bytes, SHA256: h, URL: "https://example.org"})
+			if err := VerifyManifest(manifest, dir); err == nil || err.Error() != "checksum mismatch: "+p {
+				t.Fatalf("expected checksum mismatch, got %v", err)
+			}
+		})
 	}
 }
