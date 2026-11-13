@@ -4,20 +4,23 @@ Small, reproducible changes are welcome. Discuss API changes in an issue first. 
 
 ## Development
 
-Use Python 3.10+ and Go 1.24+ with a C compiler. A supported, maintained Python version is preferable for development.
+Use Python 3.10+ and Go 1.24.9+ with a C compiler. We recommend [uv](https://docs.astral.sh/uv/) for the Python side:
 
 ```sh
-python -m venv .venv-dev
+uv venv .venv-dev
 source .venv-dev/bin/activate
-python -m pip install build twine ruff
-python -m pip install .
+uv pip install build twine ruff mypy tokenizers
+uv pip install .
 python -m unittest discover -s tests -v
 go test -race ./...
 go vet ./...
-ruff check src tests tools examples setup.py
+ruff check src tests tools examples setup.py benchmarks
+mypy --strict src/banglatok
 ```
 
-Tests exercise the installed Go shared library. After changing Go or Python package code, reinstall with `python -m pip install --force-reinstall .` before testing. Running against an old wheel can test an obsolete native runtime.
+With plain pip, replace `uv venv` with `python -m venv` and `uv pip` with `python -m pip`.
+
+Tests exercise the installed Go shared library. After changing Go or Python package code, reinstall with `uv pip install --reinstall .` before testing. Running against an old wheel can test an obsolete native runtime.
 
 Format changed Go files with `gofmt`. Prefer the standard library and the existing small API over new dependencies or generic abstractions. Add a focused regression test for behavior changes, and test actual native behavior rather than mocked return values.
 

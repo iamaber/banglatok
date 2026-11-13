@@ -25,11 +25,13 @@ tags:
 - bpe
 ---
 
-# {name}
+# banglatok `{name}`
 
-A lossless BPE tokenizer for Bangla, English and Banglish (romanized Bengali), including
-code-mixed text. Vocabulary: {vocab:,} IDs. This repository holds only the tokenizer; there
-are no model weights.
+Fast, lossless subword tokenizers for Bangla, English and Banglish (romanized Bengali),
+including code-mixed text.
+
+This is banglatok's `{name}` BPE model. Vocabulary: {vocab:,} IDs.
+This repository holds only the tokenizer; there are no model weights.
 
 It is the Hugging Face export of `{name}` from
 [banglatok](https://github.com/iamaber/banglatok) {version}, and gives exactly the same IDs.
@@ -41,7 +43,13 @@ tok = AutoTokenizer.from_pretrained("{repo}")
 tok("meetingটা ১০টায়, don't be late 🙂")
 ```
 
-Or use the native package, which is faster and has no dependencies:
+Or use banglatok, the native package with no Python dependencies. We recommend
+[uv](https://docs.astral.sh/uv/); pip works too:
+
+```sh
+uv add banglatok       # in a uv project
+# or: pip install banglatok
+```
 
 ```python
 from banglatok import Tokenizer
@@ -56,6 +64,8 @@ tok = Tokenizer.from_pretrained("{name}")
 - Training data, build steps and limitations:
   [docs/MODELS.md](https://github.com/iamaber/banglatok/blob/main/docs/MODELS.md).
   Benchmarks: [benchmarks/POPULAR_COMPARISON.md](https://github.com/iamaber/banglatok/blob/main/benchmarks/POPULAR_COMPARISON.md).
+- [User guide](https://github.com/iamaber/banglatok/blob/main/docs/USAGE.md):
+  installation, Python API, CLI, token budgets, datasets and model training.
 
 ## License
 

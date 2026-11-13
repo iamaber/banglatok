@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.2.1 — 2026-11-13
+
+### Documentation
+
+- Added `docs/USAGE.md`: installation, model selection, normalization, Python API, CLI, Hugging Face, multiprocessing, troubleshooting, and guides for token budgets, Datasets, PyTorch batches and training a language model.
+- Recommended uv for installation while retaining pip instructions. Linked guides from the README and PyPI documentation metadata.
+- Standardized the package name (`banglatok`) and benchmark model labels (`banglatok bn-bpe-58k` / `banglatok bn-bpe-28k`). README links work on both GitHub and PyPI.
+
+### Fixed
+
+- Calls in a child forked after the Go library was loaded now raise an actionable error instead of hanging. Use `spawn` or `forkserver` and create the tokenizer in each worker.
+
+### Internal
+
+- Removed unused native JSON encode operations; shared corpus manifest/hash helpers; moved training and report output helpers into the Go CLI. Model files and token IDs are unchanged.
+- Updated the corpus CLI's parquet-go dependency to 0.32.0; source builds now require Go 1.24.9 or newer. The native wheel's Unicode dependency remains golang.org/x/text 0.28.0.
+
 ## 0.2.0 — 2026-11-13
 
 First public release.

@@ -1,6 +1,6 @@
 # Bundled models
 
-Both models ship inside the wheel and load offline with `Tokenizer.from_pretrained(name)`.
+banglatok bundles two models, `bn-bpe-58k` and `bn-bpe-28k`, which load offline with `Tokenizer.from_pretrained(name)`. The package, Python import and command are all named `banglatok`; the `bn-bpe-*` names select its models. See the [user guide](USAGE.md#choosing-a-model) for examples.
 
 | Name | Vocabulary | Base BPE | Fused IDs | Use it when |
 |---|---:|---:|---:|---|
@@ -36,7 +36,7 @@ python benchmarks/build_fused_model.py --base models/bpe-16000.json --budget 320
 - No unknown tokens. Characters not in the vocabulary fall back to their UTF-8 bytes.
 - Case, Bengali marks, ZWJ/ZWNJ, digits, punctuation and emoji are preserved. Nothing is transliterated, lowercased or stemmed.
 - Control IDs are `0 <pad>`, `1 <unk>` (never emitted), `2 <s>` and `3 </s>`. `encode` never adds them. Use `tokenizer(texts, add_special_tokens=True)` when you need them.
-- These are not SentencePiece or Hugging Face vocabularies. Using one with a pretrained encoder means re-initializing or adapting that encoder's embeddings.
+- They export to Hugging Face format with `save_huggingface(directory)`, but their vocabulary IDs differ from pretrained encoders such as BanglaBERT or XLM-R. Using one with such an encoder means re-initializing or adapting its embeddings.
 
 ## Limitations
 
