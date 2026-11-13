@@ -26,6 +26,12 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def recorded(path: str) -> Path:
+    """Resolve a path frozen before reports/ and experiments/ moved under research/."""
+    moved = Path(path)
+    return Path("research") / moved if moved.parts[:1] in (("reports",), ("experiments",)) else moved
+
+
 def read_rows(path: Path) -> list[dict]:
     with path.open(encoding="utf-8") as stream:
         return [json.loads(line) for line in stream]

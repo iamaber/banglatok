@@ -8,7 +8,7 @@ from pathlib import Path
 from compare import score_rankings
 from evaluate import bm25
 from metrics import paired_difference, query_metrics, summarize
-from prepare import read_rows, sha256, verify_manifest, write_rows
+from prepare import read_rows, recorded, sha256, verify_manifest, write_rows
 from seed_analysis import paired_seeds
 
 
@@ -49,7 +49,7 @@ def analyze(suite: Path, selection: Path, output: Path) -> dict:
         raise ValueError("sentence suite does not bind the frozen domain choice")
     decision = json.loads(selection.read_text())
     if not decision.get("selection_frozen_before_reserved_test") or sha256(
-        Path(decision["evaluation_suite"])
+        recorded(decision["evaluation_suite"])
     ) != decision["evaluation_suite_sha256"]:
         raise ValueError("frozen development evidence differs")
     records = {}

@@ -24,7 +24,7 @@ PACKAGE_DATA = {
 
 
 def check_paths(names: set[str]) -> None:
-    excluded = {"models", "reports", ".tools", ".git", ".cache", "__pycache__"}
+    excluded = {"models", "reports", "research", ".tools", ".git", ".cache", "__pycache__"}
     for name in names:
         path = PurePosixPath(name)
         parts = path.parts

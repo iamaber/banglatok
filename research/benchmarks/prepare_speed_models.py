@@ -56,7 +56,7 @@ def main() -> None:
         "maximum 1024 UTF-8 bytes per word",
         "artifacts": artifacts,
     }
-    Path("reports/speed-models.json").write_text(json.dumps(metadata, indent=2) + "\n")
+    Path("research/reports/speed-models.json").write_text(json.dumps(metadata, indent=2) + "\n")
 
 
 if __name__ == "__main__":

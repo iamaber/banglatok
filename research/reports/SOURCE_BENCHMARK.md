@@ -15,18 +15,18 @@ Fresh original-tokenizer quality evaluation is complete; the [comparison report]
 Reproduce from the repository root, using the pinned local raw snapshots and corpora:
 
 ```sh
-.venv/retrieval/bin/python experiments/retrieval/source_benchmark.py audit \
-  --material experiments/retrieval/source_benchmark_v1 \
+.venv/retrieval/bin/python research/experiments/retrieval/source_benchmark.py audit \
+  --material research/experiments/retrieval/source_benchmark_v1 \
   --corpus data/processed/train.jsonl \
   --corpus data/processed/validation.jsonl \
   --corpus data/processed/test.jsonl \
   --corpus data/processed/vashantor-expanded-v2/prepared/train.jsonl \
   --corpus data/processed/alignment-round2-v1/pairs.jsonl \
   --corpus data/processed/hard-negatives-reviewed-v1/pairs.jsonl \
-  --output reports/source-benchmark-overlap-repro.json
-.venv/retrieval/bin/python experiments/retrieval/source_benchmark.py build \
-  --material experiments/retrieval/source_benchmark_v1 \
-  --overlap reports/source-benchmark-overlap-repro.json \
+  --output research/reports/source-benchmark-overlap-repro.json
+.venv/retrieval/bin/python research/experiments/retrieval/source_benchmark.py build \
+  --material research/experiments/retrieval/source_benchmark_v1 \
+  --overlap research/reports/source-benchmark-overlap-repro.json \
   --output data/processed/source-benchmark-repro
 ```
 
@@ -34,22 +34,22 @@ Longer original-tokenizer runs can resume from verified completed checkpoints:
 
 ```sh
 HF_HUB_OFFLINE=1 TOKENIZERS_PARALLELISM=false .venv/retrieval/bin/python \
-  experiments/retrieval/run_original_training.py \
-  --protocol experiments/retrieval/round2_training_protocol.json \
+  research/experiments/retrieval/run_original_training.py \
+  --protocol research/experiments/retrieval/round2_training_protocol.json \
   --base models/hf-cache/models--intfloat--multilingual-e5-small/snapshots/614241f622f53c4eeff9890bdc4f31cfecc418b3 \
   --root models/encoders-round2 \
-  --output reports/round2-original-training-v1.json
+  --output research/reports/round2-original-training-v1.json
 ```
 
 After all six original-tokenizer runs complete, execute the fresh comparison:
 
 ```sh
 HF_HUB_OFFLINE=1 TOKENIZERS_PARALLELISM=false .venv/retrieval/bin/python \
-  experiments/retrieval/original_comparison.py \
+  research/experiments/retrieval/original_comparison.py \
   --benchmark data/processed/source-benchmark-v2 \
-  --inventory reports/round2-original-training-v1.json \
+  --inventory research/reports/round2-original-training-v1.json \
   --base models/hf-cache/models--intfloat--multilingual-e5-small/snapshots/614241f622f53c4eeff9890bdc4f31cfecc418b3 \
-  --criteria experiments/retrieval/round2_original_criteria.json \
+  --criteria research/experiments/retrieval/round2_original_criteria.json \
   --output data/processed/round2-original-comparison-v1
 ```
 

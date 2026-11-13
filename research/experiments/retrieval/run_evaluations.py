@@ -6,7 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from prepare import sha256, verify_manifest
+from prepare import recorded, sha256, verify_manifest
 
 
 def run(
@@ -30,7 +30,7 @@ def run(
         decision = json.loads(selection.read_text())
         if not decision.get("selection_frozen_before_reserved_test"):
             raise ValueError("development selection is not frozen")
-        if sha256(Path(decision["evaluation_suite"])) != decision["evaluation_suite_sha256"]:
+        if sha256(recorded(decision["evaluation_suite"])) != decision["evaluation_suite_sha256"]:
             raise ValueError("frozen development evidence differs")
     expected_datasets = {p.name: sha256(p / "manifest.json") for p in datasets}
     jobs = [("unchanged", base)]

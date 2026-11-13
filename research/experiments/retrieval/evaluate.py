@@ -208,7 +208,9 @@ def evaluate(directory: Path, report: Path, model: Path | None) -> dict:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pilot", type=Path, default=Path("data/processed/retrieval-pilot-v1"))
-    parser.add_argument("--report", type=Path, default=Path("reports/retrieval-pilot-v1.json"))
+    parser.add_argument(
+        "--report", type=Path, default=Path("research/reports/retrieval-pilot-v1.json")
+    )
     parser.add_argument("--model", type=Path, help="local pinned E5 snapshot; omit for BM25 only")
     args = parser.parse_args()
     result = evaluate(args.pilot, args.report, args.model)

@@ -230,7 +230,9 @@ def build(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--material", type=Path, default=Path("experiments/retrieval/domain_material.jsonl")
+        "--material",
+        type=Path,
+        default=Path("research/experiments/retrieval/domain_material.jsonl"),
     )
     parser.add_argument("--training", type=Path, default=Path("data/processed/train.jsonl"))
     parser.add_argument("--output", type=Path, default=Path("data/processed/domain-benchmark-v1"))

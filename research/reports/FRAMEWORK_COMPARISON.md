@@ -84,7 +84,7 @@ Run from the repository root after building our wheel and preparing the corpus/m
 
 ```sh
 python3.12 -m venv .venv/comparison
-.venv/comparison/bin/python -m pip install -r benchmarks/comparison-requirements.txt
+.venv/comparison/bin/python -m pip install -r research/benchmarks/comparison-requirements.txt
 .venv/comparison/bin/python -m pip install dist/*.whl
 export TOKENIZERS_PARALLELISM=false
 export NLTK_DATA="$PWD/data/raw/nltk"
@@ -93,9 +93,9 @@ mkdir -p models/comparison
 curl --fail --location \
   https://raw.githubusercontent.com/sagorbrur/bnlp/master/model/bn_spm.model \
   -o models/comparison/bnlp.model
-.venv/comparison/bin/python benchmarks/train_comparison.py
-.venv/comparison/bin/python benchmarks/compare_frameworks.py --cpu-model "Apple M5"
-.venv/comparison/bin/python -m unittest discover -s benchmarks -p 'test_*.py' -v
+.venv/comparison/bin/python research/benchmarks/train_comparison.py
+.venv/comparison/bin/python research/benchmarks/compare_frameworks.py --cpu-model "Apple M5"
+.venv/comparison/bin/python -m unittest discover -s research/benchmarks -p 'test_*.py' -v
 ```
 
 Replace `--cpu-model` with your actual hardware model. The BNLP download URL can change upstream: compare its SHA-256 against the saved results before treating a rerun as identical. Models and training text remain in ignored `models/comparison/`; no external library was added to our package's runtime requirements.

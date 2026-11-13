@@ -27,7 +27,7 @@ Follow [docs/RELEASING.md](docs/RELEASING.md) to build from a source archive, in
 
 ## Research changes
 
-Research environments are separate from the zero-dependency tokenizer API; see [experiments/retrieval/README.md](experiments/retrieval/README.md). Preserve frozen datasets and decisions. Report annotation origin, actual compute/data budgets, uncertainty and failed gates. Agent judgments must not be described as independent human review.
+Research environments are separate from the zero-dependency tokenizer API; see [research/experiments/retrieval/README.md](research/experiments/retrieval/README.md). Preserve frozen datasets and decisions. Report annotation origin, actual compute/data budgets, uncertainty and failed gates. Agent judgments must not be described as independent human review.
 
 ## Pull requests
 

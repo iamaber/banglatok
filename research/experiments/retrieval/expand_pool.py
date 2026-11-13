@@ -8,7 +8,7 @@ from collections import Counter
 from pathlib import Path
 
 from annotation_archive import GRADE_FIELDS
-from prepare import read_rows, sha256, verify_manifest, write_rows
+from prepare import read_rows, recorded, sha256, verify_manifest, write_rows
 
 EXPECTED_MODELS = {"unchanged"} | {
     f"{budget}/{arm}-seed{seed}"
@@ -93,7 +93,7 @@ def import_labels(pool: Path, labels: Path, output: Path) -> dict:
         raise ValueError("source dataset changed")
     if sha256(pool / "packet.jsonl") != manifest["packet_sha256"]:
         raise ValueError("review packet changed")
-    if sha256(Path(manifest["suite"])) != manifest["suite_sha256"] or any(
+    if sha256(recorded(manifest["suite"])) != manifest["suite_sha256"] or any(
         sha256(Path(path)) != digest for path, digest in manifest["ranking_files"].items()
     ):
         raise ValueError("candidate provenance changed")

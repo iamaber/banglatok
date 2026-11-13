@@ -150,7 +150,7 @@ def run(protocol: Path, base: Path, root: Path, budget: str) -> dict:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--protocol", type=Path, default=Path("experiments/retrieval/run_protocol.json")
+        "--protocol", type=Path, default=Path("research/experiments/retrieval/run_protocol.json")
     )
     parser.add_argument("--base", type=Path, required=True)
     parser.add_argument("--root", type=Path, default=Path("models/encoders"))

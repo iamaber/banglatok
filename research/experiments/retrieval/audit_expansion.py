@@ -5,7 +5,7 @@ import json
 from collections import Counter
 from pathlib import Path
 
-from prepare import canonical, sha256
+from prepare import canonical, recorded, sha256
 
 
 def rows(path):
@@ -20,8 +20,9 @@ def audit(directory: Path, original: Path, material: Path) -> dict:
         path = Path(filename)
         if path.is_absolute() or ".." in path.parts or sha256(directory / path) != digest:
             raise ValueError("expanded corpus file checksum mismatch")
+    inputs = {recorded(name): digest for name, digest in manifest["inputs"].items()}
     for path in [material, *(original / f"{s}.jsonl" for s in ("validation", "test"))]:
-        if manifest["inputs"].get(str(path)) != sha256(path):
+        if inputs.get(path) != sha256(path):
             raise ValueError("reserved input differs from expansion provenance")
     reserved = {
         canonical(text)
@@ -69,7 +70,9 @@ if __name__ == "__main__":
     parser.add_argument("--expanded", type=Path, required=True)
     parser.add_argument("--original", type=Path, default=Path("data/processed"))
     parser.add_argument(
-        "--material", type=Path, default=Path("experiments/retrieval/domain_material.jsonl")
+        "--material",
+        type=Path,
+        default=Path("research/experiments/retrieval/domain_material.jsonl"),
     )
     parser.add_argument("--report", type=Path, required=True)
     args = parser.parse_args()

@@ -45,11 +45,11 @@ Reproduction:
 
 ```sh
 HF_HUB_OFFLINE=1 TOKENIZERS_PARALLELISM=false .venv/retrieval/bin/python \
-  experiments/retrieval/deployment.py workload \
+  research/experiments/retrieval/deployment.py workload \
   --alignment data/processed/alignment-expanded-v1 \
   --output data/processed/deployment-workload-new
 HF_HUB_OFFLINE=1 TOKENIZERS_PARALLELISM=false .venv/retrieval/bin/python \
-  experiments/retrieval/deployment.py benchmark \
+  research/experiments/retrieval/deployment.py benchmark \
   --model models/encoders/equal-data/original-seed17 \
   --workload data/processed/deployment-workload-new \
   --output data/processed/deployment-new/original

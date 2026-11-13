@@ -188,7 +188,9 @@ def main() -> None:
     parser.add_argument("--repeats", type=int, default=5)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--cpu-model", default=platform.processor())
-    parser.add_argument("--output", type=Path, default=Path("reports/framework-comparison.json"))
+    parser.add_argument(
+        "--output", type=Path, default=Path("research/reports/framework-comparison.json")
+    )
     parser.add_argument("--model", type=Path, action="append", default=[], help="extra Go models")
     args = parser.parse_args()
     if min(args.repeats, args.batch_size) < 1:

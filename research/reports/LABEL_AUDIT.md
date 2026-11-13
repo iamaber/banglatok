@@ -9,9 +9,9 @@ The [agent judgments and disagreements](../experiments/retrieval/expanded_label_
 Reproduce from the repository root with the original expanded dataset available. Use a fresh output directory:
 
 ```sh
-.venv/retrieval/bin/python experiments/retrieval/label_audit.py \
-  --archive experiments/retrieval/expanded_pool_review_v1 \
+.venv/retrieval/bin/python research/experiments/retrieval/label_audit.py \
+  --archive research/experiments/retrieval/expanded_pool_review_v1 \
   --dataset data/processed/retrieval-reviewed-expanded-v3 \
-  --reviews experiments/retrieval/expanded_label_audit_v1 \
+  --reviews research/experiments/retrieval/expanded_label_audit_v1 \
   --output data/processed/expanded-label-audit-repro
 ```

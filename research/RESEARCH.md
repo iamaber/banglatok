@@ -1,6 +1,6 @@
 # Research Plan: A Bangla–English–Banglish Tokenizer for Text Embeddings
 
-> Implementation audit, 2026-09-08: the core recommendation remains a hypothesis supported by the cited task-specific evidence. See [RESEARCH_AUDIT.md](RESEARCH_AUDIT.md) for the source verification and observed download discrepancies, and [README.md](README.md) for the Go implementation, corpus snapshot, and measured intrinsic results. The implementation uses custom Unigram EM with expected-count pruning, not an exact SentencePiece reproduction. No embedding retrieval superiority has been established.
+> Implementation audit, 2026-09-08: the core recommendation remains a hypothesis supported by the cited task-specific evidence. See [RESEARCH_AUDIT.md](RESEARCH_AUDIT.md) for the source verification and observed download discrepancies, and [README.md](../README.md) for the Go implementation, corpus snapshot, and measured intrinsic results. The implementation uses custom Unigram EM with expected-count pruning, not an exact SentencePiece reproduction. No embedding retrieval superiority has been established.
 
 ## Executive summary
 
