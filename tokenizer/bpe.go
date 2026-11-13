@@ -27,7 +27,7 @@ func (t *Tokenizer) initBPE() error {
 	for i := range t.denseCharacters {
 		t.denseCharacters[i] = -1
 	}
-	available := map[int]bool{}
+	available, reachable := make([]bool, len(t.model.Pieces)), 0
 	for i, p := range t.model.Pieces {
 		if utf8.RuneCountInString(p.Text) == 1 {
 			r, _ := utf8.DecodeRuneInString(p.Text)
@@ -37,21 +37,27 @@ func (t *Tokenizer) initBPE() error {
 				t.characters[r] = i
 			}
 			available[i] = true
+			reachable++
 		}
 	}
+	isAvailable := func(i int) bool { return i >= 0 && i < len(available) && available[i] }
 	for rank, m := range t.model.Merges {
-		if !available[m.Left] || !available[m.Right] || m.Result < 0 || m.Result >= len(t.model.Pieces) {
+		if !isAvailable(m.Left) || !isAvailable(m.Right) || m.Result < 0 || m.Result >= len(t.model.Pieces) {
 			return fmt.Errorf("invalid BPE merge")
 		}
-		if t.model.Pieces[m.Result].Text != t.model.Pieces[m.Left].Text+t.model.Pieces[m.Right].Text {
+		left, right, result := t.model.Pieces[m.Left].Text, t.model.Pieces[m.Right].Text, t.model.Pieces[m.Result].Text
+		if len(result) != len(left)+len(right) || result[:len(left)] != left || result[len(left):] != right {
 			return fmt.Errorf("BPE merge text mismatch")
 		}
 		if !t.mergeRanks.insert(pairKey(PieceOffset+m.Left, PieceOffset+m.Right), uint64(rank)<<32|uint64(PieceOffset+m.Result)) {
 			return fmt.Errorf("duplicate BPE merge")
 		}
-		available[m.Result] = true
+		if !available[m.Result] {
+			available[m.Result] = true
+			reachable++
+		}
 	}
-	if len(available) != len(t.model.Pieces) {
+	if reachable != len(t.model.Pieces) {
 		return fmt.Errorf("BPE vocabulary contains unreachable pieces")
 	}
 	return nil

@@ -73,9 +73,21 @@ func New(m Model) (*Tokenizer, error) {
 			t.spaceFusion[id] = base + i
 		}
 	}
+	// Only Unigram walks the trie; BPE needs just the duplicate check.
+	var seen map[string]struct{}
+	if m.Algorithm == "bpe" {
+		seen = make(map[string]struct{}, len(m.Pieces))
+	}
 	for i, p := range m.Pieces {
 		if p.Text == "" || !utf8.ValidString(p.Text) || math.IsNaN(p.Score) || math.IsInf(p.Score, 0) || p.Score > 0 {
 			return nil, fmt.Errorf("invalid piece %d", i)
+		}
+		if seen != nil {
+			if _, ok := seen[p.Text]; ok {
+				return nil, fmt.Errorf("duplicate piece %q", p.Text)
+			}
+			seen[p.Text] = struct{}{}
+			continue
 		}
 		n := 0
 		for j := range len(p.Text) {
@@ -103,29 +115,31 @@ func New(m Model) (*Tokenizer, error) {
 	return t, nil
 }
 
+// Load reads a JSON model. A compiled sidecar (see CompiledPath) replaces
+// parsing and cache segmentation when it matches the JSON bytes exactly.
 func Load(path string) (*Tokenizer, error) {
-	b, err := os.ReadFile(path)
+	source, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
+	if t, err := loadCompiled(CompiledPath(path), source); err == nil {
+		return t, nil
+	}
+	t, _, _, err := loadJSON(source)
+	return t, err
+}
+
+// loadJSON also returns the cache IDs and per-word ends for compilation.
+func loadJSON(source []byte) (*Tokenizer, []uint32, []uint32, error) {
 	var m Model
-	if err = json.Unmarshal(b, &m); err != nil {
-		return nil, err
+	if err := json.Unmarshal(source, &m); err != nil {
+		return nil, nil, nil, err
 	}
 	t, err := New(m)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
-	// Loaded models cache vocabulary strings and optional training words, never
-	// caller text. Compute their actual segmentation rather than assuming that
-	// every learned piece wins against competing Unigram paths or BPE merge ranks.
-	words := make([]string, 0, len(m.Pieces)+len(m.CacheWords))
-	for _, piece := range m.Pieces {
-		if !strings.Contains(piece.Text, " ") && piece.Text == Normalize(piece.Text) {
-			words = append(words, piece.Text)
-		}
-	}
-	words = append(words, m.CacheWords...)
+	words := cacheWords(m)
 	ids, ends := make([]uint32, 0, 2*len(words)), make([]uint32, len(words))
 	var buffer []int
 	for i, word := range words {
@@ -136,7 +150,20 @@ func Load(path string) (*Tokenizer, error) {
 		ends[i] = uint32(len(ids))
 	}
 	t.cache = newWordCache(words, ids, ends, t.spaceFusion)
-	return t, nil
+	return t, ids, ends, nil
+}
+
+// cacheWords lists vocabulary strings and optional training words, never
+// caller text. Load computes their actual segmentation rather than assuming
+// that every learned piece wins against competing Unigram paths or BPE ranks.
+func cacheWords(m Model) []string {
+	words := make([]string, 0, len(m.Pieces)+len(m.CacheWords))
+	for _, piece := range m.Pieces {
+		if !strings.Contains(piece.Text, " ") && piece.Text == Normalize(piece.Text) {
+			words = append(words, piece.Text)
+		}
+	}
+	return append(words, m.CacheWords...)
 }
 
 func (m Model) Save(path string) error {
