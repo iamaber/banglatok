@@ -11,12 +11,19 @@ from pathlib import Path
 from typing import TypedDict, cast
 
 
+class Merge(TypedDict):
+    left: int
+    right: int
+    result: int
+
+
 class Response(TypedDict, total=False):
     handle: int
     vocabulary: int
     algorithm: str
     pieces: list[str]
     space_fusion: list[int]
+    merges: list[Merge]
     text: str
     error: str
 
@@ -127,7 +134,7 @@ class NativeHandle:
 
     def count(self, data: bytes) -> int:
         """Return the number of IDs without materializing them in Python."""
-        count = self._encode_into(self._handle, data, len(data), None, 0)
+        count: int = self._encode_into(self._handle, data, len(data), None, 0)
         if count < 0:
             if count == _CLOSED:
                 raise ValueError("unknown or closed tokenizer handle")
@@ -143,6 +150,11 @@ class NativeHandle:
     def vocabulary(self) -> tuple[list[str], list[int]]:
         response = call(self._lib, {"op": "pieces", "handle": self._handle})
         return response.get("pieces", []), response.get("space_fusion", [])
+
+    def merges(self) -> list[tuple[int, int]]:
+        """BPE merges in rank order as (left, right) piece indices."""
+        response = call(self._lib, {"op": "merges", "handle": self._handle})
+        return [(merge["left"], merge["right"]) for merge in response.get("merges", [])]
 
     def close(self) -> None:
         self._finalizer()

@@ -3,8 +3,10 @@
 import os
 from collections.abc import Sequence
 from importlib.resources import as_file, files
+from pathlib import Path
 from typing import Literal, overload
 
+from ._hf import tokenizer_config, tokenizer_json
 from ._native import NativeHandle
 from ._native import normalize as _normalize
 
@@ -142,8 +144,28 @@ class Tokenizer:
         """Mapping from token text to ID for every ID."""
         return dict(self._token_ids())
 
+    def save_huggingface(self, directory: str | os.PathLike[str]) -> None:
+        """Write ``tokenizer.json`` and ``tokenizer_config.json`` for Hugging Face.
+
+        Load the directory with ``transformers.AutoTokenizer.from_pretrained`` or
+        ``tokenizers.Tokenizer.from_file``; IDs and decoded text match this
+        tokenizer. Only BPE models can be exported. With ``tokenizers`` alone, set
+        ``encode_special_tokens = True`` so literal ``<s>`` text is not a control
+        token; ``transformers`` does this from the saved configuration.
+        """
+        if self.algorithm != "bpe":
+            raise ValueError("Hugging Face export supports BPE models only")
+        _, fusion = self._native.vocabulary()
+        document = tokenizer_json(self._vocabulary(), self._native.merges(), fusion)
+        target = Path(directory)
+        target.mkdir(parents=True, exist_ok=True)
+        (target / "tokenizer.json").write_text(document, encoding="utf-8")
+        (target / "tokenizer_config.json").write_text(tokenizer_config(), encoding="utf-8")
+
+    # str is itself a Sequence[str]; this overload wins because it is listed first,
+    # matching the runtime isinstance(texts, str) check.
     @overload
-    def __call__(
+    def __call__(  # type: ignore[overload-overlap]
         self,
         texts: str,
         *,

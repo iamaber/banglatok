@@ -20,15 +20,16 @@ type request struct {
 }
 
 type response struct {
-	Handle      uint64   `json:"handle,omitempty"`
-	Vocabulary  int      `json:"vocabulary,omitempty"`
-	Algorithm   string   `json:"algorithm,omitempty"`
-	IDs         []int    `json:"ids,omitempty"`
-	Batch       [][]int  `json:"batch,omitempty"`
-	Pieces      []string `json:"pieces,omitempty"`
-	SpaceFusion []int    `json:"space_fusion,omitempty"`
-	Text        string   `json:"text"`
-	Error       string   `json:"error,omitempty"`
+	Handle      uint64            `json:"handle,omitempty"`
+	Vocabulary  int               `json:"vocabulary,omitempty"`
+	Algorithm   string            `json:"algorithm,omitempty"`
+	IDs         []int             `json:"ids,omitempty"`
+	Batch       [][]int           `json:"batch,omitempty"`
+	Pieces      []string          `json:"pieces,omitempty"`
+	SpaceFusion []int             `json:"space_fusion,omitempty"`
+	Merges      []tokenizer.Merge `json:"merges,omitempty"`
+	Text        string            `json:"text"`
+	Error       string            `json:"error,omitempty"`
 }
 
 // Registry owns models until Python closes or finalizes their handles.
@@ -96,6 +97,8 @@ func (r *Registry) call(req request) (response, error) {
 	case "pieces":
 		pieces, fusion := model.Vocabulary()
 		return response{Pieces: pieces, SpaceFusion: fusion}, nil
+	case "merges":
+		return response{Merges: model.Merges()}, nil
 	default:
 		return response{}, fmt.Errorf("unknown operation %q", req.Operation)
 	}
