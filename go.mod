@@ -1,10 +1,10 @@
 module github.com/iamaber/banglatok
 
-go 1.24.9
+go 1.26.0
 
 require (
 	github.com/parquet-go/parquet-go v0.32.0
-	golang.org/x/text v0.28.0
+	golang.org/x/text v0.44.0
 )
 
 require (
