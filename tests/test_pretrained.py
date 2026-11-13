@@ -4,6 +4,8 @@ import contextlib
 import importlib.util
 import io
 import json
+import multiprocessing
+import os
 import tempfile
 import unittest
 from concurrent.futures import ThreadPoolExecutor
@@ -20,6 +22,19 @@ from banglatok import (
     normalize,
 )
 from banglatok.__main__ import main
+
+
+def _encode_in_forked_child(tok: Tokenizer) -> None:
+    for attempt in (lambda: tok.encode("ami"), lambda: Tokenizer.from_pretrained()):
+        try:
+            attempt()
+        except RuntimeError as error:
+            if "forkserver" not in str(error):
+                os._exit(2)
+        else:
+            os._exit(1)
+    os._exit(0)
+
 
 STRESS = [
     "আমি বাংলায় গান গাই।",
@@ -65,6 +80,20 @@ class PretrainedTests(unittest.TestCase):
                     self.assertEqual(tok.count_tokens(text), len(ids))
                     self.assertEqual(tok.decode(ids), normalize(text))
                     self.assertTrue(all(i > EOS_ID for i in ids))
+
+    @unittest.skipUnless(hasattr(os, "fork"), "fork is not available")
+    def test_forked_child_fails_fast_instead_of_hanging(self) -> None:
+        self.models[DEFAULT_MODEL].encode("loaded in the parent")
+        child = multiprocessing.get_context("fork").Process(
+            target=_encode_in_forked_child, args=(self.models[DEFAULT_MODEL],)
+        )
+        child.start()
+        child.join(timeout=60)
+        if child.is_alive():
+            child.kill()
+            child.join()
+            self.fail("a forked child hung in the Go runtime")
+        self.assertEqual(child.exitcode, 0)
 
     def test_output_buffer_growth_across_threads(self) -> None:
         tok = self.models["bn-bpe-28k"]
