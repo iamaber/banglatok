@@ -6,7 +6,7 @@
 
 - Added reproducible corpus-v2 acquisition from pinned Bengali/English Wikipedia, Bengali Wikibooks and Wikivoyage, with source-specific attribution and rights limitations.
 - Added stronger quality filtering, disk-backed canonical/near deduplication, immutable v1 evaluation files, separate extra holdouts and independent growth/leakage audits. Fivefold growth counts only accepted unique training records and normalized characters.
-- Added validation-only promotion gates and versioned Hugging Face corpus/model publishing. Existing model IDs and v1 dataset artifacts remain immutable; changing the default requires passing the promotion gates.
+- Added validation-only promotion gates and versioned Hugging Face corpus/model publishing. Existing model IDs and v1 dataset artifacts remain immutable; changing the default requires passing the promotion gates. Default Hub publishing targets v1 only; versioned models require explicit paths and their own provenance.
 - Streamed fusion training and made SentencePiece training sequential by default for larger corpora. Benchmarks can compare local candidates, extra holdouts and disjoint review samples.
 - Run research tooling tests separately from inference wheel tests across the source-CI platform/Python matrix, keeping research scripts and provenance inputs out of distributions.
 

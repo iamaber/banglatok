@@ -17,7 +17,9 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from banglatok import Tokenizer, __version__, available_models
+from banglatok import Tokenizer, __version__
+
+V1_MODELS = ("bn-bpe-28k", "bn-bpe-58k")
 
 CARD = """---
 license: cc-by-sa-4.0
@@ -395,7 +397,7 @@ def main() -> None:
         parser.error("--benchmark requires --model; bundled v1 cards remain unchanged")
     names = set()
     for model in args.model:
-        if model.stem in {"bn-bpe-28k", "bn-bpe-58k"}:
+        if model.stem in V1_MODELS:
             parser.error(f"{model.stem} is an immutable v1 ID; use a new versioned stem")
         match = re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*-v([0-9]+)", model.stem)
         if not match or int(match[1]) < 2:
@@ -412,7 +414,7 @@ def main() -> None:
     guide = (Path(__file__).resolve().parents[1] / "docs" / "USAGE.md").read_text(encoding="utf-8")
     models = [(path.stem, path) for path in args.model]
     if not models:
-        models = [(name, None) for name in available_models()]
+        models = [(name, None) for name in V1_MODELS]
     for name, model in models:
         repo = f"{args.namespace}/banglatok-{name}"
         with tempfile.TemporaryDirectory() as temporary:

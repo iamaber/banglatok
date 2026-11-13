@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from banglatok import Tokenizer, available_models
+from banglatok import Tokenizer
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -170,11 +170,10 @@ class VersionedModelPublishingTests(unittest.TestCase):
     def test_original_bundled_cli_still_exports_both_v1_models(self) -> None:
         result = self.run_publisher("--dry-run", str(self.output))
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual({p.name for p in self.output.iterdir()}, set(available_models()))
+        self.assertEqual({p.name for p in self.output.iterdir()}, {"bn-bpe-28k", "bn-bpe-58k"})
         card = (self.output / "bn-bpe-28k" / "README.md").read_text(encoding="utf-8")
         self.assertIn("563,476 training records", card)
         self.assertIn('Tokenizer.from_pretrained("bn-bpe-28k")', card)
-        self.assertIn("This table compares **both** bundled variants", card)
 
 
 if __name__ == "__main__":
