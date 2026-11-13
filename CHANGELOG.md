@@ -4,6 +4,8 @@
 
 - Added the full usage guide to both Hugging Face model repositories, with links from their model cards.
 - Simplified the introductory examples in the README and guide.
+- Published the attributed training, validation and test corpus on Hugging Face.
+- Added the training-data sources and measured token-count/speed comparisons with popular tokenizers to both Hugging Face model cards.
 
 ## 0.2.1 — 2026-11-13
 

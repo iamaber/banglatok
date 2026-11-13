@@ -9,6 +9,11 @@ banglatok bundles two models, `bn-bpe-58k` and `bn-bpe-28k`, which load offline 
 
 The vocabulary counts include 4 control IDs and 256 byte-fallback IDs.
 
+The exact training, validation and test splits are published in
+[`iamaber/banglatok-training-corpus`](https://huggingface.co/datasets/iamaber/banglatok-training-corpus).
+Only the 563,476-record training split was used for model learning. Dataset text
+keeps its source-specific terms, separate from the tokenizer files' CC BY-SA 4.0 license.
+
 ## How they were built
 
 1. `bntok train -algorithm bpe` learned the base vocabulary from the training split described in [data/CORPUS.md](../data/CORPUS.md). That split has 563,476 records: Bengali Wikipedia, Tatoeba sentence pairs, and BanglaTLit romanized and Bengali text. Its buckets are Bangla, English, Banglish and code-mixed.
