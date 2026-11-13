@@ -1,0 +1,8 @@
+{"text":"আমি বাংলা বলি এবং বই পড়ি।","bucket":"bangla","group":"toy-reading","source":"hand-authored-example","split":"train"}
+{"text":"আজ সকালে আকাশ পরিষ্কার ছিল।","bucket":"bangla","group":"toy-sky","source":"hand-authored-example","split":"train"}
+{"text":"I speak English and read books.","bucket":"english","group":"toy-reading","source":"hand-authored-example","split":"train"}
+{"text":"The sky was clear this morning.","bucket":"english","group":"toy-sky","source":"hand-authored-example","split":"train"}
+{"text":"ami bangla boli ebong boi pori.","bucket":"banglish","group":"toy-reading","source":"hand-authored-example","split":"train"}
+{"text":"aj shokale akash porishkar chilo.","bucket":"banglish","group":"toy-sky","source":"hand-authored-example","split":"train"}
+{"text":"আজকের meetingটা কখন হবে?","bucket":"code-mixed","group":"toy-mix-1","source":"hand-authored-example","split":"train"}
+{"text":"filesগুলো update করে দাও please.","bucket":"code-mixed","group":"toy-mix-2","source":"hand-authored-example","split":"train"}
