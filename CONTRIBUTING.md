@@ -12,9 +12,10 @@ source .venv-dev/bin/activate
 uv pip install build twine ruff mypy tokenizers
 uv pip install .
 python -m unittest discover -s tests -v
+python -m unittest discover -s research/tests -v
 go test -race ./...
 go vet ./...
-ruff check src tests tools examples setup.py benchmarks
+ruff check src tests research/tests tools examples setup.py benchmarks
 mypy --strict src/banglatok
 ```
 
@@ -31,6 +32,8 @@ Follow [docs/RELEASING.md](docs/RELEASING.md) to build from a source archive, in
 ## Research changes
 
 Research environments are separate from the zero-dependency tokenizer API; see [research/experiments/retrieval/README.md](research/experiments/retrieval/README.md). Preserve frozen datasets and decisions. Report annotation origin, actual compute/data budgets, uncertainty and failed gates. Agent judgments must not be described as independent human review.
+
+Research tooling tests live in `research/tests/` and run across the same source-CI Python/platform matrix. They use checkout-only scripts and provenance documents, which are deliberately excluded from inference distributions. Wheel tests in `tests/` exercise the shipped tokenizer; do not skip research checks or copy research corpora into source archives to make wheel tests pass.
 
 ## Pull requests
 

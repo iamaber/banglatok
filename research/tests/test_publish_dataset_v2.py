@@ -14,7 +14,7 @@ from importlib import import_module
 from pathlib import Path
 from unittest.mock import patch
 
-TOOLS = Path(__file__).resolve().parents[1] / "tools"
+TOOLS = Path(__file__).resolve().parents[2] / "tools"
 sys.path.insert(0, str(TOOLS))
 preparer = import_module("prepare_corpus_v2")
 publisher = import_module("publish_dataset")
