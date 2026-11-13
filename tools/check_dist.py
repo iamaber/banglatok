@@ -1,14 +1,26 @@
-"""Fail closed on incomplete or accidentally oversized public distributions."""
+"""Validate native tokenizer release contents before publishing."""
 
 import argparse
-from email.parser import BytesParser
-from pathlib import Path, PurePosixPath
 import tarfile
 import zipfile
+from email.parser import BytesParser
+from pathlib import Path, PurePosixPath
 
 NAME = "bn_tokenizers_embedding"
-NOTICES = {"LICENSE", "THIRD_PARTY_NOTICES.md", "third_party/licenses/GO-LICENSE",
-           "third_party/licenses/X-TEXT-LICENSE", "third_party/licenses/X-TEXT-PATENTS"}
+NOTICES = {
+    "LICENSE",
+    "MODEL_LICENSE.md",
+    "THIRD_PARTY_NOTICES.md",
+    "third_party/licenses/GO-LICENSE",
+    "third_party/licenses/X-TEXT-LICENSE",
+    "third_party/licenses/X-TEXT-PATENTS",
+}
+LICENSE_EXPRESSION = "MIT AND BSD-3-Clause AND CC-BY-SA-4.0"
+PACKAGE_DATA = {
+    "data/demo-unigram.json",
+    "pretrained/bn-bpe-58k.json",
+    "pretrained/bn-bpe-28k.json",
+}
 
 
 def check_paths(names: set[str]) -> None:
@@ -16,9 +28,14 @@ def check_paths(names: set[str]) -> None:
     for name in names:
         path = PurePosixPath(name)
         parts = path.parts
-        if (path.is_absolute() or ".." in parts or excluded.intersection(parts)
-                or any(p == ".env" or p.startswith(".env.") for p in parts)
-                or "data/raw/" in name or "data/processed/" in name):
+        if (
+            path.is_absolute()
+            or ".." in parts
+            or excluded.intersection(parts)
+            or any(p == ".env" or p.startswith(".env.") for p in parts)
+            or "data/raw/" in name
+            or "data/processed/" in name
+        ):
             raise ValueError(f"excluded content in distribution: {name}")
 
 
@@ -32,9 +49,17 @@ def check(directory: Path, version: str) -> None:
         prefix = f"{NAME}-{version}/"
         paths = {n.removeprefix(prefix) for n in archive.getnames()}
         check_paths(paths)
-        required = {"pyproject.toml", "setup.py", "go.mod", "go.sum", "tokenizer/model.go",
-                    "cmd/bntok-shared/main.go", "internal/native/native.go",
-                    "src/bn_tokenizers_embedding/data/demo-unigram.json", *NOTICES}
+        required = {
+            "pyproject.toml",
+            "setup.py",
+            "go.mod",
+            "go.sum",
+            "tokenizer/model.go",
+            "cmd/bntok-shared/main.go",
+            "internal/native/native.go",
+            *(f"src/{NAME}/{name}" for name in PACKAGE_DATA),
+            *NOTICES,
+        }
         if not required <= paths:
             raise ValueError(f"sdist is missing required files: {sorted(required - paths)}")
     for wheel in wheels:
@@ -48,8 +73,8 @@ def check(directory: Path, version: str) -> None:
             metadata = BytesParser().parsebytes(archive.read(metadata_name))
             if metadata["Name"] != "bn-tokenizers-embedding" or metadata["Version"] != version:
                 raise ValueError(f"wheel name/version differs: {wheel.name}")
-            if metadata["License-Expression"] != "MIT AND BSD-3-Clause":
-                raise ValueError("wheel license expression does not cover bundled native code")
+            if metadata["License-Expression"] != LICENSE_EXPRESSION:
+                raise ValueError("wheel license expression does not cover native code and models")
             if metadata.get_all("Requires-Dist"):
                 raise ValueError("unexpected Python runtime dependencies")
             if metadata["Requires-Python"] != ">=3.10":
@@ -57,14 +82,19 @@ def check(directory: Path, version: str) -> None:
             runtime = {f"{NAME}/_go{s}" for s in (".so", ".dylib", ".dll")}
             if len(runtime.intersection(paths)) != 1:
                 raise ValueError("wheel must contain exactly one native runtime")
-            required = {f"{NAME}/data/demo-unigram.json", f"{NAME}/py.typed"}
+            required = {f"{NAME}/{name}" for name in PACKAGE_DATA} | {f"{NAME}/py.typed"}
             required.update(f"{info}/licenses/{n}" for n in NOTICES)
             if not required <= paths:
-                raise ValueError(f"wheel is missing demo/types/notices: {sorted(required - paths)}")
+                raise ValueError(
+                    f"wheel is missing models/types/notices: {sorted(required - paths)}"
+                )
             wheel_metadata = BytesParser().parsebytes(archive.read(f"{info}/WHEEL"))
             tags = wheel_metadata.get_all("Tag", [])
-            if (wheel_metadata["Root-Is-Purelib"] != "false" or not tags
-                    or any(not t.startswith("py3-none-") or t.endswith("-any") for t in tags)):
+            if (
+                wheel_metadata["Root-Is-Purelib"] != "false"
+                or not tags
+                or any(not t.startswith("py3-none-") or t.endswith("-any") for t in tags)
+            ):
                 raise ValueError("native wheel must use Python-independent platform tags")
         print(f"Verified {wheel.name}")
     print(f"Verified {source.name}")

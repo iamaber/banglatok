@@ -2,10 +2,11 @@ include go.mod go.sum
 recursive-include tokenizer *.go
 recursive-include internal/native *.go
 include cmd/bntok-shared/main.go
+recursive-include src/bn_tokenizers_embedding/pretrained *.json
 recursive-include tests *.py
-recursive-include examples *.py
+recursive-include examples *.py *.jsonl
 include tools/check_dist.py
-include CHANGELOG.md CONTRIBUTING.md SECURITY.md
+include CHANGELOG.md CONTRIBUTING.md SECURITY.md CITATION.cff MODEL_LICENSE.md docs/MODELS.md
 prune data
 prune models
 prune reports

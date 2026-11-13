@@ -1,20 +1,41 @@
 [project]
 name = "bn-tokenizers-embedding"
-version = "0.1.0a1"
-description = "Bangla, English and Banglish tokenizers with a native Go engine"
+version = "0.2.0"
+description = "Fast, lossless Bangla, English and Banglish subword tokenizers with bundled models and a native Go engine"
 readme = "README.md"
 authors = [
     { name = "Aber Islam", email = "aber.islam.dev@gmail.com" }
 ]
 requires-python = ">=3.10"
 dependencies = []
-license = "MIT AND BSD-3-Clause"
-license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md", "third_party/licenses/*"]
-keywords = ["bengali", "bangla", "banglish", "tokenizer", "unigram", "bpe", "nlp"]
+license = "MIT AND BSD-3-Clause AND CC-BY-SA-4.0"
+license-files = [
+    "LICENSE",
+    "MODEL_LICENSE.md",
+    "THIRD_PARTY_NOTICES.md",
+    "third_party/licenses/*",
+]
+keywords = [
+    "bengali",
+    "bangla",
+    "banglish",
+    "romanized-bengali",
+    "code-mixed",
+    "tokenizer",
+    "subword",
+    "bpe",
+    "unigram",
+    "nlp",
+    "llm",
+]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
+    "Natural Language :: Bengali",
+    "Natural Language :: English",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -23,15 +44,20 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: 3.15",
     "Programming Language :: Go",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Text Processing :: Linguistic",
     "Typing :: Typed",
 ]
 
 [project.urls]
+Homepage = "https://github.com/iamaber/bn-tokenizers-embedding"
 Repository = "https://github.com/iamaber/bn-tokenizers-embedding"
 Documentation = "https://github.com/iamaber/bn-tokenizers-embedding#readme"
 Issues = "https://github.com/iamaber/bn-tokenizers-embedding/issues"
 Changelog = "https://github.com/iamaber/bn-tokenizers-embedding/blob/main/CHANGELOG.md"
+
+[project.scripts]
+bntokenize = "bn_tokenizers_embedding.__main__:main"
 
 [build-system]
 requires = ["setuptools>=77"]
@@ -42,7 +68,7 @@ where = ["src"]
 include = ["bn_tokenizers_embedding*"]
 
 [tool.setuptools.package-data]
-bn_tokenizers_embedding = ["py.typed", "data/*.json"]
+bn_tokenizers_embedding = ["py.typed", "data/*.json", "pretrained/*.json"]
 
 [tool.ruff]
 target-version = "py310"
@@ -53,10 +79,12 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.cibuildwheel]
 build = "cp311-*"
+skip = "*-musllinux_*"
 test-command = "python -m unittest discover -s {project}/tests -v"
 
 [tool.cibuildwheel.linux]
 manylinux-x86_64-image = "manylinux_2_28"
+manylinux-aarch64-image = "manylinux_2_28"
 
 [tool.cibuildwheel.macos]
 environment = { MACOSX_DEPLOYMENT_TARGET = "14.0" }

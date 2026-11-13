@@ -1,10 +1,8 @@
 package native
 
 import (
-	"encoding/binary"
 	"encoding/json"
 	"path/filepath"
-	"reflect"
 	"slices"
 	"testing"
 
@@ -41,16 +39,12 @@ func TestWireContracts(t *testing.T) {
 				t.Fatal(loaded)
 			}
 			for _, texts := range [][]string{nil, {"", "ab", "আমি\tভালো 🙂", "a\x00b"}} {
-				var input []byte
-				for _, text := range texts {
-					input = binary.LittleEndian.AppendUint32(input, uint32(len(text)))
-					input = append(input, text...)
-				}
+				input := frame(texts)
 				batch := control(request{Operation: "encode_batch", Handle: loaded.Handle, Texts: texts})
 				if batch.Error != "" {
 					t.Fatal(batch.Error)
 				}
-				want := []byte{0}
+				var want [][]int
 				for i, ids := range batch.Batch {
 					single := control(request{Operation: "encode", Handle: loaded.Handle, Text: texts[i]})
 					if single.Error != "" || !slices.Equal(single.IDs, ids) {
@@ -60,13 +54,20 @@ func TestWireContracts(t *testing.T) {
 					if decoded.Error != "" || decoded.Text != tokenizer.Normalize(texts[i]) {
 						t.Fatal(decoded)
 					}
-					want = binary.LittleEndian.AppendUint32(want, uint32(len(ids)))
-					for _, id := range ids {
-						want = binary.LittleEndian.AppendUint32(want, uint32(id))
+					want = append(want, append([]int{}, ids...))
+				}
+				got, message, ok := parseBinary(t, registry.EncodeBinary(loaded.Handle, input), len(texts))
+				if !ok || len(got) != len(want) {
+					t.Fatalf("binary encode failed: %s", message)
+				}
+				for i := range want {
+					if !slices.Equal(got[i], want[i]) {
+						t.Fatalf("binary/JSON mismatch: %v != %v", got[i], want[i])
 					}
 				}
-				if got := registry.EncodeBinary(loaded.Handle, input); !reflect.DeepEqual(got, want) {
-					t.Fatalf("binary/JSON mismatch: %v != %v", got, want)
+				pieces := control(request{Operation: "pieces", Handle: loaded.Handle})
+				if pieces.Error != "" || len(pieces.Pieces) != len(model.Pieces) || pieces.Pieces[0] != model.Pieces[0].Text {
+					t.Fatal(pieces)
 				}
 			}
 			for range 2 {
@@ -78,8 +79,8 @@ func TestWireContracts(t *testing.T) {
 			if closed.Error != "unknown or closed tokenizer handle" {
 				t.Fatal(closed)
 			}
-			if got := registry.EncodeBinary(loaded.Handle, nil); string(got) != "\x01"+closed.Error {
-				t.Fatalf("binary close error: %q", got)
+			if _, message, ok := parseBinary(t, registry.EncodeBinary(loaded.Handle, nil), 0); ok || message != closed.Error {
+				t.Fatalf("binary close error: %q", message)
 			}
 		})
 	}

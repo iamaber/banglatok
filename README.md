@@ -1,139 +1,142 @@
-# Bangla–English–Banglish tokenizers: Python API, Go engine
+# bn-tokenizers-embedding
 
-Python package backed by native Go Unigram/BPE tokenization, with Go training tools, a collected checksum-locked corpus, grouped held-out splits, and reproducible intrinsic evaluation. The initial Unigram/BPE models use 16k, 32k and 48k vocabularies. These are tokenizer candidates. The controlled encoder experiment now includes 18 adapted checkpoints, but **no custom-tokenizer retrieval improvement passed the declared domain criteria**; unchanged E5 remains the selected reference.
+**Fast, lossless subword tokenizers for Bangla, English and Banglish (romanized Bengali), including code-mixed text.**
 
-Read [the research audit](RESEARCH_AUDIT.md), [corpus documentation](data/CORPUS.md), and [measured results](reports/RESULTS.md). The original [research plan](RESEARCH.md) remains the downstream experimental roadmap.
-
-## Python package
-
-The built wheel in `dist/` contains the native Go runtime and has no third-party Python runtime dependencies. It has been installed and tested locally on macOS 26 arm64. Nothing has been published to PyPI. Models are separate artifacts under `models/`; the wheel does not bundle training data or automatically download a model.
-
-```sh
-python -m pip install dist/bn_tokenizers_embedding-0.1.0-py3-none-macosx_26_0_arm64.whl
-```
+[![CI](https://github.com/iamaber/bn-tokenizers-embedding/actions/workflows/ci.yml/badge.svg)](https://github.com/iamaber/bn-tokenizers-embedding/actions/workflows/ci.yml)
+![Python 3.10–3.15](https://img.shields.io/badge/python-3.10%E2%80%933.15-blue)
+![Runtime dependencies: none](https://img.shields.io/badge/runtime%20deps-none-brightgreen)
+[![License: MIT (code), CC BY-SA 4.0 (models)](https://img.shields.io/badge/license-MIT%20%7C%20CC%20BY--SA%204.0-lightgrey)](#license)
 
 ```python
-from bn_tokenizers_embedding import Tokenizer, normalize
+from bn_tokenizers_embedding import Tokenizer
 
-with Tokenizer("models/unigram-32000.json") as tokenizer:
-    ids = tokenizer.encode("আমি ভালো আছি। ami valo achi 🙂")
-    print(tokenizer.decode(ids))
-    print(tokenizer.encode_batch(["meetingটা কখন?", "When is the meeting?"]))
-    print(tokenizer.vocab_size)
-
-print(normalize("  আমি\tভালো আছি। "))
+tok = Tokenizer.from_pretrained()          # bundled model; no download, no network
+tok.tokenize("meetingটা ১০টায়, don't be late 🙂")
+# ['meeting', 'টা', ' ১০', 'টায়', ',', " don't", ' be', ' late', ' 🙂']
 ```
 
-Use `models/bpe-32000.json` for BPE with the same API. Model loading happens once per `Tokenizer`; single and batch calls execute inside Go through `ctypes`, without a subprocess. A context manager or `close()` releases the native handle; finalization also releases forgotten handles. Instances support concurrent calls; finish active work before closing. Create a separate instance in each spawned worker process rather than trying to pickle a native handle.
+- **Fewest tokens.** On unseen product reviews it produced 22% fewer tokens than BanglaBERT and GPT-4o's `o200k_base`, 21% fewer than XLM-R/mE5/BGE-M3, 8% fewer than MuRIL, and 62% fewer than Qwen3.
+- **Lossless.** `decode(encode(text))` gives back the normalized text exactly, for every input. There is no `[UNK]` and no lowercasing, and Bengali marks, ZWJ/ZWNJ, emoji and mixed scripts are kept.
+- **Fast.** In single-threaded runs on unseen text it was 1.3–1.8× faster than SentencePiece, 1.6–5.9× faster than tiktoken, and 6.7–12× faster than Hugging Face `tokenizers`.
+- **Tiny footprint.** The engine is native Go behind `ctypes`, with zero Python runtime dependencies and typed APIs. It is thread-safe, and two pretrained models ship inside the wheel.
 
-Building from source requires Go 1.24+, a C compiler for the CGo bridge, and Python 3.10+. Installed wheels require neither Go nor a compiler. The core Go tokenizer/CLI itself does not require CGo. Source builds produce a platform-specific `py3-none` wheel, not a CPython-version-specific extension; other OS/architecture combinations need their own builds and validation.
+> The package name is historical. This library tokenizes; it does not compute embeddings. Its vocabularies are meant for training or adapting encoders and LLMs on Bengali text, and for counting or segmenting such text.
+
+## Benchmarks
+
+Here are 10,000 naturally written e-commerce reviews from [BanglishRev](https://huggingface.co/datasets/BanglishRev/bangla-english-and-code-mixed-ecommerce-review-dataset), in Bengali, English, Banglish and mixed script. This source was never seen in training. Measured on an Apple M5, single thread, Python 3.12.
+
+| Tokenizer | Vocab | Tokens / word ↓ | Lossless round trip ↑ | Texts with UNK ↓ | MB/s, single calls ↑ | MB/s, batches of 64 ↑ |
+|---|---:|---:|---:|---:|---:|---:|
+| **bn-bpe-58k (this package)** | 57,925 | **1.379** | **100%** | **0** | 61.1 | 71.0 |
+| **bn-bpe-28k (this package)** | 27,760 | 1.587 | **100%** | **0** | **62.1** | **72.8** |
+| SentencePiece Unigram 32k, trained on our data | 32,000 | 1.518 | 100% | 0 | 45.7 | 43.6 |
+| BNLP `bn_spm` (SentencePiece) | 50,000 | 1.825 | 80.1% | 1,932 | 40.5 | 39.0 |
+| tiktoken `o200k_base` (GPT-4o) | 200,019 | 1.780 | 100% | 0 | 37.4 | 12.0 |
+| BanglaBERT (csebuetnlp) | 32,000 | 1.771 | 51.1% | 1,110 | 9.2 | 9.2 |
+| MuRIL (Google) | 197,258 | 1.498 | 47.9% | 1,617 | 8.8 | 8.8 |
+| XLM-R / multilingual-E5 / BGE-M3 | 250,002 | 1.740 | 98.2% | 109 | 6.5 | 6.5 |
+| mBERT cased | 119,547 | 2.122 | 48.0% | 1,706 | 8.1 | 8.1 |
+| Qwen3 | 151,669 | 3.588 | 100% | 0 | 6.0 | 6.0 |
+
+[Full report](reports/POPULAR_COMPARISON.md): per-script breakdown, the in-domain validation split, more tokenizers, method, limitations, and the commands to reproduce it. BanglaBERT is about 3% shorter on Bengali-only text but lossy; among lossless tokenizers, `bn-bpe-58k` is the most compact on Bengali, Latin and mixed script. Shorter sequences cut compute and context use, but they do not by themselves make a downstream model more accurate.
+
+## Install
 
 ```sh
-# Standard source installation (Go must be on PATH).
-python -m pip install .
-
-# This workspace's local Go toolchain.
-BNTOK_GO="$PWD/.tools/go/bin/go" python -m pip install .
-
-# Build both an sdist and a wheel; uv builds the wheel from the source archive.
-BNTOK_GO="$PWD/.tools/go/bin/go" uv build
-
-# Tests exercise the installed native library, not a mock.
-python -m unittest discover -s tests -v
+pip install bn-tokenizers-embedding
 ```
 
-The Python API deliberately stays small: `Tokenizer`, `normalize`, `encode`, `encode_batch`, `decode`, `vocab_size`, and lifecycle methods. Corpus preparation and training remain available through the Go CLI below. Native inference requires only `tokenizer/` and the Unicode dependency; Parquet processing is not linked into the wheel.
-
-## Python API benchmarks
-
-The package has been validated locally on macOS arm64 across Python 3.10–3.14. There is no repository-hosted CI workflow; run the Go tests, vet, formatting checks and installed-wheel tests manually before publishing or merging changes.
-
-Measure the installed Python API with a trained model:
+Prebuilt wheels target Linux (x86_64, aarch64) and macOS (x86_64, arm64) for CPython 3.10–3.15, and need no compiler. Until the first PyPI release, or on other platforms, build from source. That needs Go 1.24+ and a C compiler:
 
 ```sh
-python benchmarks/python_api.py --model models/unigram-32000.json > reports/python-api-unigram-32000.json
-python benchmarks/python_api.py --model models/bpe-32000.json > reports/python-api-bpe-32000.json
+pip install git+https://github.com/iamaber/bn-tokenizers-embedding
 ```
 
-The benchmark alternates single-call and batch timing order across repeats and verifies matching IDs and normalized round trips outside timing. See [Python throughput results](reports/PYTHON_API.md) for methodology and limitations. Omitting `--model` runs a tiny smoke fixture, not a representative performance benchmark.
+## Usage
 
-The [external framework comparison](reports/FRAMEWORK_COMPARISON.md) measures BNLP, SentencePiece and Hugging Face byte-level BPE on the full validation split. It includes encoding speed, normalized text preservation and sequence lengths, with reproducible scripts and explicit training differences. It does not establish downstream NLP accuracy.
+```python
+from bn_tokenizers_embedding import Tokenizer
 
-The [optimization report](reports/PERFORMANCE_IMPROVEMENTS.md) records approximately 2× faster Python encoding with unchanged IDs. The subsequent [word-cache and native space-fusion experiment](reports/SPEED_EXPERIMENT.md) measures a batch-speed advantage over the tested BNLP model. Encoding uses length-prefixed UTF-8 and packed integer buffers; each call accepts less than 2 GiB of input including framing. Loaded models cache vocabulary-piece segmentations and optional training words, increasing startup time and memory in exchange for faster repeated inference. Version-2 BPE models support native space fusion; they change token IDs and require a compatible, trained encoder.
+with Tokenizer.from_pretrained("bn-bpe-58k") as tok:
+    ids = tok.encode("আমি বাংলায় গান গাই। ami banglay gaan gai")
+    tok.decode(ids)                       # 'আমি বাংলায় গান গাই। ami banglay gaan gai'
+    tok.encode_batch(["আমি ভালো আছি", "kemon acho?"])   # one native call
+    tok.count_tokens("অনেক লম্বা লেখা…")    # fast length, no list built
 
-## Retrieval research pilot
+    # Encoder-ready inputs: <s> … </s>, truncation and padding with <pad>.
+    batch = tok(["আমি ভালো আছি", "hi"], max_length=128, padding=True)
+    batch["input_ids"], batch["attention_mask"]
+```
 
-The [retrieval experiments](experiments/retrieval/README.md) now include complete agent review of 3,152 pooled judgments and 300 source pairs, a six-domain Bengali/Banglish/English proxy, audited natural training expansion, and controlled encoder adaptation over three seeds in two budgets. All 19 encoders were scored on domain development, reserved test and sentence cohorts. [Measured results](reports/ENCODER_COMPARISON.md) retain unchanged E5: both custom tokenizers failed domain quality and English-retention gates. [Sentence review](reports/RETRIEVAL_REVIEW.md) records exclusions, alternatives, the 73-case historical failure audit and incomplete-pool limitations. The original project test was read only for holdout integrity; the new domain test was scored after selection froze.
+Load a tokenizer once and reuse it. Calls from many threads at once are safe, because the native call releases the GIL. In worker processes, create a fresh tokenizer inside each worker.
 
-## Go tools
-
-Requires Go 1.24 or later. A checksum-verified Go 1.27.1 toolchain is already available locally at `.tools/go/bin/go` in this workspace. The Go library and CLI run without Python, CGo, a GPU, or network access. Corpus preparation additionally uses the Go Parquet reader.
+### Command line
 
 ```sh
-go test -race ./...
-go build -o bin/bntok ./cmd/bntok
-
-# Raw data and trained models are already present in this workspace.
-bin/bntok encode -model models/unigram-32000.json \
-  -text 'আমি আজ ভালো আছি। ami aaj valo asi. meetingটা কখন?'
-
-# Reproduce the downloads and grouped splits.
-bin/bntok fetch
-bin/bntok prepare
-bin/bntok audit
-
-# Train the recommended first candidate and its controlled baseline.
-bin/bntok train -vocab 32000 -out models/unigram-32000.json
-bin/bntok train -algorithm bpe -vocab 32000 -out models/bpe-32000.json
-bin/bntok evaluate -model models/unigram-32000.json
-bin/bntok evaluate -model models/bpe-32000.json
-
-# Full vocabulary sweep; each model uses the same training snapshot.
-make matrix
-
-# Separate alternative-mixture ablation.
-bin/bntok train -balanced -out models/unigram-32000-balanced.json
-bin/bntok evaluate -model models/unigram-32000-balanced.json
+$ bntokenize "আমি বাংলা বলি"
+আমি |  বাংলা |  বলি
+$ echo "ami bangla boli" | bntokenize --ids
+4405 33616 34749
+$ bntokenize --json "ami valo"
+{"ids": [4405, 32047], "tokens": ["ami", " valo"]}
+$ bntokenize --count --model bn-bpe-28k < lines.txt    # one count per line
 ```
 
-For the bundled workspace toolchain, substitute `.tools/go/bin/go` for `go`, or use `make GO=.tools/go/bin/go build`. In restricted environments, `GOCACHE=/tmp/bn-go-build GOMODCACHE=/tmp/bn-go-mod` uses the caches populated during this task. Downloaded files and trained models are ignored by Git but live in this repository's directories. Keep `data/sources.lock.json`, `go.sum`, source code, and reports in version control.
+### API
 
-## Go API
+| Member | Description |
+|---|---|
+| `Tokenizer.from_pretrained(name="bn-bpe-58k")` | Load a bundled model, offline |
+| `Tokenizer(path)` | Load your own JSON model, e.g. one trained with `bntok train` |
+| `encode(text)` / `encode_batch(texts)` | Token IDs, without control tokens |
+| `decode(ids, skip_special_tokens=False)` / `decode_batch(batch)` | Normalized text |
+| `tokenize(text)` | Token strings: fused IDs start with `" "`, fallback bytes look like `"<0xF0>"` |
+| `count_tokens(text)` | `len(encode(text))`, without building the list |
+| `tok(texts, add_special_tokens=True, max_length=None, padding=False)` | `{"input_ids", "attention_mask"}` |
+| `id_to_token`, `token_to_id`, `get_vocab()`, `vocab_size`, `algorithm` | Vocabulary access |
+| `normalize(text)` | The shared normalization: NFC plus whitespace collapse and trim |
+| `available_models()`, `PAD_ID=0`, `UNK_ID=1`, `BOS_ID=2`, `EOS_ID=3` | Constants |
 
-```go
-package main
+## Models
 
-import (
-    "fmt"
-    "log"
-    "github.com/iamaber/bn-tokenizers-embedding/tokenizer"
-)
+| Name | Vocab | Best for |
+|---|---:|---|
+| `bn-bpe-58k` (default) | 57,925 | Shortest sequences |
+| `bn-bpe-28k` | 27,760 | Smaller embedding tables, same speed |
 
-func main() {
-    tok, err := tokenizer.Load("models/unigram-32000.json")
-    if err != nil { log.Fatal(err) }
-    ids := tok.Encode("বইগুলোতে meetingটা ami valo achi 🙂")
-    text, err := tok.Decode(ids)
-    if err != nil { log.Fatal(err) }
-    fmt.Println(ids, text)
-}
+Both are BPE vocabularies with *space fusion*: a space and the token after it can share a single ID. That removes most standalone space tokens without overloading a literal marker such as `▁`. They were learned from 563k records of Bengali Wikipedia, Tatoeba and BanglaTLit. [docs/MODELS.md](docs/MODELS.md) covers the build commands, checksums, behavior and limitations. They are not SentencePiece or Hugging Face vocabularies, so pairing one with a pretrained encoder means adapting that encoder's embeddings.
+
+## Train your own
+
+The Go CLI trains Unigram or BPE models on your JSONL corpus, and `Tokenizer(path)` loads the result:
+
+```sh
+go run ./cmd/bntok train -algorithm bpe -vocab 384 \
+  -input examples/training-records.jsonl -out models/toy-bpe.json
+go run ./cmd/bntok encode -model models/toy-bpe.json -text 'আমি বাংলা বলি। ami bangla boli'
+python benchmarks/build_fused_model.py --base models/my-bpe.json --budget 64000 \
+  --output models/my-fused.json        # optional: add space fusion
 ```
 
-An initialized tokenizer can be shared across goroutines. `Encode` is deterministic; `Decode(Encode(text))` equals `tokenizer.Normalize(text)`. `Sample(text, alpha, rng)` provides optional Unigram posterior segmentation sampling using a caller-owned seeded `math/rand.Rand`; it is intended for encoder training, not production inference.
+See [docs/TRAINING_AND_RESEARCH.md](docs/TRAINING_AND_RESEARCH.md) for the corpus format, the full research pipeline and the model contract.
 
-## Model and normalization contract
+## Research
 
-- NFC plus Unicode whitespace collapse/trim; invalid UTF-8 becomes U+FFFD. Case, Bengali marks, ZWJ/ZWNJ, punctuation, digits, emoji and natural spelling are retained. No stemming or automatic transliteration.
-- IDs `0..3` reserve PAD/UNK/BOS/EOS positions for future encoder integration. `Encode` does not emit or insert them, and `Decode` rejects them; strip encoder control IDs explicitly before decoding. IDs `4..259` represent raw bytes. Learned pieces start at `260`.
-- Ordinary text such as `<unk>`, `▁`, and `<0x20>` is literal, never interpreted as a control token. Unseen code points fall back to their UTF-8 bytes. Decode rejects invalid IDs and byte sequences that are not valid UTF-8.
-- Pretokenization uses whitespace words and preserves mixed-script words such as `meetingটা`. Version-1 models emit standalone space bytes; version-2 BPE can fuse them with the next token. Fertility and fallback metrics expand fused IDs before excluding spaces; sequence-length, latency, truncation and utilization use emitted IDs. Evaluation reserves two encoder control positions by default; configure `-max-tokens` and `-special-tokens` for the actual encoder.
-- The custom Unigram trainer uses substring seeding, forward–backward EM, expected-count pruning and Viterbi decoding. It is **not SentencePiece-compatible** and does not reproduce SentencePiece's seed selection, pruning or whitespace representation. BPE uses ranked learned merges over Unicode characters with the same corpus and boundary constraints.
-- Models are versioned JSON. Every training run writes a `.meta.json` sidecar with parameters, weights, corpus/model hashes, Go version and training duration. No model vocabulary should be substituted into an existing encoder without adapting its embedding table and retraining.
+This repository also holds the research behind the models. [data/CORPUS.md](data/CORPUS.md) documents the corpus construction, provenance and leakage controls. [reports/RESULTS.md](reports/RESULTS.md) has the intrinsic evaluation. The retrieval experiments are in [experiments/retrieval/](experiments/retrieval/README.md), and [reports/ROUND2_ORIGINAL_COMPARISON.md](reports/ROUND2_ORIGINAL_COMPARISON.md) has the encoder-adaptation results. In those experiments, swapping a custom vocabulary into multilingual-E5 did not beat the unchanged model. Treat these vocabularies as a strong starting point for training, not as a drop-in accuracy gain for existing encoders.
 
-## Corpus and evaluation scope
+## Contributing
 
-There are **563,476 training records / 65.97 million normalized characters**, plus 14,779 validation and 16,712 frozen test records. Sources are BanglaTLit, Bengali Wikipedia and attributed Tatoeba sentences. Paired forms, article paragraphs, canonical duplicates, and approximate long-text neighbors stay together. Raw source checksums, saved split overlap, and official BanglaTLit holdout exclusion are checked independently.
+[CONTRIBUTING.md](CONTRIBUTING.md) explains how to work on the project, [SECURITY.md](SECURITY.md) how to report vulnerabilities, and [docs/RELEASING.md](docs/RELEASING.md) how releases are made. Platform reports, regression cases and independent benchmark runs are especially welcome.
 
-The training mixture is 40% Bangla, 25% English, 25% Banglish, 10% script-mixed by weighted sentence contribution. Each sentence's weight is divided among its whitespace words; fitting ignores words longer than 64 runes. `-balanced` uses 25% each. The small code-mixed bucket is explicitly a script proxy and needs more natural data. Automatic privacy/near-duplicate filters are incomplete; inspect [CORPUS.md](data/CORPUS.md) before redistributing data or treating these splits as a publishable benchmark.
+## Citation
 
-Reports include fertility, sequence percentiles, byte fallback, vocabulary utilization, sequence-limit rates, round trips, and local throughput; a byte baseline counts UTF-8 bytes on the same text. External subword comparisons now cover BNLP, SentencePiece and Hugging Face byte-level BPE. They do not measure morphological correctness or semantic retrieval. The [controlled encoder comparison](reports/ENCODER_COMPARISON.md) adds actual matched adaptation, retrieval evaluation, agent annotation, crossed seed/group uncertainty, and repeated latency/RSS measurements. Adapted-system sentence pooling is complete: 6,711 additional agent judgments give all 19 systems full top-10 coverage in the [expanded analysis](reports/encoder-expanded-pool-analysis-v1.json). Independent human review and larger natural-search validation remain future work.
+If you use this library or its models, please cite it with the metadata in [CITATION.cff](CITATION.cff).
+
+## License
+
+- Code, documentation and the demo vocabulary: [MIT](LICENSE).
+- Bundled model files (`bn-bpe-58k`, `bn-bpe-28k`): [CC BY-SA 4.0](MODEL_LICENSE.md), because they are learned from Wikipedia and Tatoeba text.
+- Native wheels include BSD-3-Clause Go components ([notices](THIRD_PARTY_NOTICES.md)).
+
+The SPDX expression is `MIT AND BSD-3-Clause AND CC-BY-SA-4.0`. Research corpora keep their own terms and are not distributed.
