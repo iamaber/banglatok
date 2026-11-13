@@ -77,7 +77,7 @@ def benchmark(model: Path, iterations: int, repeats: int, batch_size: int) -> di
                 raise RuntimeError("round-trip check failed")
             single, batch = measure_pair(
                 lambda texts=texts: [tok.encode(text) for text in texts],
-                lambda texts=texts: tok.encode_batch(texts),
+                lambda texts=texts: tok.encode_batch(texts, num_threads=1),
                 iterations,
                 repeats,
                 texts,
