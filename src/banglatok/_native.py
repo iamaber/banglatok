@@ -33,6 +33,25 @@ class Response(TypedDict, total=False):
 _CLOSED = -1
 _INVALID = -2
 _MAX_PAYLOAD = 2**31 - 1
+# Batch worker limit; more workers than CPUs only add scheduling.
+_MAX_THREADS = 1024
+
+
+def threads(value: int | None) -> int:
+    """Resolve num_threads; 0 asks Go for every available CPU."""
+    if value is None:
+        setting = os.environ.get("BANGLATOK_NUM_THREADS", "").strip()
+        if not setting:
+            return 0
+        try:
+            value = int(setting)
+        except ValueError:
+            raise ValueError("BANGLATOK_NUM_THREADS must be a positive integer") from None
+        if value < 1:
+            raise ValueError("BANGLATOK_NUM_THREADS must be a positive integer")
+    elif type(value) is not int or value < 1:
+        raise ValueError("num_threads must be a positive integer or None")
+    return min(value, _MAX_THREADS)
 
 
 @lru_cache(maxsize=1)
@@ -49,6 +68,7 @@ def library() -> ctypes.CDLL:
         ctypes.c_ulonglong,
         ctypes.c_char_p,
         ctypes.c_size_t,
+        ctypes.c_int,
         ctypes.POINTER(ctypes.c_size_t),
     ]
     lib.bntok_encode.restype = ctypes.c_void_p
@@ -167,8 +187,8 @@ class NativeHandle:
             raise ValueError("encode input exceeds 2 GiB")
         return count
 
-    def encode(self, texts: list[bytes]) -> list[list[int]]:
-        return encode(self._lib, self._handle, texts)
+    def encode(self, texts: list[bytes], threads: int) -> list[list[int]]:
+        return encode(self._lib, self._handle, texts, threads)
 
     def decode(self, ids: list[int]) -> str:
         return call(self._lib, {"op": "decode", "handle": self._handle, "ids": ids})["text"]
@@ -186,14 +206,14 @@ class NativeHandle:
         self._finalizer()
 
 
-def encode(lib: ctypes.CDLL, handle: int, texts: list[bytes]) -> list[list[int]]:
+def encode(lib: ctypes.CDLL, handle: int, texts: list[bytes], threads: int) -> list[list[int]]:
     """Length-prefixed UTF-8 input; native-endian uint32 status, counts, then IDs."""
     size = 4 * len(texts) + sum(map(len, texts))
     if size > _MAX_PAYLOAD:
         raise ValueError("encode input exceeds 2 GiB")
     payload = b"".join([part for data in texts for part in (struct.pack("<I", len(data)), data)])
     length = ctypes.c_size_t()
-    pointer = lib.bntok_encode(handle, payload, len(payload), ctypes.byref(length))
+    pointer = lib.bntok_encode(handle, payload, len(payload), threads, ctypes.byref(length))
     if not pointer:
         raise MemoryError("Go tokenizer returned a null response")
     try:

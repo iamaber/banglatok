@@ -31,7 +31,7 @@ func TestWireContracts(t *testing.T) {
 				t.Fatal(loaded)
 			}
 			for _, texts := range [][]string{nil, {"", "ab", "আমি\tভালো 🙂", "a\x00b"}} {
-				got, message, ok := parseBinary(t, registry.EncodeBinary(loaded.Handle, frame(texts)), len(texts))
+				got, message, ok := parseBinary(t, registry.EncodeBinary(loaded.Handle, frame(texts), 1), len(texts))
 				if !ok || len(got) != len(texts) {
 					t.Fatalf("binary encode failed: %s", message)
 				}
@@ -69,7 +69,7 @@ func TestWireContracts(t *testing.T) {
 			if closed.Error != "unknown or closed tokenizer handle" {
 				t.Fatal(closed)
 			}
-			if _, message, ok := parseBinary(t, registry.EncodeBinary(loaded.Handle, nil), 0); ok || message != closed.Error {
+			if _, message, ok := parseBinary(t, registry.EncodeBinary(loaded.Handle, nil, 1), 0); ok || message != closed.Error {
 				t.Fatalf("binary close error: %q", message)
 			}
 			if _, err := registry.EncodeInto(loaded.Handle, "", nil); err == nil || err.Error() != closed.Error {

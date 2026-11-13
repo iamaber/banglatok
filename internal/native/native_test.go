@@ -46,7 +46,7 @@ func TestRegistryLifecycle(t *testing.T) {
 		go func() {
 			defer workers.Done()
 			for range 20 {
-				batch, message, ok := parseBinary(t, registry.EncodeBinary(loaded.Handle, input), 1)
+				batch, message, ok := parseBinary(t, registry.EncodeBinary(loaded.Handle, input, 0), 1)
 				if !ok {
 					t.Error(message)
 					return

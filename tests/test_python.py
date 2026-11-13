@@ -2,14 +2,30 @@
 
 import gc
 import json
+import os
 import tempfile
 import unittest
 import weakref
+from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from importlib.resources import as_file, files
 from pathlib import Path
 
 from banglatok import Tokenizer, _native, normalize
+
+
+@contextmanager
+def environment(name: str, value: str) -> Iterator[None]:
+    previous = os.environ.get(name)
+    os.environ[name] = value
+    try:
+        yield
+    finally:
+        if previous is None:
+            del os.environ[name]
+        else:
+            os.environ[name] = previous
 
 
 class TokenizerTests(unittest.TestCase):
@@ -103,6 +119,24 @@ class TokenizerTests(unittest.TestCase):
             expected = tok.encode(text)
             with ThreadPoolExecutor(max_workers=8) as pool:
                 self.assertEqual(list(pool.map(tok.encode, [text] * 200)), [expected] * 200)
+
+    def test_num_threads(self) -> None:
+        texts = [("আমি hello 🙂 a\0b " * (i % 50)) for i in range(2000)]
+        with Tokenizer.from_pretrained("bn-bpe-28k") as tok:
+            expected = [tok.encode(text) for text in texts]
+            for threads in (None, 1, 2, 3, 10, 5000):
+                self.assertEqual(tok.encode_batch(texts, num_threads=threads), expected)
+            with environment("BANGLATOK_NUM_THREADS", "3"):
+                self.assertEqual(tok.encode_batch(texts), expected)
+            for bad in (0, -1, 1.0, True, "2"):
+                with self.assertRaisesRegex(ValueError, "num_threads"):
+                    tok.encode_batch(texts, num_threads=bad)  # type: ignore[arg-type]
+            for setting in ("0", "x", "-2"):
+                with environment("BANGLATOK_NUM_THREADS", setting):
+                    with self.assertRaisesRegex(ValueError, "BANGLATOK_NUM_THREADS"):
+                        tok.encode_batch(texts)
+            with environment("BANGLATOK_NUM_THREADS", " "):
+                self.assertEqual(tok.encode_batch(texts[:3]), expected[:3])
 
     def test_bpe_model(self) -> None:
         path = Path(self.directory.name) / "bpe.json"

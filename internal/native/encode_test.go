@@ -48,7 +48,7 @@ func TestBinaryEncodeMalformedInput(t *testing.T) {
 	_, model := loadTestModel(t, "unigram")
 	r := Registry{models: map[uint64]*tokenizer.Tokenizer{1: model}}
 	for _, input := range [][]byte{{0}, {255, 255, 255, 255}, {2, 0, 0, 0, 'a'}} {
-		if _, _, ok := parseBinary(t, r.EncodeBinary(1, input), 0); ok {
+		if _, _, ok := parseBinary(t, r.EncodeBinary(1, input, 1), 0); ok {
 			t.Fatal("accepted malformed input")
 		}
 	}
@@ -73,7 +73,7 @@ func FuzzBinaryEncode(f *testing.F) {
 	_, model := loadTestModel(f, "unigram")
 	r := Registry{models: map[uint64]*tokenizer.Tokenizer{1: model}}
 	f.Fuzz(func(t *testing.T, input []byte) {
-		if _, _, ok := parseBinary(t, r.EncodeBinary(2, input), 0); ok {
+		if _, _, ok := parseBinary(t, r.EncodeBinary(2, input, 1), 0); ok {
 			t.Fatal("invalid handle must return an error")
 		}
 		var texts []string
@@ -85,7 +85,7 @@ func FuzzBinaryEncode(f *testing.F) {
 			texts = append(texts, string(rest[4:4+n]))
 			rest = rest[4+n:]
 		}
-		batch, _, ok := parseBinary(t, r.EncodeBinary(1, input), len(texts))
+		batch, _, ok := parseBinary(t, r.EncodeBinary(1, input, 1), len(texts))
 		if !ok {
 			return
 		}
