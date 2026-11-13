@@ -2,25 +2,17 @@ package native
 
 import (
 	"encoding/json"
-	"path/filepath"
 	"slices"
 	"testing"
 
 	"github.com/iamaber/banglatok/tokenizer"
 )
 
-// Both wire formats operate on handles created and released through the C control path.
+// Binary encoding operates on handles created and released through the JSON control path.
 func TestWireContracts(t *testing.T) {
-	models := []tokenizer.Model{
-		{Version: 1, Algorithm: "unigram", Normalization: tokenizer.Normalization, Pieces: []tokenizer.Piece{{Text: "আমি", Score: -1}}},
-		{Version: 1, Algorithm: "bpe", Normalization: tokenizer.Normalization, Pieces: []tokenizer.Piece{{Text: "a"}, {Text: "b"}, {Text: "ab"}}, Merges: []tokenizer.Merge{{Left: 0, Right: 1, Result: 2}}},
-	}
-	for _, model := range models {
-		t.Run(model.Algorithm, func(t *testing.T) {
-			path := filepath.Join(t.TempDir(), "model.json")
-			if err := model.Save(path); err != nil {
-				t.Fatal(err)
-			}
+	for _, algorithm := range []string{"unigram", "bpe"} {
+		t.Run(algorithm, func(t *testing.T) {
+			path, model := loadTestModel(t, algorithm)
 			var registry Registry
 			control := func(req request) response {
 				t.Helper()
@@ -35,52 +27,53 @@ func TestWireContracts(t *testing.T) {
 				return res
 			}
 			loaded := control(request{Operation: "load", Path: path})
-			if loaded.Error != "" || loaded.Handle == 0 || loaded.Vocabulary != tokenizer.PieceOffset+len(model.Pieces) {
+			if loaded.Error != "" || loaded.Handle == 0 || loaded.Vocabulary != model.VocabSize() || loaded.Algorithm != model.Algorithm() {
 				t.Fatal(loaded)
 			}
 			for _, texts := range [][]string{nil, {"", "ab", "আমি\tভালো 🙂", "a\x00b"}} {
-				input := frame(texts)
-				batch := control(request{Operation: "encode_batch", Handle: loaded.Handle, Texts: texts})
-				if batch.Error != "" {
-					t.Fatal(batch.Error)
-				}
-				var want [][]int
-				for i, ids := range batch.Batch {
-					single := control(request{Operation: "encode", Handle: loaded.Handle, Text: texts[i]})
-					if single.Error != "" || !slices.Equal(single.IDs, ids) {
-						t.Fatalf("single/batch mismatch: %+v, %v", single, ids)
-					}
-					decoded := control(request{Operation: "decode", Handle: loaded.Handle, IDs: ids})
-					if decoded.Error != "" || decoded.Text != tokenizer.Normalize(texts[i]) {
-						t.Fatal(decoded)
-					}
-					want = append(want, append([]int{}, ids...))
-				}
-				got, message, ok := parseBinary(t, registry.EncodeBinary(loaded.Handle, input), len(texts))
-				if !ok || len(got) != len(want) {
+				got, message, ok := parseBinary(t, registry.EncodeBinary(loaded.Handle, frame(texts)), len(texts))
+				if !ok || len(got) != len(texts) {
 					t.Fatalf("binary encode failed: %s", message)
 				}
-				for i := range want {
-					if !slices.Equal(got[i], want[i]) {
-						t.Fatalf("binary/JSON mismatch: %v != %v", got[i], want[i])
+				for i, text := range texts {
+					want := model.Encode(text)
+					if !slices.Equal(got[i], want) {
+						t.Fatalf("binary/direct mismatch for %q: %v != %v", text, got[i], want)
+					}
+					out := make([]uint32, len(want))
+					if n, err := registry.EncodeInto(loaded.Handle, text, out); err != nil || n != len(want) {
+						t.Fatalf("encode into failed: n=%d err=%v", n, err)
+					}
+					for j, id := range want {
+						if out[j] != uint32(id) {
+							t.Fatalf("encode into/direct mismatch for %q at ID %d: %d != %d", text, j, out[j], id)
+						}
+					}
+					decoded := control(request{Operation: "decode", Handle: loaded.Handle, IDs: got[i]})
+					if decoded.Error != "" || decoded.Text != tokenizer.Normalize(text) {
+						t.Fatal(decoded)
 					}
 				}
-				pieces := control(request{Operation: "pieces", Handle: loaded.Handle})
-				if pieces.Error != "" || len(pieces.Pieces) != len(model.Pieces) || pieces.Pieces[0] != model.Pieces[0].Text {
-					t.Fatal(pieces)
-				}
+			}
+			pieces := control(request{Operation: "pieces", Handle: loaded.Handle})
+			wantPieces, wantFusion := model.Vocabulary()
+			if pieces.Error != "" || !slices.Equal(pieces.Pieces, wantPieces) || !slices.Equal(pieces.SpaceFusion, wantFusion) {
+				t.Fatal(pieces)
 			}
 			for range 2 {
 				if closed := control(request{Operation: "close", Handle: loaded.Handle}); closed.Error != "" {
 					t.Fatal(closed.Error)
 				}
 			}
-			closed := control(request{Operation: "encode_batch", Handle: loaded.Handle})
+			closed := control(request{Operation: "decode", Handle: loaded.Handle})
 			if closed.Error != "unknown or closed tokenizer handle" {
 				t.Fatal(closed)
 			}
 			if _, message, ok := parseBinary(t, registry.EncodeBinary(loaded.Handle, nil), 0); ok || message != closed.Error {
 				t.Fatalf("binary close error: %q", message)
+			}
+			if _, err := registry.EncodeInto(loaded.Handle, "", nil); err == nil || err.Error() != closed.Error {
+				t.Fatalf("encode into close error: %v", err)
 			}
 		})
 	}
