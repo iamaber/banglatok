@@ -1,6 +1,6 @@
 [project]
 name = "banglatok"
-version = "0.2.1"
+version = "0.2.2"
 description = "Fast, lossless subword tokenizers for Bangla, English and Banglish (romanized Bengali), including code-mixed text."
 readme = "README.md"
 authors = [
