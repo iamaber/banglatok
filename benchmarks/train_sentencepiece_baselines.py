@@ -1,9 +1,8 @@
 """Train SentencePiece baselines with the same ID budgets as the bundled models.
 
-Each model is trained on the same NFC/whitespace-normalized training split as
-the bundled models, with byte fallback, so vocabulary size is the only thing
-that differs from the bundled tokenizers in the comparison. ``vocab_size`` is
-the total ID space, matching ``Tokenizer.vocab_size`` of the bundled models.
+Both algorithms use the same NFC/whitespace-normalized training records as the
+native models. Training objectives and implementations differ; the vocabulary
+budgets match the complete ID spaces, including controls and byte fallback.
 """
 
 import argparse
@@ -21,7 +20,11 @@ MODEL_TYPES = ["unigram", "bpe"]
 
 
 def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def write_training_text(source: Path, target: Path) -> int:
@@ -54,7 +57,11 @@ def main() -> None:
     parser.add_argument(
         "--metadata", type=Path, default=Path("benchmarks/results/sentencepiece-baselines.json")
     )
+    parser.add_argument("--vocab-size", type=int, action="append")
+    parser.add_argument("--workers", type=int, default=1)
     args = parser.parse_args()
+    if args.workers < 1:
+        parser.error("--workers must be positive")
     args.output.mkdir(parents=True, exist_ok=True)
     text = args.output / "train.txt"
     longest = write_training_text(args.training, text)
@@ -76,9 +83,9 @@ def main() -> None:
             settings | {"model_type": model_type, "vocab_size": size},
         )
         for model_type in MODEL_TYPES
-        for size in SIZES
+        for size in (args.vocab_size or SIZES)
     ]
-    with ProcessPoolExecutor(len(jobs)) as pool:
+    with ProcessPoolExecutor(min(args.workers, len(jobs))) as pool:
         seconds = dict(pool.map(train, jobs))
     metadata = {
         "training_source_sha256": sha256(args.training),
