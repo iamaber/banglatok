@@ -1,7 +1,7 @@
 include go.mod go.sum
 recursive-include tokenizer *.go
 recursive-include internal/native *.go
-include cmd/bntok-shared/main.go
+include cmd/bntok-shared/main.go cmd/bntok-shared/default.pgo
 recursive-include src/banglatok/pretrained *.json *.bntok
 recursive-include tests *.py
 recursive-include examples *.py *.jsonl
