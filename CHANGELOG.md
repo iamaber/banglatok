@@ -1,6 +1,13 @@
 # Changelog
 
-## Unreleased
+## 0.2.3 — 2026-11-14
+
+### Performance
+
+- Encoding is faster with unchanged token IDs. BPE merge ranks use a flat open-addressing table, the word cache is flat, and large batches are split across native worker threads.
+- `encode_batch()` and `tok()` accept `num_threads`; without it `BANGLATOK_NUM_THREADS` applies, else every CPU. IDs and their order never depend on the thread count. `tok(..., return_tensors="np")` returns 2-D `int64` NumPy arrays when NumPy is installed; banglatok still has no required runtime dependency.
+- Bundled models load from checksummed binary `.bntok` sidecars instead of parsing JSON at load. The two sidecars add 6,269,640 bytes uncompressed (2,327,750 bytes compressed) to the wheel and are ignored when missing, stale or damaged, falling back to the JSON model.
+- The shared library is built with a profile-guided optimization profile and batches cross the Python/Go boundary as one UTF-8 buffer. No in-repo report measures this change set; `research/benchmarks/boundary_speed.py` is the harness added with it. The September reports below measured the earlier encoder work shipped in 0.2.0.
 
 ### Research
 
