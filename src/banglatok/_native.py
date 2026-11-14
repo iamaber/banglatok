@@ -238,9 +238,9 @@ class NativeHandle:
     def encode_rows(
         self,
         data: bytes,
-        runes: array[int],
+        runes: "array[int]",
         threads: int,
-        build: Callable[[memoryview, array[int]], T],
+        build: Callable[[memoryview, "array[int]"], T],
         *,
         max_length: int = 0,
         special: bool = False,
