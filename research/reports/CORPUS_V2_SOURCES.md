@@ -136,13 +136,9 @@ The final corpus is prepared fresh from all nine candidate files (not appended t
 
 `tools/acquire_corpus_v2.py --verify --raw data/raw/expanded-v2-extension --output data/raw/expanded-v2-extension/candidates` passed on both extension files: 1,800,000 records and 519,709,346 normalized characters, with schema, normalization, filters, attribution, counts and hashes rechecked against the sidecars (`data/raw/expanded-v2-extension/verification.json`).
 
-### Licensed dialect supplement
+### Excluded dialect source
 
-Vashantor v2 (`10.17632/bj5jgk878b.2`, CC BY 4.0) is added as a small supplemental source, not as evidence of natural user traffic. The pinned 1,073,445-byte archive has SHA-256 `5abb437220ad6fede5344b974f1abe48f4be8d5a9c250b807c0fea6fe4899919` and contains human-authored/translated standard and five-regional forms in Bengali, Banglish and English.
-
-`tools/acquire_vashantor_v2.py` emits only the official train forms as candidates. Official validation/test forms are written separately and passed through `--reserved-candidates`, which marks exact, near-duplicate and grouped matches as exclusion-only before candidate selection. BanglishRev remains an independent mandatory blocker.
-
-The deterministic conversion produced 46,875 train forms (18,750 Bengali, 18,750 Banglish and 9,375 English) and 15,625 official holdout forms. A standalone preparation probe with the unchanged v2 filters accepted 8,531 training records: 3,620 Bengali, 4,209 Banglish and 702 English. Repeated aligned forms, short fragments, frozen-corpus overlaps and evaluation-linked components account for the reduction. Final all-source counts can be lower if cross-source overlap is found.
+Vashantor v2 (`10.17632/bj5jgk878b.2`) is **evaluation-only**. Although Mendeley labels the package CC BY 4.0, the accompanying paper says its seed sentences came from Facebook, YouTube, Instagram, news portals and student conversations before regional forms were produced. The package does not establish redistribution grants from those platforms, publishers or original commenters. Its 46,875 official-train forms therefore remain outside corpus v2; the local conversion probe was deleted and no Vashantor output is passed to preparation. See `CORPUS_V2_BANGLISH_SOURCES.md`.
 
 ## Focused proof
 
