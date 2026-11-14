@@ -64,3 +64,68 @@ python tools/prepare_corpus_v2.py \
 Preparation requires the separately acquired local BanglishRev exclusion input. Use fresh output/database paths; existing corpus files are not overwritten. It emits per-source/bucket counts and characters, rejection reasons, hashes, growth gates and an independently rebuilt split audit. Nonzero exit means a growth or integrity gate failed; it does not certify a fivefold expansion.
 
 Train only on `expanded-v2/train.jsonl`. Select candidates on frozen validation and extra-validation with `benchmarks/select_corpus_v2.py` before opening either test split. Old model IDs remain immutable; larger data alone does not promote a new default.
+
+## Restricted training-only sources
+
+After corpus v2 was completed, the project separated permission to train from
+permission to redistribute raw text. A source may now be used in a private
+training corpus when its rights holder or authorized data controller gives
+documented permission for transformation, model training, commercial use and
+public distribution of resulting model artifacts, even when the agreement
+forbids publishing the source rows. Public availability, a dataset wrapper
+license or a site's ability to display user posts is not that permission.
+
+Restricted sources also require compatible platform terms, a completed privacy
+review, manual review of retained rows, a retention policy and a deletion
+process. Direct messages or contributed text require contributor consent for
+the declared uses. The existing PII filters remain heuristics; they do not
+replace this review. BanglishRev remains evaluation-only and benchmark surfaces
+remain prohibited from training.
+
+Keep the rights manifest, agreement evidence and candidate JSONL under ignored
+`data/raw/` or outside the repository. A schema-1 manifest declares each record
+source and checksums the local evidence:
+
+```json
+{
+  "schema_version": 1,
+  "sources": [{
+    "record_source": "partner-natural-banglish",
+    "rights_basis": "written-contract",
+    "public_description": "Consented customer-support Banglish",
+    "evidence_path": "partner/agreement.txt",
+    "evidence_sha256": "<sha256>",
+    "rights_holder_authorized": true,
+    "training_allowed": true,
+    "transformations_allowed": true,
+    "commercial_use_allowed": true,
+    "model_artifact_distribution_allowed": true,
+    "platform_terms_allow_training": true,
+    "privacy_reviewed": true,
+    "manual_privacy_review_required": true,
+    "raw_redistribution_allowed": false,
+    "retention_policy": "Documented local policy",
+    "deletion_process": "Documented request and removal process"
+  }]
+}
+```
+
+Prepare a combined private corpus against the public v2 baseline:
+
+```sh
+python tools/prepare_restricted_corpus.py \
+  --manifest data/raw/restricted/rights.json \
+  --candidates 'data/raw/restricted/candidates/*.jsonl' \
+  --output data/processed/restricted-training
+```
+
+The tool verifies the evidence checksum and every required grant, protects all
+public and BanglishRev holdouts, applies the v2 quality/deduplication pipeline
+and marks the output `.restricted-corpus.json`. Train from its `train.jsonl`.
+Never upload that directory, its statistics or its JSONL files. The public
+dataset publisher refuses marked input. A model publisher detects the marker,
+requires the checksum-bound `restricted-summary.json`, and reports only the
+declared public descriptions, rights bases and aggregate accepted counts.
+Before releasing a derived tokenizer, inspect learned pieces for personal or
+secret strings; never quote restricted text.
+
