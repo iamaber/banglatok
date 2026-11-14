@@ -67,9 +67,12 @@ class CorpusV2Tests(unittest.TestCase):
             json.dumps([{"Reviews": [{"Review Content": self.reserved_text}]}]), encoding="utf-8"
         )
 
-    def run_cli(self, records, name, minimum=0):
+    def run_cli(self, records, name, minimum=0, reserved_records=None):
         candidates = self.root / (name + ".jsonl")
         write_rows(candidates, records)
+        reserved_candidates = self.root / (name + "-reserved.jsonl")
+        if reserved_records is not None:
+            write_rows(reserved_candidates, reserved_records)
         output = self.root / name
         completed = subprocess.run(
             [
@@ -81,6 +84,11 @@ class CorpusV2Tests(unittest.TestCase):
                 str(self.baseline),
                 "--reserved-eval",
                 str(self.reserved),
+                *(
+                    ["--reserved-candidates", str(reserved_candidates)]
+                    if reserved_records is not None
+                    else []
+                ),
                 "--output",
                 str(output),
                 "--min-train-records",
@@ -266,6 +274,28 @@ class CorpusV2Tests(unittest.TestCase):
             <= reasons,
             reasons,
         )
+
+    def test_new_source_holdout_blocks_matching_training_group(self):
+        holdout = row(
+            "Licensed conversational holdout text remains outside all training splits.",
+            "new-source:holdout",
+            source="new-source",
+        )
+        sibling = row(
+            "A distinct companion utterance shares the source alignment group.",
+            "new-source:holdout",
+            source="new-source",
+        )
+
+        _, _, accepted, audit, stats = self.run_cli(
+            [holdout, sibling],
+            "new-source-holdout",
+            reserved_records=[holdout],
+        )
+
+        self.assertFalse(any(record["source"] == "new-source" for record in accepted))
+        self.assertTrue(audit["gates"]["no_leakage"])
+        self.assertEqual(stats["reserved_candidate_records"], 1)
 
     def test_growth_failure_emits_honest_audit_and_nonzero_exit(self):
         completed, _, _, audit, _ = self.run_cli([], "insufficient", minimum=100)
