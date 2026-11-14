@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Research
+
+- Added reproducible corpus-v2 acquisition from pinned Bengali/English Wikipedia, Bengali Wikibooks and Wikivoyage, with source-specific attribution and rights limitations.
+- Added stronger quality filtering, disk-backed canonical/near deduplication, immutable v1 evaluation files, separate extra holdouts and independent growth/leakage audits. Fivefold growth counts only accepted unique training records and normalized characters.
+- Added validation-only promotion gates and versioned Hugging Face corpus/model publishing. Existing model IDs and v1 dataset artifacts remain immutable; changing the default requires passing the promotion gates. Default Hub publishing targets v1 only; versioned models require explicit paths and their own provenance.
+- Streamed fusion training and made SentencePiece training sequential by default for larger corpora. Benchmarks can compare local candidates, extra holdouts and disjoint review samples.
+- Run research tooling tests separately from inference wheel tests across the source-CI platform/Python matrix, keeping research scripts and provenance inputs out of distributions.
+- Built and audited corpus v2: 3,047,265 unique training records and 720M normalized characters (5.4× and 10.9× v1) with no holdout leakage, adding scoped CC BY 4.0 Pralekha Bengali government text. Sources without upstream redistribution rights, including Vashantor, were excluded.
+- Tokenizers trained on corpus v2, and on two user-text-weighted subsets of it, failed the promotion gates: they compressed Wikipedia-style text better but needed more tokens on frozen v1 test text and BanglishRev reviews (+1.8% to +5.7% at 58k, up to +11.7% at 28k). `bn-bpe-58k` and `bn-bpe-28k` remain the defaults. See `research/reports/CORPUS_V2_RESULTS.md`.
+
 ## 0.2.2 — 2026-11-13
 
 - Added the full usage guide to both Hugging Face model repositories, with links from their model cards.
