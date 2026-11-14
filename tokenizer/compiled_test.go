@@ -58,8 +58,6 @@ func TestCompiledMatchesJSON(t *testing.T) {
 	}
 }
 
-// Every damaged, truncated or stale sidecar must be rejected, and Load must
-// then fall back to the JSON with identical IDs.
 func TestCompiledRejectsDamage(t *testing.T) {
 	m := smallBPE(t)
 	m.CacheWords = []string{"abab", "aaaa"}

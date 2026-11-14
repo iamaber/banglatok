@@ -1,7 +1,8 @@
 """Apply the preregistered corpus-v2 promotion gates to validation benchmarks.
 
 This consumes compare_popular.py JSON, never test scores. A rejected candidate
-remains in the output with its failed gates; no passing candidate exits nonzero.
+remains in the output with its failed gates. If no candidate passes, the script
+exits nonzero.
 """
 
 import argparse

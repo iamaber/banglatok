@@ -345,7 +345,7 @@ def restricted_training_data(summary: dict) -> str:
     )
     return f"""The public baseline is
 [iamaber/banglatok-training-corpus, configuration `v2`](https://huggingface.co/datasets/iamaber/banglatok-training-corpus/tree/main/v2).
-Training additionally used private, training-only natural text. Its agreements
+Training also used private, training-only natural text. Its agreements
 permit transformation, commercial training and distribution of resulting model
 artifacts, but not redistribution of the retained rows. The raw text, agreements
 and private manifests are therefore not included in this repository.

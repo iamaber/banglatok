@@ -2,7 +2,7 @@
 """Prepare expanded-v2 without changing frozen data (Python standard library only).
 
 All records, including quality failures, participate in disk-backed duplicate/group
-components BEFORE selection. Frozen evaluation and BanglishRev components exclude
+components before selection. Frozen evaluation and BanglishRev components exclude
 new material; baseline-train components cannot become extra evaluation. Other
 components use SHA256('bn-corpus-v2:' + smallest original group), modulo 100:
 0..1 test, 2..3 validation, otherwise train. Original group names are never changed.
@@ -13,9 +13,9 @@ all ten band-pairs, guarantee candidate coverage: at most three bands can differ
 so two remain identical. Pair keys are 25/26 bits rather than 16, avoiding billions
 of incidental comparisons at multi-million-record scale. There is no sampling or
 bucket cap. Bit-sliced counters compute all 64 word-bit majorities together.
-Canonical keys retain Unicode letters, numbers AND marks, lowercased per rune.
+Canonical keys keep Unicode letters, numbers and marks, lowercased per rune.
 
-New records additionally require 40 characters and five words (or 60 letters), so
+New records also require 40 characters and five words (or 60 letters), so
 short fragments cannot satisfy growth. Quality thresholds are recorded in stats.
 SQLite cache and bounded LRU caches limit RAM independently of corpus size; disk
 and runtime grow with input and matching-band candidates. Pathological shared-band
@@ -49,7 +49,30 @@ FROZEN_HASHES = {
     "test": "3f39a8faf7ecc280ec32ce231d379cec788eb79a52d9a6e66917073500879834",
 }
 # Go unicode.IsSpace, unlike Python str.split(), excludes U+001C..U+001F.
-SPACE = re.compile(r"[\t-\r \u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]+")
+GO_UNICODE_SPACE = re.compile(r"[\t-\r \u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]+")
+SELECTION_POLICY = """Prepare expanded-v2 without changing frozen data (Python standard library only).
+
+All records, including quality failures, participate in disk-backed duplicate/group
+components BEFORE selection. Frozen evaluation and BanglishRev components exclude
+new material; baseline-train components cannot become extra evaluation. Other
+components use SHA256('bn-corpus-v2:' + smallest original group), modulo 100:
+0..1 test, 2..3 validation, otherwise train. Original group names are never changed.
+
+Near duplicates use the existing Go 64-bit word SimHash, >=12 whitespace words,
+Hamming distance <=3. Five disjoint bands (13/13/13/13/12 bits), indexed by
+all ten band-pairs, guarantee candidate coverage: at most three bands can differ,
+so two remain identical. Pair keys are 25/26 bits rather than 16, avoiding billions
+of incidental comparisons at multi-million-record scale. There is no sampling or
+bucket cap. Bit-sliced counters compute all 64 word-bit majorities together.
+Canonical keys retain Unicode letters, numbers AND marks, lowercased per rune.
+
+New records additionally require 40 characters and five words (or 60 letters), so
+short fragments cannot satisfy growth. Quality thresholds are recorded in stats.
+SQLite cache and bounded LRU caches limit RAM independently of corpus size; disk
+and runtime grow with input and matching-band candidates. Pathological shared-band
+sets can still be expensive; no approximate shortcut silently weakens protection.
+The work database is created exclusively; remove it explicitly before a fresh run.
+"""
 PRIVATE = re.compile(
     r"[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}|"
     r"(?:\+?880|\b0)1[3-9][0-9]{8}\b|"
@@ -82,11 +105,10 @@ NEAR_METHOD = {
 
 
 def normalize(text: str) -> str:
-    """NFC plus precisely Go's Unicode whitespace set; retain marks and joiners."""
     # JSON can encode lone UTF-16 surrogates; Go's JSON decoder replaces them.
     if any(0xD800 <= ord(c) <= 0xDFFF for c in text):
         text = re.sub("[\ud800-\udfff]", "\ufffd", text)
-    return SPACE.sub(" ", unicodedata.normalize("NFC", text)).strip(" ")
+    return GO_UNICODE_SPACE.sub(" ", unicodedata.normalize("NFC", text)).strip(" ")
 
 
 def lower_runes(text: str) -> str:
@@ -234,12 +256,6 @@ def read_records(path: Path):
 
 
 def reserved_texts(path: Path):
-    """Stream strings even from the documented head-truncated evaluation JSON.
-
-    Reserve review bodies AND seller replies. Only complete JSON strings are used;
-    an incomplete trailing string is ignored, never used as training material.
-    A 2 MiB token limit makes malformed/unexpected input fail rather than grow RAM.
-    """
     pending = ""
     want_value = False
     with path.open(encoding="utf-8", errors="strict") as handle:
@@ -842,7 +858,7 @@ def prepare(args: argparse.Namespace) -> bool:
                     "edge fixtures verify semantics, not identity with a different Go "
                     "Unicode table version."
                 ),
-                "selection_policy": __doc__,
+                "selection_policy": SELECTION_POLICY,
                 "quality_policy": {
                     "characters": [12, 2000],
                     "new_minimum_characters": 40,

@@ -215,7 +215,6 @@ class TokenizerTests(unittest.TestCase):
                     for k, v in reference_call(tok, ["আমি ভালো"], True, 8, "max_length").items()
                 },
             )
-            # More IDs than a per-thread buffer keeps: the call uses a native allocation.
             big = tok(MIXED[:6] * 100, max_length=2000, padding="max_length")
             self.assertEqual(big, reference_call(tok, MIXED[:6] * 100, True, 2000, "max_length"))
             self.assertEqual(tok(["a"]), reference_call(tok, ["a"], True, None, False))
@@ -352,7 +351,6 @@ class TokenizerTests(unittest.TestCase):
 
     def test_forgotten_handle_is_released(self) -> None:
         native = _native.NativeHandle(str(self.path))
-        # Retain only the numeric handle to check the real Go registry after collection.
         handle = native._handle
         reference = weakref.ref(native)
         native.cycle = native

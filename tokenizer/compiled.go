@@ -10,10 +10,6 @@ import (
 	"strings"
 )
 
-// A compiled sidecar holds a JSON model in binary form with the cached word
-// segmentations, so loading skips JSON parsing and re-encoding. Its header
-// pins the SHA-256 of the exact JSON bytes and of its own payload; any
-// mismatch, including a stale or corrupt file, falls back to the JSON.
 const compiledMagic = "BNTOKBIN"
 
 // compiledVersion covers the layout and the segmentation the payload caches.

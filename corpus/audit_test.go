@@ -36,8 +36,6 @@ func TestAuditRereadsCorruptedSplits(t *testing.T) {
 	}
 }
 
-// Write saved rows directly: corruption checks must not route through Prepare's
-// production decisions, which would remove duplicates and propagate holdouts.
 func writeAuditRecords(t *testing.T, path string, records ...Record) {
 	t.Helper()
 	f, err := os.Create(path)

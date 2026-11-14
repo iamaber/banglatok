@@ -8,7 +8,6 @@ import (
 	"github.com/iamaber/banglatok/tokenizer"
 )
 
-// Batch encoding operates on handles created and released through the JSON control path.
 func TestWireContracts(t *testing.T) {
 	for _, algorithm := range []string{"unigram", "bpe"} {
 		t.Run(algorithm, func(t *testing.T) {

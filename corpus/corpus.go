@@ -35,7 +35,8 @@ type Stats struct {
 }
 
 // Key catches punctuation, case and whitespace variants without changing the
-// text used for fitting. It is a leakage/dedup key, not inference normalization.
+// text used for fitting. It is a leakage and deduplication key, not inference
+// normalization.
 func Key(s string) string {
 	var b strings.Builder
 	for _, r := range tokenizer.Normalize(s) {

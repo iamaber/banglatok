@@ -195,10 +195,6 @@ func (t *Tokenizer) AppendEncode(dst []int, text string) []int {
 	return ids
 }
 
-// appendWords encodes space-separated words. With verify it gives up, so the
-// caller can normalize first, unless it proves Normalize(s) == s on the way:
-// cached words are normalized, a single space between normalized words has
-// normalization boundaries on both sides, and alreadyNormalized checks the rest.
 func (t *Tokenizer) appendWords(dst []int, s string, verify bool) ([]int, bool) {
 	ids, first := dst, len(dst)
 	var local [128]viterbiState
@@ -264,7 +260,7 @@ func (t *Tokenizer) Algorithm() string { return t.model.Algorithm }
 // Merges returns a copy of the BPE merge rules in rank order; Unigram has none.
 func (t *Tokenizer) Merges() []Merge { return append([]Merge(nil), t.model.Merges...) }
 
-// Decode rejects reserved/invalid IDs rather than silently losing text.
+// Decode rejects reserved or invalid IDs instead of dropping text without an error.
 func (t *Tokenizer) Decode(ids []int) (string, error) {
 	var b strings.Builder
 	for _, id := range ids {
@@ -293,7 +289,7 @@ func (t *Tokenizer) VocabSize() int {
 }
 
 // Expand returns base token IDs, undoing space fusion without decoding text.
-// It rejects reserved/out-of-range IDs; UTF-8 validity is checked by Decode.
+// It rejects reserved or out-of-range IDs; Decode checks UTF-8 validity.
 func (t *Tokenizer) Expand(ids []int) ([]int, error) {
 	base := PieceOffset + len(t.model.Pieces)
 	result := make([]int, 0, len(ids))

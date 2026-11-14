@@ -11,8 +11,6 @@ type word struct {
 	count float64
 }
 
-// trainingInput owns the shared corpus contract and accumulation order. Empty
-// corpora and vocabulary budgets are interpreted by each training algorithm.
 type trainingInput struct {
 	words      []word
 	characters map[string]bool

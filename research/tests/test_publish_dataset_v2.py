@@ -1,5 +1,3 @@
-"""Isolated publisher CLI fixtures: no ignored corpus or Hub access."""
-
 import contextlib
 import gzip
 import hashlib

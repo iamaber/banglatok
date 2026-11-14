@@ -8,10 +8,6 @@ import (
 
 const unigramByteFallbackScore = -30
 
-// Unigram's three recurrences share piece lookup, but deliberately keep their
-// traversal and arithmetic separate: training excludes byte fallback, whereas
-// inference includes it. Match order also determines Viterbi ties and RNG draws.
-
 // matches walks byte trie edges; learned pieces always end on rune boundaries.
 func (t *Tokenizer) matches(s string, start int, visit func(end, id int)) {
 	n := 0

@@ -8,10 +8,6 @@ import (
 	"github.com/iamaber/banglatok/tokenizer"
 )
 
-// Work sizes in input bytes, measured on Apple M5: below minParallelBytes a
-// batch is encoded on the calling goroutine because worker start-up costs more
-// than it saves; each worker gets at least minWorkerBytes; chunks are at least
-// minChunkBytes so scheduling stays cheap while uneven texts still balance.
 const (
 	minParallelBytes = 8 << 10
 	minWorkerBytes   = 2 << 10

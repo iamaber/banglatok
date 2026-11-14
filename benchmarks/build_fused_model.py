@@ -3,7 +3,7 @@
 Fusion IDs represent a space followed by one base ID. Candidates are the base
 IDs that most often start a word (follow a space) in the training split; ties
 break by ID. The training-word cache lists the most frequent training words
-and only speeds up encoding: it never changes IDs.
+and only speeds up encoding. It never changes IDs.
 """
 
 import argparse

@@ -756,7 +756,7 @@ def main() -> None:
         "--corpus-version",
         choices=("v1", "v2"),
         default="v1",
-        help="explicit corpus snapshot; default retains frozen v1",
+        help="explicit corpus snapshot; default keeps frozen v1",
     )
     parser.add_argument(
         "--dry-run", type=Path, metavar="PATH", help="prepare only, without uploading"

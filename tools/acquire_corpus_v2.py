@@ -98,7 +98,7 @@ def acquire(lock: dict, item: dict, raw: Path, reuse: Path | None = None) -> Pat
                     if not content_range.startswith(f"bytes {offset}-"):
                         raise ValueError(f"Invalid range response: {content_range}")
                 elif response.status == 200:
-                    offset = 0  # Server ignored Range: never append a full response.
+                    offset = 0  # The server ignored Range; never append a full response.
                 else:
                     raise ValueError(f"Unexpected HTTP status: {response.status}")
                 with partial.open("ab" if offset else "wb") as output:
@@ -150,7 +150,6 @@ def write_json(path: Path, value: dict) -> None:
 
 
 def articles(path: Path, item: dict, batch_size: int) -> Iterator[dict]:
-    """Yield one article/page at a time, retaining original source grouping."""
     if item.get("format") != "mediawiki-xml-bz2":
         import pyarrow.parquet as pq
 
@@ -333,7 +332,7 @@ def emit(
     counts.setdefault("records", 0)
     counts.setdefault("normalized_characters", 0)
     if offset and not counts["records"]:
-        partial.unlink()  # Entirely skipped: no candidate file, provenance only.
+        partial.unlink()
     metadata = {
         "source": item["source"],
         "output": str(destination) if counts["records"] or not offset else None,
@@ -356,7 +355,6 @@ def emit(
             "in the same global English order as the default run; skipped rows are "
             "hashed/counted under skipped_* and never written or counted as records"
         )
-    # Metadata first: a completed .jsonl never appears without its provenance.
     write_json(metadata_path, metadata)
     if metadata["output"] is not None:
         partial.replace(destination)
@@ -448,7 +446,7 @@ def main() -> None:
         "--en-shards", type=int, default=8, help="first N pinned English shards, maximum 8"
     )
     parser.add_argument(
-        "--max-paragraphs", type=int, default=20, help="10–20 qualifying paragraphs/article"
+        "--max-paragraphs", type=int, default=20, help="10 to 20 qualifying paragraphs per article"
     )
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument(

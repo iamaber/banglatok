@@ -131,8 +131,6 @@ def build(
                 )
     rng = random.Random(seed)
     chosen, groups, keys = [], set(), set()
-    # Include English alignment explicitly rather than giving all capacity to
-    # Banglish. Limited supply is reported; it is never filled with synthetic pairs.
     vashantor_quota = min(1600, count // 5) if expanded is not None else 0
     remaining = count - vashantor_quota
     quotas = {"tatoeba-ben": remaining // 4, "banglatlit": remaining - remaining // 4}

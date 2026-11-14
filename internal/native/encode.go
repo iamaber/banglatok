@@ -5,7 +5,6 @@ import "sync"
 // Scratch ID buffers are reused across calls; returned data never aliases them.
 var scratch = sync.Pool{New: func() any { return new([]int) }}
 
-// maxPooledIDs keeps one unusually large request from pinning its buffer.
 const maxPooledIDs = 1 << 16
 
 func release(buffer *[]int, ids []int) {

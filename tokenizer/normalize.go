@@ -12,7 +12,7 @@ import (
 const Normalization = "nfc-whitespace-v1"
 
 // Normalize applies NFC, trims whitespace and collapses Unicode whitespace.
-// Case, joiners, punctuation, accents and spelling variants are preserved.
+// It preserves case, joiners, punctuation, accents and spelling variants.
 // Invalid UTF-8 is replaced with U+FFFD before normalization.
 func Normalize(s string) string {
 	if alreadyNormalized(s) {

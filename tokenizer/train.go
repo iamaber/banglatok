@@ -16,9 +16,9 @@ type TrainConfig struct {
 }
 
 // Train fits a Unigram language model with forward-backward EM and iterative
-// expected-count pruning. This is not SentencePiece's loss-based pruning recipe
-// and its JSON models are deliberately not advertised as SentencePiece compatible.
-// Counts may be fractional, allowing a documented sentence-weighted mixture.
+// expected-count pruning. This is not SentencePiece's loss-based pruning recipe,
+// so the project does not advertise its JSON models as SentencePiece compatible.
+// Counts may be fractional, which permits a documented sentence-weighted mixture.
 func Train(counts map[string]float64, c TrainConfig) (Model, error) {
 	if c.VocabSize <= PieceOffset || c.SeedSize < c.VocabSize || c.MaxPieceRunes < 1 || c.EMIterations < 1 {
 		return Model{}, fmt.Errorf("invalid training configuration")

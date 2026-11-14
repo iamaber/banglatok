@@ -48,11 +48,12 @@ func bntok_encode_into(handle C.ulonglong, data *C.char, length C.size_t, out *C
 }
 
 // bntok_encode_batch encodes len(runes) consecutive texts of data, given as
-// code-point counts, with up to threads workers (<= 0: every CPU) and shapes
-// the rows as native.Layout describes. It overwrites runes with each row's
-// unpadded length and returns the number of IDs written, or a negative status.
-// IDs go to out when capacity suffices; otherwise to a malloc'd *allocated
-// that the caller frees with bntok_free. Memory is only used during the call.
+// code-point counts, with up to threads workers (every CPU when threads <= 0),
+// and shapes the rows as native.Layout describes. It overwrites runes with each
+// row's unpadded length and returns the number of IDs written, or a negative
+// status. IDs go to out when capacity is large enough, otherwise to a malloc'd
+// *allocated that the caller frees with bntok_free. Memory is only used during
+// the call.
 //
 //export bntok_encode_batch
 func bntok_encode_batch(handle C.ulonglong, data *C.char, length C.size_t, runes *C.uint32_t, count C.size_t, threads C.int,

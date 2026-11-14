@@ -129,9 +129,6 @@ func (t *Tokenizer) merge(left, right int) uint64 {
 	return t.mergeRanks.find(pairKey(left, right))
 }
 
-// appendBPE applies the lowest-ranked merge to every non-overlapping
-// occurrence, matching training, until no merge applies. Pair ranks are kept
-// beside the word and recomputed only next to merged tokens.
 func (t *Tokenizer) appendBPE(ids []int, s string) []int {
 	start := len(ids)
 	for _, r := range s {

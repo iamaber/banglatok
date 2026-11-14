@@ -38,12 +38,6 @@ func (g *groups) join(a, b int) {
 	g.parent[b] = a
 }
 
-// prepareRecords normalizes the input in place and connects all records before
-// choosing splits: even rejected text can bridge groups or carry heldout priority.
-// The returned sequence is consumed once, in input order. Filtering is deferred
-// until consumption so output errors preserve Prepare's partial statistics;
-// the writer accounts for records only after successfully encoding them.
-// Audits intentionally reconstruct their checks from saved files independently.
 func prepareRecords(records []Record, st *Stats) (iter.Seq[Record], error) {
 	g := groups{make([]int, len(records))}
 	for i := range g.parent {

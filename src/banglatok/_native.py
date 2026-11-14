@@ -154,7 +154,7 @@ class _IDs:
 
 
 class _Buffers(threading.local):
-    """Per-thread output buffers: ctypes releases the GIL during native calls."""
+    """Per-thread output buffers, because ctypes releases the GIL during native calls."""
 
     def __init__(self) -> None:
         self.one = _IDs(1024)
@@ -199,8 +199,6 @@ class NativeHandle:
             raise RuntimeError("tokenizer is closed")
 
     def _payload(self, text: str) -> bytes:
-        """UTF-8 for the per-text hot paths, which leave the closed-handle check
-        to the native call but raise exactly as check_open plus validation."""
         if _forked:
             raise RuntimeError(_FORKED)
         if not isinstance(text, str):

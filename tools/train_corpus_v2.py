@@ -33,8 +33,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 FUSE = ROOT / "benchmarks/build_fused_model.py"
 SENTENCEPIECE = ROOT / "benchmarks/train_sentencepiece_baselines.py"
-# Base vocabulary -> total fused budget, matching bn-bpe-28k and bn-bpe-58k.
-SIZES = {16000: 27760, 32000: 57925}
+FUSED_BUDGET_BY_BASE_VOCAB = {16000: 27760, 32000: 57925}
 GIB = 1 << 30
 
 # Peak memory footprint and wall seconds per GiB of training JSONL, measured with
@@ -80,7 +79,6 @@ def physical_memory() -> int:
 
 
 def rel(path: Path) -> str:
-    """Repository-relative path when possible: steps run from the repository root."""
     return str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path)
 
 
@@ -243,7 +241,6 @@ class Runner:
 
 
 def default_jobs(steps: list[Step]) -> int:
-    """Processes are capped by CPUs; the scheduler separately enforces the memory budget."""
     return max(1, min(os.cpu_count() or 1, len(steps)))
 
 
@@ -396,7 +393,7 @@ def main() -> None:
     parser.add_argument("--bntok", type=Path, default=ROOT / "bin/bntok")
     parser.add_argument("--python", type=Path, default=Path(sys.executable))
     args = parser.parse_args()
-    args.sizes = dict(args.size or SIZES.items())
+    args.sizes = dict(args.size or FUSED_BUDGET_BY_BASE_VOCAB.items())
     if len(set(args.sizes.values())) != len(args.sizes):
         parser.error("budgets must be distinct")
     if args.jobs is not None and args.jobs < 1:
