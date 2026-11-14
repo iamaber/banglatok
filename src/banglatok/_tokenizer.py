@@ -1,5 +1,6 @@
 """Small, typed Python interface; all text processing stays in Go."""
 
+import importlib
 import os
 from array import array
 from collections.abc import Callable, Iterable, Sequence
@@ -296,7 +297,7 @@ class Tokenizer:
         build: Callable[[memoryview, array[int]], tuple[Any, Any]]
         if return_tensors == "np":
             try:
-                import numpy
+                numpy: Any = importlib.import_module("numpy")
             except ImportError:
                 raise ImportError("return_tensors='np' requires NumPy: pip install numpy") from None
             build = _arrays(numpy, padded=width != 0)
