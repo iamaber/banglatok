@@ -146,7 +146,7 @@ Pralekha revision `4c16a270141891dd5c3e98f6f4f207f11bd11236` contributes Bengali
 
 `tools/acquire_pralekha_v2.py` checksum-verified two Bengali alignable Parquet shards (231,290,314 bytes total) and the official English–Bengali dev/test shards. It emitted **731,001 Bengali candidate paragraphs / 226,359,565 normalized characters**. The official dev/test Bengali targets emitted **30,298 exclusion-only paragraphs / 6,031,276 characters** and are passed through `--reserved-candidates`; they never become corpus rows.
 
-The acquisition rejected 519,278 lines outside the 12–2,000-character range, 362,571 lines below eight words, 12,239 gross script mismatches and 154 privacy-pattern matches. A second conversion reproduced both output SHA-256 values exactly: candidates `14c0c830…` and reserved holdouts `390395d3…`. Each candidate retains its Pralekha `n_id`, `doc_id`, pinned revision, source card and CC BY attribution.
+The acquisition rejected 519,278 lines outside the 12–2,000-character range, 362,571 lines below eight words, 12,239 gross script mismatches and 154 privacy-pattern matches. A second conversion reproduced both output SHA-256 values exactly: candidates `14c0c830…` and reserved holdouts `3f40c466…`. The source `dev` label is serialized as corpus `validation`; source identity remains in every row. Each candidate retains its Pralekha `n_id`, `doc_id`, pinned revision, source card and CC BY attribution.
 
 ## Focused proof
 
