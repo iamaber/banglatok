@@ -52,3 +52,17 @@ func BenchmarkValidation(b *testing.B) {
 		}
 	}
 }
+
+// BenchmarkLoad measures cold model construction from BNTOK_MODEL.
+func BenchmarkLoad(b *testing.B) {
+	model := os.Getenv("BNTOK_MODEL")
+	if model == "" {
+		b.Skip("set BNTOK_MODEL")
+	}
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		if _, err := Load(model); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
