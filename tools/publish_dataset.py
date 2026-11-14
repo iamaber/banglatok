@@ -56,6 +56,7 @@ V2_FILES = [
     "v2/manifest.json",
     "v2/sources.lock.json",
     "v2/frozen-v1-sources.lock.json",
+    "v2/domain-sources.lock.json",
     "v2/corpus-stats.json",
     "v2/audit.json",
     "v2/independent-audit.json",
@@ -232,6 +233,11 @@ def prepare(output: Path) -> dict:
 
 def v2_source_notices(output: Path) -> dict:
     lock = json.loads((ROOT / "data/corpus-v2-sources.lock.json").read_text())
+    domain_lock = json.loads((ROOT / "data/corpus-v2-domain-sources.lock.json").read_text())
+    overlap = set(lock["source_declarations"]) & set(domain_lock["source_declarations"])
+    if overlap:
+        raise ValueError(f"duplicate v2 source declarations: {sorted(overlap)}")
+    lock["source_declarations"].update(domain_lock["source_declarations"])
     entries = {entry["path"]: entry for entry in lock["artifacts"] if entry["source"] == "license"}
     for name in V2_NOTICE_PATHS:
         entry = entries.get(name)
@@ -260,6 +266,16 @@ https://creativecommons.org/licenses/by-sa/4.0/. Their pinned rights API respons
 are retained in notices/wikimedia/. Each row retains the original page URL,
 revision URL, contributor-history URL, snapshot and modification notice.
 Imported passages can have additional page-specific obligations.
+
+## Pralekha Bengali government material
+
+Scoped Bengali alignable documents use pinned Pralekha revision
+`4c16a270141891dd5c3e98f6f4f207f11bd11236` under CC BY 4.0. Only
+PIB/Mann Ki Baat alignable material is eligible; unalignable Sangraha is excluded.
+Official Pralekha development and test Bengali text is exclusion-only. Rows retain
+Pralekha `n_id`, `doc_id`, revision, license and transformation attribution. See
+[domain-sources.lock.json](domain-sources.lock.json) for artifact hashes and the
+first-party PM India and PIB reproduction policies.
 
 See [SOURCES.md](SOURCES.md), [sources.lock.json](sources.lock.json), and
 [frozen-v1-sources.lock.json](frozen-v1-sources.lock.json) for evidence and pins.
@@ -305,23 +321,40 @@ def compress_v2_split(
                 if marker is not None and marker not in record["attribution"]:
                     raise ValueError(f"{split}:{rows}: missing source attribution")
                 if declaration:
-                    language = declaration["language"]
-                    project = record["source"].split("-")[0]
-                    url = f"https://{language}.{project}.org/wiki/"
                     license_name = declaration["license"].split(";")[0]
-                    if (
-                        record["bucket"] != declaration["bucket"]
-                        or not record["group"].startswith(declaration["group"].split("<")[0])
-                        or url not in record["attribution"]
-                        or f"{project.capitalize()} contributors" not in record["attribution"]
-                        or license_name not in record["attribution"]
-                    ):
+                    if declaration.get("attribution_marker"):
+                        mismatch = (
+                            record["bucket"] != declaration["bucket"]
+                            or not record["group"].startswith(declaration["group"].split("<")[0])
+                            or declaration["attribution_marker"] not in record["attribution"]
+                            or license_name not in record["attribution"]
+                        )
+                    else:
+                        language = declaration["language"]
+                        project = record["source"].split("-")[0]
+                        url = f"https://{language}.{project}.org/wiki/"
+                        mismatch = (
+                            record["bucket"] != declaration["bucket"]
+                            or not record["group"].startswith(declaration["group"].split("<")[0])
+                            or url not in record["attribution"]
+                            or f"{project.capitalize()} contributors" not in record["attribution"]
+                            or license_name not in record["attribution"]
+                        )
+                    if mismatch:
                         raise ValueError(
                             f"{split}:{rows}: source language/group/attribution mismatch"
                         )
-                    if project in {"wikibooks", "wikivoyage"} and (
-                        "oldid=" not in record["attribution"]
-                        or "action=history" not in record["attribution"]
+                    if (
+                        not declaration.get("attribution_marker")
+                        and project
+                        in {
+                            "wikibooks",
+                            "wikivoyage",
+                        }
+                        and (
+                            "oldid=" not in record["attribution"]
+                            or "action=history" not in record["attribution"]
+                        )
                     ):
                         raise ValueError(f"{split}:{rows}: missing revision/history attribution")
                 if (
@@ -463,13 +496,17 @@ Publication requires at least 2,817,380 canonically unique training rows and
 
 The expansion retains eligible original BanglaTLit and Tatoeba material, reads all
 Bengali Wikipedia articles from the pinned `20231101.bn` snapshot rather than the
-old article sample, and adds English Wikipedia `20231101.en`, Bengali Wikibooks
-and Bengali Wikivoyage (`20261101`). English uses a deterministic prefix of pinned
-shards, not a uniform sample. Real paragraphs are selected, not synthetic
-transliterations or fragments chopped to inflate growth. Bengali Wikibooks chapters
-share root-book groups. [v2/SOURCES.md](v2/SOURCES.md) records acquisition settings,
-candidate supply (not final accepted sizes), primary evidence and exclusions.
-The exact [expanded source lock](v2/sources.lock.json) and
+old article sample, and adds English Wikipedia `20231101.en`, Bengali Wikibooks,
+Bengali Wikivoyage (`20261101`) and licensed Bengali government/news-podcast
+documents from pinned Pralekha. English uses a deterministic prefix of pinned
+shards, not a uniform sample. Pralekha's unalignable Sangraha component is excluded,
+and its official development/test Bengali text is leakage protection only. Real
+paragraphs are selected, not synthetic transliterations or fragments chopped to
+inflate growth. Bengali Wikibooks chapters share root-book groups.
+[v2/SOURCES.md](v2/SOURCES.md) records acquisition settings, candidate supply
+(not final accepted sizes), primary evidence and exclusions.
+The exact [expanded source lock](v2/sources.lock.json),
+[domain source lock](v2/domain-sources.lock.json) and
 [original source lock](v2/frozen-v1-sources.lock.json) are retained separately.
 
 NFC/Go-whitespace normalization preserves combining marks and joiners. Additional
@@ -495,7 +532,8 @@ Bucket labels are source/script proxies, not independently reviewed annotation.
 This collection is not relicensed under a single license. Preserve row attribution.
 Wikipedia retains the pinned historical CC BY-SA 3.0 / GFDL-where-applicable notice;
 Wikibooks/Wikivoyage retain CC BY-SA 4.0, page revision and contributor-history
-links. Tatoeba retains CC BY 2.0 France sentence IDs and contributor credit.
+links. Pralekha's scoped government material retains CC BY 4.0, revision and
+document IDs. Tatoeba retains CC BY 2.0 France sentence IDs and contributor credit.
 The exact BanglaTLit MIT repository notice does **not** independently establish
 rights for every original commenter or aggregated third-party passage.
 [v2/LICENSES.md](v2/LICENSES.md) and [v2/notices/](v2/notices/) retain source evidence.
@@ -518,14 +556,21 @@ go run ./cmd/bntok prepare
 # Preserve verified frozen-v1 copies before expanded preparation.
 .venv/corpus-v2/bin/python tools/acquire_corpus_v2.py --source all
 .venv/corpus-v2/bin/python tools/acquire_corpus_v2.py --verify
-python tools/prepare_corpus_v2.py --candidates 'data/raw/expanded-v2/candidates/*.jsonl'
+.venv/corpus-v2/bin/python tools/acquire_pralekha_v2.py
+.venv/corpus-v2/bin/python tools/acquire_pralekha_v2.py --verify
+python tools/prepare_corpus_v2.py \
+  --candidates 'data/raw/expanded-v2/candidates/*.jsonl' \
+  --candidates 'data/raw/expanded-v2-extension/candidates/*.jsonl' \
+  --candidates 'data/raw/expanded-v2-pralekha/candidates/*.jsonl' \
+  --reserved-candidates 'data/raw/expanded-v2-pralekha/reserved/*.jsonl'
 python tools/publish_dataset.py --corpus-version v2 --dry-run .cache/corpus-v2-publication
 ```
 
 Acquisition dependencies and snapshot details are in [v2/SOURCES.md](v2/SOURCES.md).
-Preparation requires the locally held exclusion-only BanglishRev input; it is not
-redistributed here. Reproduction therefore needs separately authorized local
-evaluation access. [v2/PROTOCOL.md](v2/PROTOCOL.md) freezes growth/quality gates and
+Preparation requires the locally held exclusion-only BanglishRev input and pinned
+Pralekha source holdouts; neither is redistributed as training data. Reproduction
+therefore needs those verified local exclusions. [v2/PROTOCOL.md](v2/PROTOCOL.md)
+freezes growth/quality gates and
 future tokenizer-selection rules; publishing this dataset does not claim that
 those model-selection rules were passed. The publisher independently reconstructs
 audit facts against actual files and local exclusion input, verifies all frozen
@@ -623,6 +668,7 @@ def prepare_v2(output: Path) -> dict:
         raise ValueError("stats/audit near-duplicate policy mismatch")
     for source, target in (
         ("data/corpus-v2-sources.lock.json", "sources.lock.json"),
+        ("data/corpus-v2-domain-sources.lock.json", "domain-sources.lock.json"),
         ("data/sources.lock.json", "frozen-v1-sources.lock.json"),
         ("research/reports/CORPUS_V2_PROTOCOL.md", "PROTOCOL.md"),
         ("research/reports/CORPUS_V2_SOURCES.md", "SOURCES.md"),
@@ -645,7 +691,12 @@ def prepare_v2(output: Path) -> dict:
     (output / "README.md").write_text(v2_dataset_card(splits, actual), encoding="utf-8")
     preprocessing = [
         ROOT / "tools" / name
-        for name in ("acquire_corpus_v2.py", "prepare_corpus_v2.py", "publish_dataset.py")
+        for name in (
+            "acquire_corpus_v2.py",
+            "acquire_pralekha_v2.py",
+            "prepare_corpus_v2.py",
+            "publish_dataset.py",
+        )
     ]
     manifest = {
         "manifest_version": 2,
@@ -666,8 +717,14 @@ def prepare_v2(output: Path) -> dict:
             "commands": [
                 "python tools/acquire_corpus_v2.py --source all",
                 "python tools/acquire_corpus_v2.py --verify",
+                "python tools/acquire_pralekha_v2.py",
+                "python tools/acquire_pralekha_v2.py --verify",
                 "python tools/prepare_corpus_v2.py "
-                "--candidates 'data/raw/expanded-v2/candidates/*.jsonl'",
+                "--candidates 'data/raw/expanded-v2/candidates/*.jsonl' "
+                "--candidates 'data/raw/expanded-v2-extension/candidates/*.jsonl' "
+                "--candidates 'data/raw/expanded-v2-pralekha/candidates/*.jsonl' "
+                "--reserved-candidates "
+                "'data/raw/expanded-v2-pralekha/reserved/*.jsonl'",
                 "python tools/publish_dataset.py --corpus-version v2 --dry-run OUTPUT",
             ],
         },
