@@ -12,6 +12,7 @@ import argparse
 import bz2
 import hashlib
 import json
+import os
 import re
 import time
 import unicodedata
@@ -61,7 +62,7 @@ def artifact_url(lock: dict, item: dict) -> str:
     )
 
 
-def acquire(lock: dict, item: dict, raw: Path) -> Path:
+def acquire(lock: dict, item: dict, raw: Path, reuse: Path | None = None) -> Path:
     existing = ROOT / item["existing"] if item.get("existing") else None
     if existing is not None and existing.is_file():
         validate_artifact(existing, item)
@@ -70,6 +71,11 @@ def acquire(lock: dict, item: dict, raw: Path) -> Path:
     target.parent.mkdir(parents=True, exist_ok=True)
     if target.exists():
         validate_artifact(target, item)
+        return target
+    if reuse is not None and (reuse / item["path"]).is_file():
+        # Hard-link a checksum-verified prior download; neither copy is ever written.
+        validate_artifact(reuse / item["path"], item)
+        os.link(reuse / item["path"], target)
         return target
     partial = target.with_name(target.name + ".part")
     for attempt in range(5):
@@ -241,7 +247,13 @@ def emit(
     max_paragraphs: int,
     limit: int,
     batch_size: int,
+    offset: int = 0,
 ) -> dict:
+    """Write qualifying paragraphs; the first ``offset`` are skipped, never emitted.
+
+    Skipped rows are counted, character-counted and hashed exactly as they would
+    have been written, so a continuation can prove it skipped a prior prefix.
+    """
     lang = "en" if item["source"] == "en-wikipedia" else "bn"
     name = item.get("output_name", f"{item['source']}-{Path(item['path']).stem}")
     destination = output / f"{name}.jsonl"
@@ -254,6 +266,12 @@ def emit(
         "normalization": "NFC then Unicode whitespace collapse",
         "filter_version": 2 if item.get("format") == "mediawiki-xml-bz2" else 1,
     }
+    if offset:
+        settings["record_offset"] = offset
+    if not destination.exists() and offset and metadata_path.exists():
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        if metadata["settings"] == settings and metadata["output"] is None:
+            return metadata  # Completed shard wholly inside the skipped prefix.
     if destination.exists():
         if not metadata_path.exists():
             raise ValueError(f"Existing output without metadata: {destination}")
@@ -266,11 +284,13 @@ def emit(
     partial = destination.with_name(destination.name + ".part")
     counts: Counter = Counter()
     digest = hashlib.sha256()
+    skipped_digest = hashlib.sha256()
     stop = False
     with partial.open("wb") as stream:
         for article in articles(path, item, batch_size):
             counts["articles_scanned"] += 1
             kept = 0
+            emitted = False
             for original in article["text"].split("\n"):
                 text, reason = paragraph(original, lang)
                 if reason:
@@ -287,12 +307,21 @@ def emit(
                 encoded = (
                     json.dumps(record, ensure_ascii=False, separators=(",", ":")) + "\n"
                 ).encode("utf-8")
+                kept += 1
+                if counts["skipped_records"] < offset:
+                    skipped_digest.update(encoded)
+                    counts["skipped_records"] += 1
+                    counts["skipped_normalized_characters"] += len(text)
+                    counts["skipped_bytes"] += len(encoded)
+                    if kept >= max_paragraphs:
+                        break
+                    continue
                 stream.write(encoded)
                 digest.update(encoded)
                 counts["records"] += 1
                 counts["normalized_characters"] += len(text)
-                kept += 1
-                if kept == 1:
+                if not emitted:
+                    emitted = True
                     counts["articles_emitted"] += 1
                 if limit and counts["records"] >= limit:
                     stop = True
@@ -301,12 +330,16 @@ def emit(
                     break
             if stop:
                 break
+    counts.setdefault("records", 0)
+    counts.setdefault("normalized_characters", 0)
+    if offset and not counts["records"]:
+        partial.unlink()  # Entirely skipped: no candidate file, provenance only.
     metadata = {
         "source": item["source"],
-        "output": str(destination),
+        "output": str(destination) if counts["records"] or not offset else None,
         "settings": settings,
         "artifact": {**item, "local_path": str(path), "url": artifact_url(lock, item)},
-        "bytes": partial.stat().st_size,
+        "bytes": partial.stat().st_size if partial.exists() else 0,
         "sha256": digest.hexdigest(),
         "counts": dict(counts),
         "quota_reached": stop,
@@ -316,9 +349,17 @@ def emit(
             "first qualifying paragraphs; no slicing"
         ),
     }
+    if offset:
+        metadata["skipped_sha256"] = skipped_digest.hexdigest()
+        metadata["offset_semantics"] = (
+            "record_offset = qualifying records still to skip when this shard began, "
+            "in the same global English order as the default run; skipped rows are "
+            "hashed/counted under skipped_* and never written or counted as records"
+        )
     # Metadata first: a completed .jsonl never appears without its provenance.
     write_json(metadata_path, metadata)
-    partial.replace(destination)
+    if metadata["output"] is not None:
+        partial.replace(destination)
     return metadata
 
 
@@ -411,20 +452,43 @@ def main() -> None:
     )
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument(
+        "--en-offset",
+        type=int,
+        default=0,
+        help=(
+            "skip the first N qualifying English records of the default global order "
+            "(hashed/counted, never emitted); --en-quota then counts only new records. "
+            "Requires --source en-wikipedia and a separate --raw/--output"
+        ),
+    )
+    parser.add_argument(
+        "--reuse-artifacts",
+        type=Path,
+        help="prior artifacts directory: hard-link checksum-verified files instead of downloading",
+    )
+    parser.add_argument(
         "--verify", action="store_true", help="stream-verify completed candidates, without fetching"
     )
     args = parser.parse_args()
     if not 10 <= args.max_paragraphs <= 20 or not 1 <= args.en_shards <= 8 or args.batch_size < 1:
         parser.error("max-paragraphs must be 10–20, en-shards 1–8, batch-size positive")
-    if min(args.bn_quota, args.en_quota, args.books_quota, args.voyage_quota) < 0:
-        parser.error("quotas must be nonnegative")
+    if min(args.bn_quota, args.en_quota, args.books_quota, args.voyage_quota, args.en_offset) < 0:
+        parser.error("quotas and offsets must be nonnegative")
+    if args.en_offset and (
+        args.source != "en-wikipedia"
+        or DEFAULT_RAW.resolve() in (args.raw.resolve(), *args.raw.resolve().parents)
+        or DEFAULT_RAW.resolve() in (args.output.resolve(), *args.output.resolve().parents)
+    ):
+        parser.error(
+            "--en-offset needs --source en-wikipedia and --raw/--output outside the default"
+        )
     if args.verify:
         print(json.dumps(verify(args.output, args.raw), indent=2), flush=True)
         return
     lock = json.loads(args.lock.read_text(encoding="utf-8"))
     for artifact in lock["artifacts"]:
         if artifact["source"] == "license":
-            acquire(lock, artifact, args.raw)
+            acquire(lock, artifact, args.raw, args.reuse_artifacts)
     summary = []
     for source, quota in [
         ("bn-wikipedia", args.bn_quota),
@@ -434,14 +498,15 @@ def main() -> None:
     ]:
         if args.source not in ("all", source):
             continue
-        records = 0
+        records = skipped = 0
         items = [item for item in lock["artifacts"] if item["source"] == source]
         if source == "en-wikipedia":
             items = items[: args.en_shards]
+        offset = args.en_offset if source == "en-wikipedia" else 0
         for item in items:
             if quota and records >= quota:
                 break
-            path = acquire(lock, item, args.raw)
+            path = acquire(lock, item, args.raw, args.reuse_artifacts)
             metadata = emit(
                 path,
                 item,
@@ -451,8 +516,10 @@ def main() -> None:
                 args.max_paragraphs,
                 quota - records if quota else 0,
                 args.batch_size,
+                offset - skipped,
             )
             records += metadata["counts"]["records"]
+            skipped += metadata["counts"].get("skipped_records", 0)
             summary.append(metadata)
             print(
                 json.dumps(
@@ -465,10 +532,18 @@ def main() -> None:
                 flush=True,
             )
     args.raw.mkdir(parents=True, exist_ok=True)
-    write_json(
-        args.raw / f"acquisition-{args.source}.json",
-        {"lock_sha256": sha256(args.lock), "outputs": summary},
-    )
+    result = {"lock_sha256": sha256(args.lock), "outputs": summary}
+    if args.en_offset:
+        result["continuation"] = {
+            "en_offset": args.en_offset,
+            "en_quota": args.en_quota,
+            "skipped_records": skipped,
+            "emitted_records": records,
+            "offset_satisfied": skipped == args.en_offset,
+            "quota_satisfied": records == args.en_quota,
+            "reuse_artifacts": str(args.reuse_artifacts) if args.reuse_artifacts else None,
+        }
+    write_json(args.raw / f"acquisition-{args.source}.json", result)
 
 
 if __name__ == "__main__":
