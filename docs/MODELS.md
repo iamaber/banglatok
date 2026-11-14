@@ -19,6 +19,7 @@ keeps its source-specific terms, separate from the tokenizer files' CC BY-SA 4.0
 1. `bntok train -algorithm bpe` learned the base vocabulary from the training split described in [data/CORPUS.md](../data/CORPUS.md). That split has 563,476 records: Bengali Wikipedia, Tatoeba sentence pairs, and BanglaTLit romanized and Bengali text. Its buckets are Bangla, English, Banglish and code-mixed.
 2. `benchmarks/build_fused_model.py` added the space-fusion IDs. Each one stands for a space followed by one base ID. Candidates are the base IDs that most often start a word in the training split, with a minimum count of 2.
 3. The same script stored the 64,000 most frequent training words that are not already pieces as `cache_words`. Their segmentation is computed once when the model loads. This only makes encoding faster and never changes IDs.
+4. `go run ./tools/compile_model src/banglatok/pretrained/*.json` wrote each `.bntok` sidecar: the same model in binary form with the cached segmentations precomputed, so loading skips JSON parsing and re-encoding. It records the SHA-256 of the exact JSON bytes and of its own contents; a missing, stale or damaged sidecar is ignored and the JSON is loaded instead. `go test ./tokenizer` fails if a shipped sidecar differs from what the current code compiles.
 
 ```sh
 python benchmarks/build_fused_model.py --base models/bpe-32000.json --budget 64000 \

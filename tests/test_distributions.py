@@ -26,6 +26,8 @@ class DistributionTests(unittest.TestCase):
                 "data/demo-unigram.json",
                 "pretrained/bn-bpe-58k.json",
                 "pretrained/bn-bpe-28k.json",
+                "pretrained/bn-bpe-58k.bntok",
+                "pretrained/bn-bpe-28k.bntok",
             ]
             source = [
                 "pyproject.toml",
@@ -35,6 +37,7 @@ class DistributionTests(unittest.TestCase):
                 "tokenizer/model.go",
                 "internal/native/native.go",
                 "cmd/bntok-shared/main.go",
+                "cmd/bntok-shared/default.pgo",
                 *(f"src/banglatok/{name}" for name in package_data),
                 *notices,
             ]

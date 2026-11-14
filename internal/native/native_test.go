@@ -34,7 +34,6 @@ func loadTestModel(t testing.TB, algorithm string) (string, *tokenizer.Tokenizer
 
 func TestRegistryLifecycle(t *testing.T) {
 	path, _ := loadTestModel(t, "unigram")
-	input := frame([]string{"আমি hello 🙂"})
 	var registry Registry
 	loaded, err := registry.call(request{Operation: "load", Path: path})
 	if err != nil {
@@ -46,9 +45,9 @@ func TestRegistryLifecycle(t *testing.T) {
 		go func() {
 			defer workers.Done()
 			for range 20 {
-				batch, message, ok := parseBinary(t, registry.EncodeBinary(loaded.Handle, input), 1)
-				if !ok {
-					t.Error(message)
+				batch, err := encodeTexts(&registry, loaded.Handle, []string{"আমি hello 🙂"}, 0)
+				if err != nil {
+					t.Error(err)
 					return
 				}
 				decoded, err := registry.call(request{Operation: "decode", Handle: loaded.Handle, IDs: batch[0]})
