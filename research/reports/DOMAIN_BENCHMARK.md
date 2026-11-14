@@ -1,4 +1,4 @@
-# Agent-authored domain retrieval proxy — 9 October 2026
+# Agent-authored domain retrieval proxy, 9 October 2026
 
 The user requested that the implementation agent create and judge material for
 business, banking, technology, science, general conversation and QA. This benchmark
@@ -18,12 +18,12 @@ nine language-direction datasets, including monolingual checks. Development has
 42 queries/documents per direction; test has 18. Reusing an intent in multiple
 directions does not create additional independent observations.
 
-All 360 document/query surfaces were checked against the tokenizer's 563,476
-training records using NFC/case/punctuation-insensitive canonical keys: no exact
-canonical overlaps. This does not rule out semantic overlap or pretrained-model
+All 360 document and query forms were checked against the tokenizer's 563,476
+training records using NFC/case/punctuation-insensitive canonical keys. No exact
+canonical overlaps were found. This does not rule out semantic overlap or pretrained-model
 contamination. The existing project's frozen test was read only for holdout
 integrity checks, never scored or used for selection. Expanded training also
-excludes all 360 benchmark surfaces. The new reserved domain test was scored
+excludes all 360 benchmark forms. The new reserved domain test was scored
 after the development choice was frozen; that choice remains unchanged E5.
 
 ## Complete agent intent review
@@ -36,7 +36,7 @@ and 3,540 other-intent answers receive grade 0. No alternative passage supplies
 the requested specific facts. The shared intent labels are projected across the
 authored parallel language forms; this is not independent language review.
 
-Both language surfaces and the original 42/18 split are byte-identical to v1.
+Both language forms and the original 42/18 split are byte-identical to v1.
 Every candidate has an explicit label: 15,876 query-document judgments across
 nine development directions and 2,916 across nine test directions. The
 [reviewed manifest](domain-benchmark-reviewed-v2.json) records coverage and

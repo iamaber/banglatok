@@ -158,9 +158,9 @@ heuristics, not complete PII removal.**
 Paired sentences and article paragraphs form groups before splitting. Canonical
 duplicate keys ignore case, spacing, and punctuation only for deduplication and
 grouping; they do not replace the published text. Texts with at least twelve
-whitespace words additionally use 64-bit bag-of-words SimHash, linking Hamming
-distances at most three. This approximate technique can miss variants and
-over-group common wording; there is no claim of semantic or transliteration
+whitespace words also use 64-bit bag-of-words SimHash to link Hamming distances
+at most three. This approximate technique can miss variants and over-group
+common wording; there is no claim of semantic or transliteration
 leakage elimination.
 
 Official test membership wins over validation membership; both win over

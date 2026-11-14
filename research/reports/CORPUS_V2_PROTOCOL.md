@@ -49,7 +49,7 @@ Promotion to default requires:
 
 If no candidate passes, retain the published default and report the negative result; do not describe a larger corpus or a retrained candidate as a demonstrated quality improvement.
 
-### Follow-up: user-text-weighted mixtures
+### Follow-up on user-text-weighted mixtures
 
 No full-corpus candidate passed. Every one regressed all frozen-v1 buckets while compressing the Wikipedia-heavy extra splits better, and same-data SentencePiece showed the same loss. The accepted corpus is about 57% English Wikipedia, whereas frozen-v1 English is conversational Tatoeba text. This follow-up was recorded after those results and before training or scoring any mixture.
 
@@ -64,7 +64,7 @@ These subsets are smaller than the fivefold growth gate and are judged as tokeni
 
 An intrinsic winner is eligible for an experimental v2 model ID, but it does not replace the package default until a matched encoder comparison also passes. Reuse the repository's pinned `intfloat/multilingual-e5-small` body, reviewed alignment data, hard negatives, objectives, seeds 17/29/43, equal-data and equal-compute budgets, and source-backed retrieval evaluator. Compare the candidate with the original E5 tokenizer under identical training exposure; do not compare only against unchanged E5 or an old custom-tokenizer checkpoint.
 
-The primary downstream metric remains Banglish→Bengali nDCG@10. Promotion requires at least +0.03 absolute development gain over the matched adapted-original control, a paired 95% interval above zero, no more than 0.01 English-query mean nDCG loss, and no more than 1.25× latency or peak memory in every seed under both budgets. Freeze candidate identity, tokenizer hash, initialization method, corpus/alignment hashes and thresholds before scoring it.
+The primary downstream metric remains Banglish-to-Bengali nDCG@10. Promotion requires at least +0.03 absolute development gain over the matched adapted-original control, a paired 95% interval above zero, no more than 0.01 English-query mean nDCG loss, and no more than 1.25× latency or peak memory in every seed under both budgets. Freeze candidate identity, tokenizer hash, initialization method, corpus/alignment hashes and thresholds before scoring it.
 
 The existing source-backed benchmark is agent-authored and has been used for earlier model decisions. A new candidate has not been scored on it, but its reserved split is not a never-observed benchmark. Report that limitation and treat the result as project evidence, not independent natural-traffic validation. If the encoder gate fails, retain the current package default even when the v2 tokenizer has better intrinsic compression; the experimental model may still be published with that negative downstream result.
 
@@ -89,5 +89,5 @@ training. Such text stays in an ignored, marked private corpus; it is excluded
 from every public dataset artifact. Privacy review, manual row review,
 retention/deletion procedures, leakage protection and aggregate provenance
 remain mandatory. Public access or a wrapper repository license alone remains
-insufficient. BanglishRev and other benchmark surfaces remain evaluation-only.
+insufficient. BanglishRev and other benchmark datasets remain evaluation-only.
 

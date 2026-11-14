@@ -16,7 +16,7 @@ The user explicitly authorized agent authorship and judgments. All reviewed arti
 
 ## Natural training expansion
 
-Only audited original Vashantor v2 training forms were added. The expanded grouped corpus has 586,181 train records, including 22,765 accepted Vashantor training forms. Every original project holdout, original Vashantor validation/test form and authored benchmark surface is excluded from train. The project test was read only for integrity, never scored or used for selection. Reserve-only benchmark rows are suppressed from all corpus outputs.
+Only audited original Vashantor v2 training forms were added. The expanded grouped corpus has 586,181 train records, including 22,765 accepted Vashantor training forms. Every original project holdout, original Vashantor validation/test form and authored benchmark example is excluded from train. The project test was read only for integrity, never scored or used for selection. Reserve-only benchmark rows are suppressed from all corpus outputs.
 
 The frozen alignment sample has 8,000 clean training groups: 4,800 BanglaTLit, 1,600 Tatoeba and 1,600 Vashantor. Both forms must belong to the same train group; identities and duplicated canonical text are rejected. Source locks, expanded manifests and repeatable audits record provenance. The merged BanglaDual Wikipedia subset overlaps an existing upstream dump and uses generated Romanization, so it was not used as a new natural-data source.
 
@@ -28,7 +28,7 @@ The custom vocabulary starts with mean original-subword embeddings and explicit 
 
 [Run protocol](run_protocol.json): seeds 17, 29 and 43, CPU/four threads, batch 16, training maximum 128 tokens. Equal data is 64 representation plus 128 contrastive steps. Equal compute is 120 wall seconds including loading, vocabulary initialization and both stages; a final optimizer-step overrun is reported. Saving is excluded. Same seeded data order is verified for equal-data arms. All checkpoint/report/model/data/code hashes are recorded and checked on resume.
 
-[Criteria](criteria.json) were frozen before adapted domain scoring. A custom candidate must gain at least 0.03 absolute Banglish→Bengali nDCG over adapted original, have a positive paired interval, lose no more than 0.01 English-query mean nDCG, and stay within 1.25× latency/RSS in every seed under both budgets. Uncertainty jointly resamples training seeds and intent groups. The domain choice was frozen before reserved-test scoring; secondary sentence results cannot revise it.
+[Criteria](criteria.json) were frozen before adapted domain scoring. A custom candidate must gain at least 0.03 absolute Banglish-to-Bengali nDCG over adapted original, have a positive paired interval, lose no more than 0.01 English-query mean nDCG, and stay within 1.25× latency/RSS in every seed under both budgets. Uncertainty jointly resamples training seeds and intent groups. The domain choice was frozen before reserved-test scoring; secondary sentence results cannot revise it.
 
 Evaluation uses 512 tokens, batch 16 and fresh sequential processes. Five warm batch-throughput passes and 60 batch-1 requests include tokenization, encoding and exact cached-document search. RSS includes model loading and evaluation. These small CPU measurements do not establish production latency or large-index performance.
 

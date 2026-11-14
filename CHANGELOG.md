@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.3 — 2026-11-14
+## 0.2.3, 2026-11-14
 
 ### Performance
 
@@ -24,14 +24,14 @@
   privacy review and retention/deletion attestations are mandatory; marked
   private corpora are rejected by the public dataset publisher.
 
-## 0.2.2 — 2026-11-13
+## 0.2.2, 2026-11-13
 
 - Added the full usage guide to both Hugging Face model repositories, with links from their model cards.
 - Simplified the introductory examples in the README and guide.
 - Published the attributed training, validation and test corpus on Hugging Face.
 - Added the training-data sources and measured token-count/speed comparisons with popular tokenizers to both Hugging Face model cards.
 
-## 0.2.1 — 2026-11-13
+## 0.2.1, 2026-11-13
 
 ### Documentation
 
@@ -48,7 +48,7 @@
 - Removed unused native JSON encode operations; shared corpus manifest/hash helpers; moved training and report output helpers into the Go CLI. Model files and token IDs are unchanged.
 - Updated the corpus CLI's parquet-go dependency to 0.32.0; source builds now require Go 1.24.9 or newer. The native wheel's Unicode dependency remains golang.org/x/text 0.28.0.
 
-## 0.2.0 — 2026-11-13
+## 0.2.0, 2026-11-13
 
 First public release.
 
@@ -73,7 +73,7 @@ First public release.
 - Research reports, experiments and scripts moved under `research/`.
 - License expression: `MIT AND BSD-3-Clause AND CC-BY-SA-4.0`.
 
-## 0.1.0a1 — unreleased preview
+## 0.1.0a1, unreleased preview
 
 - Prepared the typed Python/Go tokenizer API for a public alpha, with an offline toy vocabulary and a self-contained training example.
 - Added MIT licensing, retained BSD-3-Clause native notices, installed-distribution CI, archive validation and opt-in platform-wheel/PyPI workflows.

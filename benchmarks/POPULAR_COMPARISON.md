@@ -14,7 +14,7 @@ The harness is [compare_popular.py](compare_popular.py). Every timing is **singl
 - It is the fastest tokenizer tested on both machines: 1.1–1.7× SentencePiece Unigram, 2.6–4.4× SentencePiece BPE, 1.3–6.3× tiktoken and 5–12× Hugging Face `tokenizers`, combining single calls and batches of 64. On single calls alone the lead over tiktoken is 1.3–1.7×. All timings are single-threaded.
 - Both models reproduce every input exactly.
 
-## Unseen-source corpus: BanglishRev product reviews
+## Unseen-source BanglishRev product reviews
 
 These are 10,000 unique, naturally written e-commerce reviews (12–2,000 characters) from [BanglishRev](https://huggingface.co/datasets/BanglishRev/bangla-english-and-code-mixed-ecommerce-review-dataset) (CC BY-NC-SA 4.0). They were sampled deterministically from the first 64 MiB of `reviews v1.json` (SHA-256 `553b8e1e…`), which is 1,297,966 UTF-8 bytes. None of this source is in our training data. Buckets are by script: Bengali only, Latin only (English and Banglish), and mixed.
 
@@ -56,7 +56,7 @@ Tokens per word and losslessness are identical on both machines. Speed is MB/s f
 
 Two tokenizers beat ours on a single script, and both lose text. BanglaBERT is 2.8% shorter on Bengali-only text, but it reproduces only half of all inputs. Sagorsarker's Bangla-BERT is shorter on Latin-script text because it lowercases and strips accents; it reproduces 0.32% of inputs and emits `[UNK]` in 74% of them. Among lossless tokenizers, `bn-bpe-58k` is the most compact on every script, but only by 1–3% over same-size SentencePiece.
 
-## In-domain corpus: frozen validation split (Apple M5)
+## In-domain frozen validation split on Apple M5
 
 These are the 14,779 validation records from [data/CORPUS.md](../data/CORPUS.md): 3,013,257 bytes in Bangla, Banglish, code-mixed and English buckets. All models trained on our data saw the training split of the same sources, so this corpus favors them over the published tokenizers. The unseen-source tables above are the fairer comparison.
 

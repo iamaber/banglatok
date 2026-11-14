@@ -14,7 +14,7 @@ banglatok is a fast, lossless subword tokenizer for Bangla, English and Banglish
 - [Your own models](#your-own-models)
 - [Guides](#guides)
   - [Count tokens and stay within a budget](#count-tokens-and-stay-within-a-budget)
-  - [Tokenize a dataset with 🤗 Datasets](#tokenize-a-dataset-with--datasets)
+  - [Tokenize a dataset with Hugging Face Datasets](#tokenize-a-dataset-with-hugging-face-datasets)
   - [Feed a PyTorch DataLoader](#feed-a-pytorch-dataloader)
   - [Train a small language model from scratch](#train-a-small-language-model-from-scratch)
 - [Troubleshooting](#troubleshooting)
@@ -99,7 +99,9 @@ tok.decode_batch([[4405], [4504]])           # ['ami', 'আমি']
 tok.count_tokens("ami bangla boli")          # 3, without building the list
 ```
 
-**Normalization.** Before tokenizing, text is NFC-normalized, every run of whitespace becomes one space, and leading and trailing whitespace is removed. Nothing else changes: case, Bengali marks, ZWJ/ZWNJ, digits, punctuation and emoji are kept. `decode(encode(text))` returns exactly `normalize(text)`:
+### Normalization
+
+Before tokenizing, text is NFC-normalized, every run of whitespace becomes one space, and leading and trailing whitespace is removed. Nothing else changes: case, Bengali marks, ZWJ/ZWNJ, digits, punctuation and emoji are kept. `decode(encode(text))` returns exactly `normalize(text)`:
 
 ```python
 from banglatok import normalize
@@ -107,9 +109,13 @@ from banglatok import normalize
 normalize("  আমি\tবাংলা \n বলি  ")             # 'আমি বাংলা বলি'
 ```
 
-**No unknown tokens.** A character that is not in the vocabulary is encoded as its UTF-8 bytes, so every input round-trips. Literal text such as `<unk>`, `<s>` or `▁` is ordinary text, never a control token.
+### Unknown characters
 
-**Control tokens.** `encode` never adds them. IDs 0–3 are `<pad>`, `<unk>`, `<s>` and `</s>`, available as `PAD_ID`, `UNK_ID`, `BOS_ID` and `EOS_ID`. `decode` raises `ValueError` on them unless you pass `skip_special_tokens=True`:
+A character that is not in the vocabulary is encoded as its UTF-8 bytes, so every input round-trips. Literal text such as `<unk>`, `<s>` or `▁` is ordinary text, never a control token.
+
+### Control tokens
+
+`encode` never adds control tokens. IDs 0–3 are `<pad>`, `<unk>`, `<s>` and `</s>`, available as `PAD_ID`, `UNK_ID`, `BOS_ID` and `EOS_ID`. `decode` raises `ValueError` on them unless you pass `skip_special_tokens=True`:
 
 ```python
 from banglatok import BOS_ID, EOS_ID
@@ -117,7 +123,9 @@ from banglatok import BOS_ID, EOS_ID
 tok.decode([BOS_ID, 4405, EOS_ID], skip_special_tokens=True)   # 'ami'
 ```
 
-**Decoding cost.** `decode` materializes its argument with `list(ids)` and checks each element, and `decode_batch` decodes rows one at a time; unlike `encode_batch`, there is no batched native decode. Pass a concrete sequence of integers for large batches rather than a lazy iterator.
+### Decoding cost
+
+`decode` materializes its argument with `list(ids)` and checks each element, and `decode_batch` decodes rows one at a time. Unlike `encode_batch`, there is no batched native decode. Pass a concrete sequence of integers for large batches rather than a lazy iterator.
 
 ## Tokens and the vocabulary
 
@@ -277,7 +285,7 @@ for text, size in zip(documents, sizes):
 
 To cut one long text to a fixed number of tokens, use `tok(text, max_length=n, add_special_tokens=False)["input_ids"]`. Decoding a cut sequence can fail with `ValueError` if the cut splits a character that was stored as raw bytes; drop the trailing byte tokens or cut at a different point.
 
-### Tokenize a dataset with 🤗 Datasets
+### Tokenize a dataset with Hugging Face Datasets
 
 The tokenizer's output is a plain dict of lists, which is exactly what `Dataset.map` expects:
 

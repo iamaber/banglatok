@@ -2,7 +2,7 @@
 
 Measured 16 September 2026 on Apple M5, macOS arm64, Python 3.12.13. **The existing Python API is now about twice as fast on our validation corpus, with identical token IDs.** A separate research prototype reduces sequence lengths by 32.4% compared with our current 32k BPE. We have narrowed the gap to SentencePiece, but have not beaten it overall.
 
-## Implemented: faster encoding with unchanged models
+## Faster encoding with unchanged models
 
 Five full validation passes per configuration, median throughput, batches of 64, 14,779 records and 3,013,257 normalized UTF-8 bytes. Higher MB/s is better. Both baseline and optimized wheels were measured during this session with the same comparison harness; this is not a comparison against an older day's timing.
 
@@ -17,11 +17,11 @@ The optimized BPE's batch throughput is still below BNLP's 40.95 MB/s and the fr
 
 Changes in the production code:
 
-1. **Binary encoding interface:** text crosses the Python/Go boundary as length-prefixed UTF-8; token IDs return as packed 32-bit integers. Encoding no longer serializes and parses JSON in both directions. Loading, decoding, normalization and lifecycle operations retain JSON, now using UTF-8 rather than ASCII escapes.
-2. **Fewer temporary allocations:** BPE appends directly to the output buffer. Unigram reuses one per-call scratch buffer across words instead of allocating several arrays for each word. Long words grow the scratch buffer as needed.
-3. **Cheaper BPE lookups:** merge-pair keys use one 64-bit integer, with model validation ensuring IDs fit the representation.
-4. **Immutable vocabulary cache:** loading a model precomputes the actual segmentation of its vocabulary strings. This is bounded by the vocabulary, does not retain caller text, and does not assume that a learned piece necessarily encodes as one ID. Returned lists do not alias cached storage. Direct Go `New` construction remains uncached; `Load` prepares the cache.
-5. **Normalization fast path:** already normalized whitespace avoids splitting and rebuilding the whole string. NFC and invalid-UTF-8 behavior are preserved.
+1. Text crosses the Python/Go boundary as length-prefixed UTF-8, and token IDs return as packed 32-bit integers. Encoding no longer serializes and parses JSON in both directions. Loading, decoding, normalization and lifecycle operations retain JSON, now using UTF-8 rather than ASCII escapes.
+2. BPE appends directly to the output buffer. Unigram reuses one per-call scratch buffer across words instead of allocating several arrays for each word. Long words grow the scratch buffer as needed.
+3. Merge-pair keys use one 64-bit integer. Model validation checks that IDs fit this representation.
+4. Loading a model precomputes the actual segmentation of its vocabulary strings. This is bounded by the vocabulary, does not retain caller text, and does not assume that a learned piece necessarily encodes as one ID. Returned lists do not alias cached storage. Direct Go `New` construction remains uncached; `Load` prepares the cache.
+5. Already normalized whitespace avoids splitting and rebuilding the whole string. NFC and invalid-UTF-8 behavior are preserved.
 
 These changes are shipped together in the tested local wheel. The total speedup is measured; individual contributions have not been isolated in a complete ablation.
 
@@ -48,7 +48,7 @@ Each sample constructs a tokenizer in a fresh Python process. Five samples per m
 
 The cache moves work to initialization and retains additional data. Reuse a loaded tokenizer for repeated requests; these improvements target that usage. The measurements compare complete builds, so they do not isolate cache costs from every other change.
 
-## Experimental: fuse spaces with adjacent tokens
+## Experimental space fusion with adjacent tokens
 
 This experiment starts with our existing **16k BPE** and learns space-plus-next-token pairs from the **training split only**, using unweighted occurrence counts. Each new ID expands exactly to the original space ID and original token ID. This avoids overloading a literal Unicode marker such as `▁`.
 

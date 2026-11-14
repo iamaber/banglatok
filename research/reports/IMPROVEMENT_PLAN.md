@@ -1,4 +1,4 @@
-# Retrieval improvement implementation — 9 October 2026
+# Retrieval improvement implementation, 9 October 2026
 
 The requested scope is all five recommendations from the project review. A working
 script is not evidence that human annotation, model training or final evaluation
@@ -15,21 +15,25 @@ not used for development or model selection.
 
 ## Experimental decisions
 
-- Start with the existing pinned multilingual E5-small snapshot, rather than
+- Start with the existing pinned multilingual E5-small snapshot rather than
   changing model size while measuring tokenizer effects.
-- Primary quality metric: group-weighted nDCG@10 for Banglish → Bengali retrieval.
-  Secondary metrics: Recall@10 and MRR@10; report every query language/direction.
-- Declared practical gain: at least +0.03 absolute nDCG@10 over the adapted
-  original-tokenizer control, with the paired 95% interval above zero.
-- English guardrail: at most 0.01 absolute nDCG@10 regression, assessed on reviewed
-  English queries. Missing English evaluation means the guardrail is unverified.
-- Deployment guardrails: no more than 1.25× query encoding latency or peak memory
-  versus the adapted control on the same hardware and batch size.
-- Report equal-data experiments first; equal-compute runs use a declared training
-  time budget on the same device. Steps and token counts alone are not equal compute.
-- Count initialization, representation adaptation and contrastive training toward
-  total cost. Report embedding-table size separately from encoder body size.
-- Use three fixed training seeds (17, 29, 43) for all declared arms; all were run. Freeze choices before running the final reviewed test.
+- Use group-weighted nDCG@10 for Banglish-to-Bengali retrieval as the primary
+  quality metric. Report Recall@10, MRR@10 and every query language/direction
+  as secondary metrics.
+- Require at least +0.03 absolute nDCG@10 over the adapted original-tokenizer
+  control, with the paired 95% interval above zero.
+- Allow at most 0.01 absolute nDCG@10 regression on reviewed English queries.
+  Missing English evaluation means this limit is unverified.
+- Allow no more than 1.25× the adapted control's query encoding latency or peak
+  memory on the same hardware and batch size.
+- Report equal-data experiments first. Equal-compute runs use a declared
+  training time budget on the same device. Steps and token counts alone are not
+  equal compute.
+- Count initialization, representation adaptation and contrastive training
+  toward total cost. Report embedding-table size separately from encoder body
+  size.
+- Use three fixed training seeds, 17, 29 and 43, for all declared arms. All were
+  run. Freeze choices before running the final reviewed test.
 
 These are project decisions, not thresholds established by the literature. They
 were frozen before adapted development scoring and cannot be revised from reserved-test results.

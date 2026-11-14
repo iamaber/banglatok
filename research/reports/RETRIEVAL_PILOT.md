@@ -1,4 +1,4 @@
-# First retrieval pilot — historical results from 21 September 2026
+# First retrieval pilot, historical results from 21 September 2026
 
 This report preserves the original development pilot and its two executed baselines. The [completed review](RETRIEVAL_REVIEW.md) and [encoder comparison](ENCODER_COMPARISON.md) supersede its pending-work status, while the original scores remain unchanged. **These scores evaluate finding a Bengali sentence corresponding to a Banglish input, not natural search relevance or our tokenizer's embedding accuracy.**
 

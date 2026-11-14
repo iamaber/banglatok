@@ -17,10 +17,10 @@ tok.tokenize("meetingটা ১০টায়, don't be late 🙂")
 # ['meeting', 'টা', ' ১০', 'টায়', ',', " don't", ' be', ' late', ' 🙂']
 ```
 
-- **Short sequences.** On unseen product reviews banglatok's default model, `bn-bpe-58k`, produced 22% fewer tokens than BanglaBERT and GPT-4o's `o200k_base`, 21% fewer than XLM-R/mE5/BGE-M3, 8% fewer than MuRIL, and 62% fewer than Qwen3. Most of that comes from training on Bangla and Banglish text at this vocabulary size: SentencePiece trained on the same data with the same vocabulary size comes within about 2% (see [Benchmarks](#benchmarks)).
-- **Lossless.** `decode(encode(text))` gives back the normalized text exactly, for every input. There is no `[UNK]` and no lowercasing, and Bengali marks, ZWJ/ZWNJ, emoji and mixed scripts are kept.
-- **Fast.** Single-threaded, on unseen text, it was 1.1–1.7× faster than SentencePiece Unigram and 2.6–4.4× faster than SentencePiece BPE at the same vocabulary size, 1.3–6.3× faster than tiktoken, and 5–12× faster than Hugging Face `tokenizers`, across single calls and batches of 64 on both an Apple M5 and a Linux x86_64 server CPU. On single calls alone the lead over tiktoken is 1.3–1.7×. These speeds were measured with 0.2.0; 0.2.3 changed the encoder path and has not been re-benchmarked.
-- **Easy to adopt.** The engine is native Go behind `ctypes`, with zero Python runtime dependencies and typed APIs. It is thread-safe, two pretrained models ship inside the wheel, and they are on the Hugging Face Hub with identical IDs.
+- On unseen product reviews, banglatok's default model, `bn-bpe-58k`, produced 22% fewer tokens than BanglaBERT and GPT-4o's `o200k_base`, 21% fewer than XLM-R/mE5/BGE-M3, 8% fewer than MuRIL, and 62% fewer than Qwen3. Most of that comes from training on Bangla and Banglish text at this vocabulary size. SentencePiece trained on the same data with the same vocabulary size comes within about 2% (see [Benchmarks](#benchmarks)).
+- `decode(encode(text))` returns the normalized text exactly for every input. There is no `[UNK]` and no lowercasing. Bengali marks, ZWJ/ZWNJ, emoji and mixed scripts are kept.
+- On unseen text with one thread, it was 1.1–1.7× faster than SentencePiece Unigram and 2.6–4.4× faster than SentencePiece BPE at the same vocabulary size, 1.3–6.3× faster than tiktoken, and 5–12× faster than Hugging Face `tokenizers`, across single calls and batches of 64 on both an Apple M5 and a Linux x86_64 server CPU. On single calls alone the lead over tiktoken is 1.3–1.7×. These speeds were measured with 0.2.0; 0.2.3 changed the encoder path and has not been re-benchmarked.
+- The native Go engine runs behind `ctypes` with no Python runtime dependencies and has typed APIs. It is thread-safe. Two pretrained models ship inside the wheel and on the Hugging Face Hub with identical IDs.
 
 The vocabularies are meant for training or adapting encoders and LLMs on Bengali text, and for counting or segmenting such text.
 
@@ -68,7 +68,9 @@ The **[user guide](https://github.com/iamaber/banglatok/blob/main/docs/USAGE.md)
 
 Short recipes; each links to a complete, tested version in the user guide.
 
-**Use it from 🤗 Transformers.** Both models are on the Hub and need only `transformers`:
+### Use it from Transformers
+
+Both models are on the Hub and need only `transformers`.
 
 ```python
 from transformers import AutoTokenizer
@@ -78,15 +80,19 @@ hf = AutoTokenizer.from_pretrained("iamaber/banglatok-bn-bpe-58k")   # same IDs 
 
 `tok.save_huggingface(directory)` exports any banglatok BPE model the same way. [More](https://github.com/iamaber/banglatok/blob/main/docs/USAGE.md#hugging-face)
 
-**Tokenize a dataset.** The tokenizer returns plain lists, which `datasets` accepts directly:
+### Tokenize a dataset
+
+The tokenizer returns plain lists, which `datasets` accepts as is.
 
 ```python
 tokenized = dataset.map(lambda batch: tok(batch["text"], max_length=512), batched=True)
 ```
 
-[More](https://github.com/iamaber/banglatok/blob/main/docs/USAGE.md#tokenize-a-dataset-with--datasets)
+[More](https://github.com/iamaber/banglatok/blob/main/docs/USAGE.md#tokenize-a-dataset-with-hugging-face-datasets)
 
-**Train a model from scratch.** A model needs only the vocabulary size and the control-token IDs:
+### Train a model from scratch
+
+A model needs only the vocabulary size and the control-token IDs.
 
 ```python
 from transformers import GPT2Config, GPT2LMHeadModel
@@ -99,13 +105,15 @@ model = GPT2LMHeadModel(GPT2Config(vocab_size=tok.vocab_size, n_embd=256, n_laye
 
 [More](https://github.com/iamaber/banglatok/blob/main/docs/USAGE.md#train-a-small-language-model-from-scratch)
 
-**Count tokens against a budget**: [guide](https://github.com/iamaber/banglatok/blob/main/docs/USAGE.md#count-tokens-and-stay-within-a-budget). **Feed a PyTorch DataLoader**: [guide](https://github.com/iamaber/banglatok/blob/main/docs/USAGE.md#feed-a-pytorch-dataloader).
+The [token-budget guide](https://github.com/iamaber/banglatok/blob/main/docs/USAGE.md#count-tokens-and-stay-within-a-budget) shows how to count tokens against a limit. The [PyTorch DataLoader guide](https://github.com/iamaber/banglatok/blob/main/docs/USAGE.md#feed-a-pytorch-dataloader) shows how to batch encoded inputs.
 
-**Use several processes.** Threads can share one tokenizer. Processes must use the `spawn` or `forkserver` start method, because the Go runtime does not survive `fork()`. [More](https://github.com/iamaber/banglatok/blob/main/docs/USAGE.md#threads-and-processes)
+### Use several processes
+
+Threads can share one tokenizer. Processes must use the `spawn` or `forkserver` start method, because the Go runtime does not survive `fork()`. [More](https://github.com/iamaber/banglatok/blob/main/docs/USAGE.md#threads-and-processes)
 
 ## Benchmarks
 
-Here are 10,000 naturally written e-commerce reviews from [BanglishRev](https://huggingface.co/datasets/BanglishRev/bangla-english-and-code-mixed-ecommerce-review-dataset), in Bengali, English, Banglish and mixed script. This source was never seen in training. Every tokenizer runs **single-threaded** (`RAYON_NUM_THREADS=1`, `num_threads=1`), on an Apple M5 (macOS) and on an AMD EPYC 9V74 GitHub-hosted Linux x86_64 VM, Python 3.12. Speed is MB/s for single calls / batches of 64. The banglatok rows were measured with 0.2.0; the table predates the 0.2.3 encoder changes and has not been rerun.
+The benchmark uses 10,000 naturally written e-commerce reviews from [BanglishRev](https://huggingface.co/datasets/BanglishRev/bangla-english-and-code-mixed-ecommerce-review-dataset), in Bengali, English, Banglish and mixed script. This source was never seen in training. Every tokenizer runs **single-threaded** (`RAYON_NUM_THREADS=1`, `num_threads=1`), on an Apple M5 (macOS) and on an AMD EPYC 9V74 GitHub-hosted Linux x86_64 VM, Python 3.12. Speed is MB/s for single calls / batches of 64. The banglatok rows were measured with 0.2.0; the table predates the 0.2.3 encoder changes and has not been rerun.
 
 | Tokenizer | Vocab | Tokens / word ↓ | Lossless round trip ↑ | Texts with UNK ↓ | MB/s, Apple M5 ↑ | MB/s, Linux x86_64 ↑ |
 |---|---:|---:|---:|---:|---:|---:|
@@ -125,8 +133,8 @@ Here are 10,000 naturally written e-commerce reviews from [BanglishRev](https://
 
 What this shows:
 
-- **Against SentencePiece with the same data and vocabulary size, compression is a tie.** `bn-bpe-58k` is about 2% shorter than both SentencePiece models; `bn-bpe-28k` is about 1% longer. On the in-domain validation split, SentencePiece at the `bn-bpe-28k` size is 3–4.5% shorter. The gap to BanglaBERT, XLM-R and tiktoken comes from the training data and the vocabulary size, not from a better algorithm.
-- **The speed lead is real but depends on the CPU.** Against SentencePiece Unigram it is 1.3–1.7× on the M5 and 1.1–1.4× on the Linux VM. This table measures single-threaded calls: Hugging Face `tokenizers` was limited to one thread, and banglatok batches used one worker. Both can use multiple cores for batches outside this comparison.
+- Against SentencePiece with the same data and vocabulary size, compression is a tie. `bn-bpe-58k` is about 2% shorter than both SentencePiece models; `bn-bpe-28k` is about 1% longer. On the in-domain validation split, SentencePiece at the `bn-bpe-28k` size is 3–4.5% shorter. The gap to BanglaBERT, XLM-R and tiktoken comes from the training data and the vocabulary size, not from a better algorithm.
+- The speed lead depends on the CPU. Against SentencePiece Unigram it is 1.3–1.7× on the M5 and 1.1–1.4× on the Linux VM. This table measures single-threaded calls. Hugging Face `tokenizers` was limited to one thread, and banglatok batches used one worker. Both can use multiple cores for batches outside this comparison.
 - BanglaBERT is about 3% shorter on Bengali-only text but lossy. Among lossless tokenizers, `bn-bpe-58k` is the most compact on Bengali, Latin and mixed script.
 
 The [full report](https://github.com/iamaber/banglatok/blob/main/benchmarks/POPULAR_COMPARISON.md) has the per-script breakdown, the in-domain validation split, more tokenizers, the method, limitations, and the commands to reproduce it. Shorter sequences cut compute and context use, but they do not by themselves make a downstream model more accurate.

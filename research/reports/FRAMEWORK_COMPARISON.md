@@ -36,7 +36,7 @@ For batches, our BPE is **3.32× faster** than this Hugging Face byte-level BPE 
 
 ## Text preservation and coverage
 
-“Exact round trip” means `decode(encode(text))` equals the shared NFC/whitespace-normalized input. It does not mean linguistic accuracy or preservation of the original whitespace and Unicode byte spelling.
+"Exact round trip" means `decode(encode(text))` equals the shared NFC/whitespace-normalized input. It does not mean linguistic accuracy or preservation of the original whitespace and Unicode byte spelling.
 
 | Configuration | Exact round trips | Texts with unknown IDs | Sequence tokens/word | Texts over 510 tokens | Edge cases preserved |
 |---|---:|---:|---:|---:|---:|
@@ -55,7 +55,7 @@ Sequence tokens/word includes every emitted ID, including our standalone space t
 
 ## Results by language bucket
 
-Each cell is **sequence tokens/word · exact round-trip percentage**. Bucket names are corpus labels; “code-mixed” is the existing script-based proxy.
+Each cell is **sequence tokens/word · exact round-trip percentage**. Bucket names are corpus labels; "code-mixed" is the existing script-based proxy.
 
 | Configuration | Bangla (4,925) | Banglish (6,160) | Code-mixed (156) | English (3,538) |
 |---|---:|---:|---:|---:|
@@ -70,13 +70,13 @@ The tested Hugging Face configuration is compact for English and Banglish but fr
 
 ## Method and limitations
 
-- **Host:** Apple M5 arm64, 10 logical CPUs, macOS 26.6.2, Python 3.12.13. Our installed native wheel was used; no subprocess tokenization. All configurations ran in the same isolated environment.
-- **Evaluation:** all 14,779 frozen validation records, totaling 3,013,257 normalized UTF-8 bytes. No validation sampling or length filtering. The test split remains unused. Text and timing order use seed 20260914; configuration/mode order is shuffled each repeat to reduce timing-order bias.
-- **Timed work:** end-to-end public encoding calls returning Python integer-ID lists, including each API's internal normalization, pretokenization and conversion overhead. Hugging Face also constructs its normal Encoding results before IDs are extracted. Shared input normalization happens before timing; any normalization repeated inside an API remains timed. Imports, model loading, downloads, training, quality checks and decoding are outside timers. Results are discarded after each call; no encoder inference runs.
-- **Concurrency:** sequential single calls; batches of 64 with SentencePiece `num_threads=1` and `TOKENIZERS_PARALLELISM=false`. This is not a maximum-throughput multicore comparison. All candidates were warmed up; single and batch IDs were checked for equality outside timing.
-- **Training:** external models were offered all 563,476 training records, once each, after NFC/whitespace normalization. SentencePiece logged that it skipped one record containing a reserved character and loaded 563,475. Our existing models use weighted bucket/sentence/word contributions. Thus this is the same source split, **not an identical training objective or fully controlled algorithm ablation**. BNLP's published model is trained on Bengali Wikipedia; any overlap with our Wikipedia-derived evaluation records is unknown.
-- **External settings:** SentencePiece Unigram uses 32k target vocabulary, full character coverage, byte fallback, identity normalization, maximum piece length 12, no configured sentence sampling (`input_sentence_size=0`) and one training thread. Hugging Face uses 32k byte-level BPE, the full 256-byte alphabet, minimum frequency 2, no prefix space and no special tokens. Its default byte-level pretokenization differs from our whitespace-word boundaries. Full settings and hashes are recorded.
-- **Uncertainty:** five timing repeats on one small, warm corpus and one machine; no hardware sweep, cold-cache benchmark or confidence interval. The 156-record code-mixed bucket is small. The 16 edge cases are authored diagnostics, not a human-labeled accuracy benchmark. Native training recipes can vary with library versions; saved model hashes identify the exact artifacts used. Training durations in metadata are single setup runs, not a controlled training-speed comparison. JSON `model_bytes` values are serialized artifact sizes in different formats, not runtime memory measurements.
+- The host was an Apple M5 arm64 with 10 logical CPUs, macOS 26.6.2 and Python 3.12.13. The installed native wheel was used with no subprocess tokenization. All configurations ran in the same isolated environment.
+- The evaluation used all 14,779 frozen validation records, totaling 3,013,257 normalized UTF-8 bytes. It used no validation sampling or length filtering, and the test split remains unused. Text and timing order use seed 20260914. Each repeat shuffles configuration and mode order to reduce timing-order bias.
+- Timed work covers end-to-end public encoding calls that return Python integer-ID lists. This includes each API's internal normalization, pretokenization and conversion overhead. Hugging Face also constructs its normal Encoding results before IDs are extracted. Shared input normalization happens before timing; any normalization repeated inside an API remains timed. Imports, model loading, downloads, training, quality checks and decoding are outside timers. Results are discarded after each call, and no encoder inference runs.
+- Concurrency consists of sequential single calls and batches of 64 with SentencePiece `num_threads=1` and `TOKENIZERS_PARALLELISM=false`. This is not a maximum-throughput multicore comparison. All candidates were warmed up. Single and batch IDs were checked for equality outside timing.
+- External models received all 563,476 training records once each after NFC/whitespace normalization. SentencePiece logged that it skipped one record containing a reserved character and loaded 563,475. Our existing models use weighted bucket/sentence/word contributions. Thus this is the same source split, **not an identical training objective or fully controlled algorithm ablation**. BNLP's published model is trained on Bengali Wikipedia; any overlap with our Wikipedia-derived evaluation records is unknown.
+- SentencePiece Unigram uses a 32k target vocabulary, full character coverage, byte fallback, identity normalization, maximum piece length 12, no configured sentence sampling (`input_sentence_size=0`) and one training thread. Hugging Face uses 32k byte-level BPE, the full 256-byte alphabet, minimum frequency 2, no prefix space and no special tokens. Its default byte-level pretokenization differs from our whitespace-word boundaries. Full settings and hashes are recorded.
+- The timing data contains five repeats on one small, warm corpus and one machine. There is no hardware sweep, cold-cache benchmark or confidence interval. The 156-record code-mixed bucket is small. The 16 edge cases are authored diagnostics, not a human-labeled accuracy benchmark. Native training recipes can vary with library versions; saved model hashes identify the exact artifacts used. Training durations in metadata are single setup runs, not a controlled training-speed comparison. JSON `model_bytes` values are serialized artifact sizes in different formats, not runtime memory measurements.
 
 ## Reproduce
 
@@ -100,7 +100,7 @@ curl --fail --location \
 
 Replace `--cpu-model` with your actual hardware model. The BNLP download URL can change upstream: compare its SHA-256 against the saved results before treating a rerun as identical. Models and training text remain in ignored `models/comparison/`; no external library was added to our package's runtime requirements.
 
-Evidence: [raw measurements and model hashes](framework-comparison.json), [external training settings and hashes](comparison-training.json), [installed dependency versions](comparison-environment.json), [benchmark harness](../benchmarks/compare_frameworks.py), [training script](../benchmarks/train_comparison.py).
+The evidence includes [raw measurements and model hashes](framework-comparison.json), [external training settings and hashes](comparison-training.json), [installed dependency versions](comparison-environment.json), the [benchmark harness](../benchmarks/compare_frameworks.py) and the [training script](../benchmarks/train_comparison.py).
 
 ## What this means for the project
 

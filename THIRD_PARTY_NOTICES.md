@@ -9,11 +9,11 @@ are learned from Wikipedia, Tatoeba and BanglaTLit text and are distributed unde
 CC BY-SA 4.0 with attribution; see MODEL_LICENSE.md. The distribution's SPDX
 expression is MIT AND BSD-3-Clause AND CC-BY-SA-4.0 to reflect all three.
 
-- Go: https://go.dev/ — third_party/licenses/GO-LICENSE
-- golang.org/x/text: https://pkg.go.dev/golang.org/x/text —
+- Go: https://go.dev/, third_party/licenses/GO-LICENSE
+- golang.org/x/text: https://pkg.go.dev/golang.org/x/text,
   third_party/licenses/X-TEXT-LICENSE and X-TEXT-PATENTS
 
-The Go corpus-preparation CLI additionally depends on modules listed in go.mod
+The Go corpus-preparation CLI also depends on modules listed in go.mod
 and go.sum. Those modules are fetched separately when building the CLI; the
 Python wheel's native bridge imports only the tokenizer and its Unicode dependency.
 Dependencies retain their own licenses.

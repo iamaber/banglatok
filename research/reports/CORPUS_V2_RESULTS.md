@@ -1,4 +1,4 @@
-# Corpus v2 tokenizer refresh: results
+# Corpus v2 tokenizer refresh results
 
 **Decision: keep `bn-bpe-58k` and `bn-bpe-28k` as the published models.** The expanded corpus passed its growth and leakage gates, but no tokenizer trained on it passed the promotion gates in the [protocol](CORPUS_V2_PROTOCOL.md). Every candidate used fewer tokens on new Wikipedia-heavy text and more tokens on the conversational, Banglish and review text that the current models serve.
 
@@ -51,12 +51,12 @@ Tokens per word on held-out test data, scored only after selection had rejected 
 |---|---:|---:|---:|---:|
 | **bn-bpe-58k (published)** | **1.361** | **1.379** | **1.375** | 1.657 |
 | v2 58k plain | 1.416 | 1.457 | 1.454 | 1.521 |
-| v2 58k plain m2 | 1.386 | 1.413 | — | 1.526 |
+| v2 58k plain m2 | 1.386 | 1.413 | not measured | 1.526 |
 | SentencePiece Unigram 57,925, v2 data | 1.480 | 1.463 | 1.459 | 1.404 |
 | SentencePiece BPE 57,925, v2 data | 1.491 | 1.467 | 1.462 | 1.415 |
 | **bn-bpe-28k (published)** | **1.543** | **1.587** | **1.582** | 1.906 |
 | v2 28k plain | 1.723 | 1.750 | 1.744 | 1.890 |
-| v2 28k plain m2 | 1.593 | 1.614 | — | 1.798 |
+| v2 28k plain m2 | 1.593 | 1.614 | not measured | 1.798 |
 | SentencePiece Unigram 27,760, v2 data | 1.697 | 1.677 | 1.674 | 1.577 |
 
 The extra-test split is drawn from the new Wikipedia-heavy material, so it favours models trained on it. On real e-commerce reviews from an unseen source (BanglishRev), every v2 model needs more tokens than the published one. Same-size SentencePiece trained on the v2 data shows the same pattern, so the loss comes from the data mix rather than the training algorithm.

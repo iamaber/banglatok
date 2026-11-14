@@ -1,4 +1,4 @@
-# Larger serving workloads — 9 October 2026
+# Larger serving workloads, 9 October 2026
 
 The four measured encoders are unchanged E5 and the first experiment's equal-data
 original/Unigram/BPE seed-17 checkpoints. These measurements extend the earlier

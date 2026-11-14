@@ -1,4 +1,4 @@
-# Retrieval follow-up — second experiment
+# Retrieval follow-up, second experiment
 
 The user requested all five follow-ups after the completed first experiment.
 The first experiment's datasets, criteria, checkpoints and selected unchanged E5
@@ -17,7 +17,7 @@ carry that provenance; independent human review and natural user traffic are not
 claimed. Unknown relevance outside the pooled candidates remains unknown.
 
 New selection uses fresh development material and the original practical gates
-(+0.03 Banglish→Bengali nDCG, positive paired interval, ≤0.01 English loss,
+(+0.03 Banglish-to-Bengali nDCG, positive paired interval, ≤0.01 English loss,
 ≤1.25× latency/memory). The new protocol must bind data and training settings
 before adapted scoring. Reserved test is scored only after the new choice freezes.
 

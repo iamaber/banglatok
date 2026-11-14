@@ -1,4 +1,4 @@
-# Sparse context initialization — 9 October 2026
+# Sparse context initialization, 9 October 2026
 
 Both 32k artifacts now have executed initialization tables using exact original
 vocabulary overlaps and sparsemax-weighted training-context anchors. The

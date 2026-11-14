@@ -14,7 +14,7 @@ The processed training, validation and test splits are published at [iamaber/ban
 
 Preparation applies NFC and whitespace normalization; excludes text outside 12–2,000 normalized runes, replacement-character corruption, recognizable email addresses, Bangladeshi phone-number patterns, and simple credential assignments. These are conservative heuristic filters, **not complete PII removal**. It preserves punctuation, case, emoji, joiners, spelling variation, and meaningful combining marks in retained text.
 
-Before splitting, paired records and paragraphs of an article form groups. Canonical duplicate keys ignore case, spacing, and punctuation solely for grouping/deduplication. Long texts (at least twelve whitespace words) additionally use 64-bit bag-of-words SimHash with Hamming distance at most three. This approximate heuristic can both miss variants and over-group common wording; there is no semantic/transliteration deduplication claim. Official test membership wins over validation membership; both win over deterministic 96/2/2 group hashing. Consequently official split sizes change through leakage exclusions and additional held-out groups.
+Before splitting, paired records and paragraphs of an article form groups. Canonical duplicate keys ignore case, spacing, and punctuation solely for grouping/deduplication. Long texts (at least twelve whitespace words) also use 64-bit bag-of-words SimHash with Hamming distance at most three. This approximate heuristic can both miss variants and over-group common wording; there is no semantic/transliteration deduplication claim. Official test membership wins over validation membership; both win over deterministic 96/2/2 group hashing. Consequently official split sizes change through leakage exclusions and additional held-out groups.
 
 No synthetic transliteration is generated. BanglaDual is excluded because its upstream sources overlap and natural/synthetic provenance needs further audit. `BanglaTLit-PT.txt` is not double-counted beside its training CSV. Raw licenses and attribution remain in the checksum-locked source files.
 
@@ -79,8 +79,8 @@ Restricted sources also require compatible platform terms, a completed privacy
 review, manual review of retained rows, a retention policy and a deletion
 process. Direct messages or contributed text require contributor consent for
 the declared uses. The existing PII filters remain heuristics; they do not
-replace this review. BanglishRev remains evaluation-only and benchmark surfaces
-remain prohibited from training.
+replace this review. BanglishRev remains evaluation-only, and benchmark data
+remains prohibited from training.
 
 Keep the rights manifest, agreement evidence and candidate JSONL under ignored
 `data/raw/` or outside the repository. A schema-1 manifest declares each record

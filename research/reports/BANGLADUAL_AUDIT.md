@@ -1,4 +1,4 @@
-# BanglaDual provenance and expansion audit — 9 October 2026
+# BanglaDual provenance and expansion audit, 9 October 2026
 
 Use **original Vashantor v2** for the next natural-data expansion. Exclude BanglaDual's rule-based Wikipedia portion and repackaged BanglaTLit by default. BanglaDual's merged file is useful for provenance inspection, but its random splits and missing upstream IDs do not establish independent evaluation groups. The accompanying [machine-readable audit](bangladual-audit.json) records exact downloaded-file hashes, remote file metadata, counts, and limitations.
 
@@ -42,7 +42,7 @@ The largest source's [original dataset card](https://huggingface.co/datasets/sk-
 
 The [emotion source metadata](https://data.mendeley.com/datasets/4dnrwbxt8n/2) names existing emotion corpora plus YouTube/Twitter comments. This establishes mixed upstream provenance, but not the generation method of every Romanized form or English translation. Do not declare all 79k pairs natural, human-translated, or independent of project sources. The automatic-back-transliteration repository and BanglaTLit entries also need original-row/split mapping; source-name filtering alone cannot eliminate cross-source copies.
 
-## Actionable expansion: original Vashantor v2
+## Actionable expansion with original Vashantor v2
 
 The [Vashantor author paper](https://arxiv.org/html/2311.11142), §§3.1–3.3, describes collection from social comments, newspapers, and student conversations, followed by human regional translation. This is stronger natural-input/human-translation evidence than the aggregate's source-name labels. Keep the natural base utterances and label regional renderings as human translations; do not describe the latter as independent user queries.
 

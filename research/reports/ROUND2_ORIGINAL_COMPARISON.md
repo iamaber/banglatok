@@ -8,7 +8,7 @@ The [blinded label audit](LABEL_AUDIT.md) covers all 395 added positives and 120
 
 The [fresh source-backed benchmark](SOURCE_BENCHMARK.md) contains 90 intents across six domains: 60 development and 30 reserved test, with Bengali, Banglish and English forms plus one Banglish spelling variant per intent. All 4,500 same-split intent pairs have explicit agent judgments, projected across the nine language directions. Source groups stay wholly in one split. The original/expanded corpus and actual training pairs/negatives have zero audited canonical or near-copy matches. Dataset v2 explicitly declares reviewed-label provenance; its texts and judgments are identical to v1.
 
-All six longer original-tokenizer runs are trained, saved and verified under the [existing frozen training protocol](../experiments/retrieval/round2_training_protocol.json): three seeds in each budget. Equal-data runs finish 192 representation plus 384 contrastive steps. Equal-compute runs use 360 charged seconds, allowing a reported final-step overrun. Every batch has eight English and eight Banglish queries; every third contrastive batch includes reviewed negatives. All 13 encoders—unchanged E5, six earlier short controls and six longer runs—were evaluated in fresh sequential processes on both splits.
+All six longer original-tokenizer runs are trained, saved and verified under the [existing frozen training protocol](../experiments/retrieval/round2_training_protocol.json): three seeds in each budget. Equal-data runs finish 192 representation plus 384 contrastive steps. Equal-compute runs use 360 charged seconds, allowing a reported final-step overrun. Every batch has eight English and eight Banglish queries; every third contrastive batch includes reviewed negatives. All 13 encoders, unchanged E5, six earlier short controls and six longer runs, were evaluated in fresh sequential processes on both splits.
 
 ## Measured quality
 
@@ -35,7 +35,7 @@ Intervals use crossed paired resampling of three training seeds and six domain b
 
 ## Frozen gates and runtime
 
-The [criteria](../experiments/retrieval/round2_original_criteria.json) require at least +0.03 BL→BN nDCG over short adaptation, a positive paired interval, gain over unchanged E5, English loss no greater than 0.01, and latency/memory at most 1.25× unchanged E5 in every seed under both budgets.
+The [criteria](../experiments/retrieval/round2_original_criteria.json) require at least +0.03 BL-to-BN nDCG over short adaptation, a positive paired interval, gain over unchanged E5, English loss no greater than 0.01, and latency/memory at most 1.25× unchanged E5 in every seed under both budgets.
 
 On development, both budgets pass the short-control gain and paired-interval gates but fail gain over unchanged E5 and English retention. Equal data passes latency and memory. Equal compute passes memory but one seed has a 1.263× query-latency ratio, just above the cap. The rejection therefore does not depend on that timing result.
 
@@ -45,7 +45,7 @@ Local timings vary substantially: reserved-test latency ratios are roughly 0.37�
 
 This contrast changes training exposure, English replay/retention, hard-negative use and the positive alignment data, which removes 18 previously identified errors. It cannot isolate the causal contribution of any one change. The two protocols also have different step/time budgets; the shared budget labels do not imply equal cost across the earlier and longer protocols.
 
-The benchmark is a 90-intent agent-authored source-backed pilot, below the proposed 180-intent target. Passages are short extracts/summaries and translated forms, while communication guidance stands in for conversation. A small number of source pages creates topic shifts between development and test. Lexical exclusion cannot rule out semantic overlap or base-model pretraining exposure. No independent fluent-human review, natural user distribution, or long-document benchmark claim is made.
+The benchmark is a 90-intent agent-authored source-backed pilot, below the proposed 180-intent target. Passages are short extracts/summaries and translated forms, and communication guidance is a proxy for conversation. A small number of source pages creates topic shifts between development and test. Lexical exclusion cannot rule out semantic overlap or base-model pretraining exposure. No independent fluent-human review, natural user distribution, or long-document benchmark claim is made.
 
 The result supports investigating the English tradeoff before increasing training further. It provides no basis for replacing unchanged E5 under the declared gates, and it leaves the first experiment's frozen decision intact.
 

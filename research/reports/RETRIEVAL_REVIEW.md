@@ -1,4 +1,4 @@
-# Completed sentence review and failure audit — 9 October 2026
+# Completed sentence review and failure audit, 9 October 2026
 
 All 3,152 original E5/BM25/source-pair pooled judgments and all 300 source-pair decisions are complete. The user authorized agent judgments. These are **single-agent sentence-correspondence labels**, with no independent human-review claim.
 

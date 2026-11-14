@@ -1,4 +1,4 @@
-# Controlled encoder comparison — 9 October 2026
+# Controlled encoder comparison, 9 October 2026
 
 **Decision: retain unchanged multilingual E5-small.** Neither 32k tokenizer passed the frozen development quality or English-retention criteria in either budget. Reserved-test scoring followed that decision and did not change it.
 
@@ -8,11 +8,11 @@ Adapted values are means over seeds 17, 29 and 43. Intervals jointly resample se
 
 | Budget / encoder | Development BL→BN nDCG@10 | Test BL→BN nDCG@10 | Test difference vs adapted original [95% interval] |
 |---|---:|---:|---|
-| Unchanged E5 | 0.8039 | 0.8712 | — |
-| equal-data / original | 0.8106 | 0.8565 | — |
+| Unchanged E5 | 0.8039 | 0.8712 | not compared |
+| equal-data / original | 0.8106 | 0.8565 | not compared |
 | equal-data / unigram-32000 | 0.6788 | 0.8257 | -0.0309 [-0.1546, +0.0768] |
 | equal-data / bpe-32000 | 0.7035 | 0.8069 | -0.0497 [-0.1789, +0.0722] |
-| equal-compute / original | 0.8069 | 0.8603 | — |
+| equal-compute / original | 0.8069 | 0.8603 | not compared |
 | equal-compute / unigram-32000 | 0.7036 | 0.8173 | -0.0430 [-0.1596, +0.0624] |
 | equal-compute / bpe-32000 | 0.6972 | 0.7757 | -0.0846 [-0.2085, +0.0319] |
 
@@ -40,7 +40,7 @@ The body is the pinned E5-small snapshot `614241f622f53c4eeff9890bdc4f31cfecc418
 
 Custom embeddings start from means of original subword embeddings, with explicit control/byte fallbacks. This is heuristic initialization, not a reproduction of FOCUS or ZeTT. The feasibility budgets are small; these results do not rule out benefits from longer adaptation, better transfer or different objectives.
 
-The six-domain corpus is agent-authored and agent-judged at the user’s request. All 3,600 intent-passage pairs have explicit labels projected across the authored parallel forms. There is no independent human or language-review claim. The corpus is small and several metrics approach their ceiling. Original sentence-pilot review and all 19 encoder scores are complete; see the [sentence report](RETRIEVAL_REVIEW.md) for its pool-coverage limits.
+The six-domain corpus is agent-authored and agent-judged at the user's request. All 3,600 intent-passage pairs have explicit labels projected across the authored parallel forms. There is no independent human or language-review claim. The corpus is small and several metrics approach their ceiling. Original sentence-pilot review and all 19 encoder scores are complete; see the [sentence report](RETRIEVAL_REVIEW.md) for its pool-coverage limits.
 
 ## Evidence
 

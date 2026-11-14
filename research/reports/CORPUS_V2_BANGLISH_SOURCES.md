@@ -1,4 +1,4 @@
-# Corpus v2: Banglish and Bengali source decisions
+# Corpus v2 Banglish and Bengali source decisions
 
 ## Rule and conclusion
 
@@ -50,15 +50,15 @@ data. BanglishRev remains evaluation-only because it is a benchmark.
 
 ## Other checked Bengali/Hugging Face artifacts
 
-**REJECT synthetic/constructed:** [IndicCMix `2ead596`](https://huggingface.co/datasets/ai4bharat/IndicCMix/blob/2ead5962df60aed39c510db24f3368c037ab3522/README.md), [TituLM `23eb57f`](https://huggingface.co/datasets/hishab/titulm-bangla-corpus/blob/23eb57f29c060aa40089a4dee8c93f26612ec460/README.md), [Bangla/Banglish emotion v2](https://data.mendeley.com/datasets/4dnrwbxt8n/2), [BanglaDual v1](https://data.mendeley.com/datasets/pxw2bb4wyt/1), [Banking14 `2bd1e47`](https://huggingface.co/datasets/learn-abc/banking14-intents-en-bn-banglish/blob/2bd1e479179ae50f9f5747eec5bc2e03cf91683b/README.md). Cards describe generated translation/Romanization, constructed forms, or derivative aggregation.
+Synthetic or constructed data was rejected. The checked sources were [IndicCMix `2ead596`](https://huggingface.co/datasets/ai4bharat/IndicCMix/blob/2ead5962df60aed39c510db24f3368c037ab3522/README.md), [TituLM `23eb57f`](https://huggingface.co/datasets/hishab/titulm-bangla-corpus/blob/23eb57f29c060aa40089a4dee8c93f26612ec460/README.md), [Bangla/Banglish emotion v2](https://data.mendeley.com/datasets/4dnrwbxt8n/2), [BanglaDual v1](https://data.mendeley.com/datasets/pxw2bb4wyt/1) and [Banking14 `2bd1e47`](https://huggingface.co/datasets/learn-abc/banking14-intents-en-bn-banglish/blob/2bd1e479179ae50f9f5747eec5bc2e03cf91683b/README.md). Their cards describe generated translation or Romanization, constructed forms or derivative aggregation.
 
-**REJECT unclear upstream rights:** [Sangraha `8b813c3`](https://huggingface.co/datasets/ai4bharat/sangraha/blob/8b813c3f62d37b2fa174d68c31e8b35ae2fe85e8/README.md), [B-CORE `fbd637a`](https://huggingface.co/datasets/nahid-hub/B-CORE-bengali-corpus/blob/fbd637a917efb72d3621f0c9a85727b031ad76fc/README.md), [`bangla-llm-data@0d47517`](https://huggingface.co/datasets/nahidstaq/bangla-llm-data/blob/0d47517f41f73a232109f421a23a1b481a9147e5/README.md), [Bengali fake news `b453052`](https://huggingface.co/datasets/musfiqurtuhin/bengali-fake-news/blob/b453052ec6588c3275efa672a1e0c75b16a6af94/README.md), [BanglaLM `957e9dc`](https://github.com/Kowsher/BanglaLM-Dataset/tree/957e9dcdf84adf1e67be241703ba8082ece2fac5). Compilation licenses do not clear scraped sites/news/social/video/books; BanglaLM additionally says noncommercial research.
+Artifacts with unclear upstream rights were rejected. The checked sources were [Sangraha `8b813c3`](https://huggingface.co/datasets/ai4bharat/sangraha/blob/8b813c3f62d37b2fa174d68c31e8b35ae2fe85e8/README.md), [B-CORE `fbd637a`](https://huggingface.co/datasets/nahid-hub/B-CORE-bengali-corpus/blob/fbd637a917efb72d3621f0c9a85727b031ad76fc/README.md), [`bangla-llm-data@0d47517`](https://huggingface.co/datasets/nahidstaq/bangla-llm-data/blob/0d47517f41f73a232109f421a23a1b481a9147e5/README.md), [Bengali fake news `b453052`](https://huggingface.co/datasets/musfiqurtuhin/bengali-fake-news/blob/b453052ec6588c3275efa672a1e0c75b16a6af94/README.md) and [BanglaLM `957e9dc`](https://github.com/Kowsher/BanglaLM-Dataset/tree/957e9dcdf84adf1e67be241703ba8082ece2fac5). Compilation licenses do not clear scraped sites, news, social posts, videos or books. BanglaLM also limits use to noncommercial research.
 
-**REJECT noncommercial:** [XL-Sum](https://huggingface.co/datasets/csebuetnlp/xlsum) (10,126 Bengali BBC pairs; CC BY-NC-SA), [BanglaNMT](https://github.com/csebuetnlp/banglanmt) (about 2.75m pairs; CC BY-NC-SA), [IndicCorp](https://indicnlp.ai4bharat.org/corpora/) (Bengali news; CC BY-NC).
+Noncommercial sources were rejected. They were [XL-Sum](https://huggingface.co/datasets/csebuetnlp/xlsum), with 10,126 Bengali BBC pairs under CC BY-NC-SA; [BanglaNMT](https://github.com/csebuetnlp/banglanmt), with about 2.75 million pairs under CC BY-NC-SA; and [IndicCorp](https://indicnlp.ai4bharat.org/corpora/), with Bengali news under CC BY-NC.
 
 ## Acquisition and leakage order
 
-1. Build a deny index from **all** BanglishRev reviews/replies and all official benchmark dev/test surfaces before acquisition.
+1. Build a deny index from **all** BanglishRev reviews/replies and all official benchmark development and test data before acquisition.
 2. Acquire scoped Pralekha government text, then a small direct Global Voices pilot, Storybooks, Wikimedia supplements, and only novel licensed Tatoeba rows.
 3. Prefer quality/traceability over volume. Seek a written commercial redistribution grant for the Bangladesh Romanized Corpus; do not substitute generated Banglish.
 4. Preserve owner, revision/hash, row/page ID, URL, author/translator, source license/policy, attribution, origin status, and transformations per row.

@@ -1,4 +1,4 @@
-# Research Plan: A Bangla–English–Banglish Tokenizer for Text Embeddings
+# Research plan for a Bangla–English–Banglish tokenizer for text embeddings
 
 > Implementation audit, 2026-09-08: the core recommendation remains a hypothesis supported by the cited task-specific evidence. See [RESEARCH_AUDIT.md](RESEARCH_AUDIT.md) for the source verification and observed download discrepancies, and [README.md](../README.md) for the Go implementation, corpus snapshot, and measured intrinsic results. The implementation uses custom Unigram EM with expected-count pruning, not an exact SentencePiece reproduction. No embedding retrieval superiority has been established.
 
@@ -47,7 +47,7 @@ A successful system should:
 7. generalize to rare words, inflections, names, and new transliterations;
 8. remain fast enough for the intended deployment environment.
 
-## 2. Important distinction: tokenizer quality versus embedding quality
+## 2. Distinguishing tokenizer quality from embedding quality
 
 A tokenizer can be evaluated intrinsically, but an intrinsically attractive tokenizer is not guaranteed to produce the best embedding model.
 
@@ -130,12 +130,12 @@ Multilingual E5 demonstrates a successful recipe of large-scale contrastive pret
 For this project, useful positive pairs include:
 
 ```text
-Bangla sentence        ↔ naturally written Banglish equivalent
-Bangla sentence        ↔ English translation
-Banglish query         ↔ relevant Bangla passage
-Code-mixed query       ↔ relevant document
-Spelling variant       ↔ canonical or alternate spelling
-Paraphrased query      ↔ semantically equivalent query
+Bangla sentence        corresponds to a naturally written Banglish equivalent
+Bangla sentence        corresponds to an English translation
+Banglish query         matches a relevant Bangla passage
+Code-mixed query       matches a relevant document
+Spelling variant       maps to a canonical or alternate spelling
+Paraphrased query      maps to a semantically equivalent query
 ```
 
 Useful hard negatives should be topically similar but semantically wrong:
@@ -168,7 +168,7 @@ The potential contribution here is a controlled retrieval study, an independentl
 Bangla uses inflection, derivation, compounding, classifiers, case markers, tense/aspect/person marking, and other productive patterns. A simplified illustrative analysis is:
 
 ```text
-বইগুলোতে → বই + গুলো + তে
+বইগুলোতে = বই + গুলো + তে
              book + plural/classifier + locative
 ```
 
@@ -372,7 +372,7 @@ All metrics must be reported separately for:
 | Tokenization throughput | Measures preprocessing cost |
 | Round-trip/decode correctness | Compare decoded text with the declared normalized input; NFC and whitespace normalization do not preserve arbitrary original bytes |
 
-Report distributions, medians, high percentiles, and frequency-stratified results—not only global averages.
+Report distributions, medians, high percentiles, and frequency-stratified results. Do not report only global averages.
 
 ### 8.2 Morphological fidelity
 
@@ -429,13 +429,13 @@ The objective is not necessarily identical tokenization. It is robust model perf
 
 The final model should be tested on:
 
-1. Bangla query → Bangla document.
-2. English query → English document.
-3. Banglish query → Bangla document.
-4. Bangla query → English document.
-5. English query → Bangla document.
-6. Code-mixed query → Bangla or English document.
-7. Spelling variants → the same relevant documents.
+1. Bangla queries against Bangla documents.
+2. English queries against English documents.
+3. Banglish queries against Bangla documents.
+4. Bangla queries against English documents.
+5. English queries against Bangla documents.
+6. Code-mixed queries against Bangla or English documents.
+7. Spelling variants against the same relevant documents.
 8. Rare inflections and entities.
 9. Long documents where tokenizer efficiency affects truncation.
 
@@ -513,11 +513,11 @@ Hold tokenizer-training data fixed during the alignment-data comparison. Hold al
 
 ## 10. Embedding-training strategy
 
-### 10.1 Stage 1: existing-model baseline and tokenizer screening
+### 10.1 Stage 1 existing-model baseline and tokenizer screening
 
 First evaluate an existing multilingual embedding model with its original tokenizer and required preprocessing, then fine-tune it on alignment data as a practical baseline. Train and evaluate the controlled tokenizer matrix alongside this baseline. Reject candidates with poor coverage, severe language imbalance, excessive truncation, or unacceptable speed, but retain both a viable Unigram and BPE candidate for matched downstream experiments. Intrinsic metrics screen candidates; they do not select the final winner.
 
-### 10.2 Stage 2: encoder pretraining or adaptation
+### 10.2 Stage 2 encoder pretraining or adaptation
 
 Depending on compute:
 
@@ -526,7 +526,7 @@ Depending on compute:
 
 If adapting an existing encoder, retaining its tokenizer is the safest first baseline.
 
-### 10.3 Stage 3: contrastive embedding learning
+### 10.3 Stage 3 contrastive embedding learning
 
 Train using:
 
@@ -540,11 +540,11 @@ Train using:
 
 Pair quality is more important than indiscriminate quantity. False negatives are especially harmful when multiple documents are valid answers.
 
-### 10.4 Stage 4: distillation, if useful
+### 10.4 Stage 4 distillation, if useful
 
 A stronger multilingual teacher can help transfer semantic structure to a smaller student. Teacher quality should be checked on Bangla and Banglish rather than assumed from English benchmarks.
 
-### 10.5 Stage 5: deployment optimization
+### 10.5 Stage 5 deployment optimization
 
 After quality is established, evaluate:
 
@@ -571,7 +571,7 @@ With limited compute, contrastive adaptation of a strong multilingual model may 
 
 ## 12. Proposed experiment plan
 
-### Phase A: data audit
+### Phase A data audit
 
 1. Inventory available Bangla, English, Banglish, code-mixed, and aligned data.
 2. Verify licenses and provenance.
@@ -579,14 +579,14 @@ With limited compute, contrastive adaptation of a strong multilingual model may 
 4. Measure script, domain, length, and spelling distributions.
 5. Build frozen intrinsic and retrieval test sets.
 
-### Phase B: normalization
+### Phase B normalization
 
 1. Implement a versioned normalization pipeline.
 2. Add Unicode and mixed-script unit tests.
 3. Inspect high-frequency changes manually.
 4. Measure how normalization affects distinct words and spelling variants.
 
-### Phase C: baseline tokenizers
+### Phase C baseline tokenizers
 
 Train:
 
@@ -598,7 +598,7 @@ Character/byte baseline: at least one
 
 Compare with existing BanglaBERT, XLM-R, and embedding-model tokenizers.
 
-### Phase D: tokenizer evaluation
+### Phase D tokenizer evaluation
 
 1. Compute per-language fertility and sequence distributions.
 2. Compute unknown/fallback and truncation rates.
@@ -606,7 +606,7 @@ Compare with existing BanglaBERT, XLM-R, and embedding-model tokenizers.
 4. Test Banglish spelling and mixed-script robustness.
 5. Measure tokenization speed.
 
-### Phase E: matched encoder experiments
+### Phase E matched encoder experiments
 
 1. Evaluate an existing multilingual embedding model before and after alignment fine-tuning, retaining its original tokenizer.
 2. Select two or three viable custom tokenizer candidates, retaining a matched Unigram/BPE pair.
@@ -615,7 +615,7 @@ Compare with existing BanglaBERT, XLM-R, and embedding-model tokenizers.
 5. Compare downstream retrieval on development data; do not rank different tokenizations by raw token-level perplexity or MLM loss.
 6. Scale candidates with consistent gains, then evaluate the frozen choices on the final test collection.
 
-### Phase F: morphology-aware ablations
+### Phase F morphology-aware ablations
 
 Test one intervention at a time:
 
@@ -625,7 +625,7 @@ Test one intervention at a time:
 - subword regularization;
 - alternate language sampling.
 
-### Phase G: final embedding training
+### Phase G final embedding training
 
 1. Train on multilingual contrastive pairs.
 2. Add mined hard negatives.
@@ -665,7 +665,7 @@ A new tokenizer should only be considered an improvement if it demonstrates a me
 
 Before inspecting final test results, specify the primary retrieval metric, the minimum practically useful gain, acceptable English regression, and memory/latency limits for the application. Report effect sizes with confidence intervals; statistical significance alone does not establish practical value.
 
-Avoid claiming that it “outperforms other tokenizers” unless:
+Avoid claiming that it "outperforms other tokenizers" unless:
 
 - the baselines are named;
 - data and encoder controls are documented;

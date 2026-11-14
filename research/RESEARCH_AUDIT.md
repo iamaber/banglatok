@@ -1,4 +1,4 @@
-# Research verification — 2026-09-08
+# Research verification, 2026-09-08
 
 The plan is a sound experimental starting point. The references support testing Unigram; they do not establish an optimal vocabulary, corpus mixture, or retrieval winner. The existing qualifications about architecture, perplexity, alignment data, vocabulary capacity, and leakage are appropriate.
 
