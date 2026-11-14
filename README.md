@@ -9,8 +9,6 @@
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97-iamaber%2Fbanglatok--bn--bpe--58k-yellow)](https://huggingface.co/iamaber/banglatok-bn-bpe-58k)
 [![License: MIT (code), CC BY-SA 4.0 (models)](https://img.shields.io/badge/license-MIT%20%7C%20CC%20BY--SA%204.0-lightgrey)](#license)
 
-**Project links:** [release notes](https://github.com/iamaber/banglatok/releases/latest) · [PyPI](https://pypi.org/project/banglatok/) · [Hugging Face models](https://huggingface.co/iamaber/banglatok-bn-bpe-58k) · [training dataset](https://huggingface.co/datasets/iamaber/banglatok-training-corpus) · [portfolio case study](https://iamaber.github.io/portfolio-website/#projects)
-
 ```python
 from banglatok import Tokenizer
 
