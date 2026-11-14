@@ -320,7 +320,18 @@ def compress_v2_split(
                     raise ValueError(f"{split}:{rows}: unknown source attribution")
                 if marker is not None and marker not in record["attribution"]:
                     raise ValueError(f"{split}:{rows}: missing source attribution")
-                if declaration:
+                text = corpus_v2.normalize(record["text"])
+                # Frozen v1 rows keep their original groups and attribution format
+                # (checked by the v1 marker above); new-source rules apply to new rows.
+                frozen = split in {"validation", "test"} or (
+                    split == "train"
+                    and db.execute(
+                        "SELECT 1 FROM original_train_keys WHERE key=?",
+                        (corpus_v2.canonical(text),),
+                    ).fetchone()
+                    is not None
+                )
+                if declaration and not frozen:
                     license_name = declaration["license"].split(";")[0]
                     if declaration.get("attribution_marker"):
                         mismatch = (
@@ -362,17 +373,8 @@ def compress_v2_split(
                     in (record["source"] + record["group"] + record["attribution"]).lower()
                 ):
                     raise ValueError(f"{split}:{rows}: BanglishRev cannot be published")
-                text = corpus_v2.normalize(record["text"])
                 if split not in {"validation", "test"}:
-                    baseline = (
-                        split == "train"
-                        and db.execute(
-                            "SELECT 1 FROM original_train_keys WHERE key=?",
-                            (corpus_v2.canonical(text),),
-                        ).fetchone()
-                        is not None
-                    )
-                    reason = corpus_v2.quality(text, record, baseline)
+                    reason = corpus_v2.quality(text, record, frozen)
                     if text != record["text"] or reason:
                         raise ValueError(
                             f"{split}:{rows}: quality gate: {reason or 'not normalized'}"

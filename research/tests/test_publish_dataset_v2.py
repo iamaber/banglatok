@@ -58,11 +58,18 @@ class PublishDatasetV2Tests(unittest.TestCase):
         self.expanded.mkdir(parents=True)
         self.baseline.mkdir(parents=True)
         records = {
-            "train": row(
-                "Original training sentence preserves its historical contributor notice.",
-                "tatoeba-fra",
-                "tatoeba:original",
-                "train",
+            # Real v1 shape: a Bengali Wikipedia row whose group was linked to a
+            # BanglaTLit pair and that uses the v1 attribution format.
+            "train": dict(
+                text="লতা বট একটি লতানো উদ্ভিদ যা দেয়াল বেয়ে ওপরে ওঠে।",
+                bucket="bangla",
+                source="wikipedia-bn-20231101",
+                group="banglatlit:original",
+                attribution=(
+                    "https://bn.wikipedia.org/wiki/Example; Wikipedia contributors; "
+                    "CC BY-SA 3.0 / GFDL"
+                ),
+                split="train",
             ),
             "validation": row(
                 "Amber birch cedar drift elm fir granite hazel iris jade.",
@@ -318,6 +325,12 @@ class PublishDatasetV2Tests(unittest.TestCase):
         path = self.expanded / "train.jsonl"
         path.write_bytes(path.read_bytes().replace(b"Wikipedia contributors", b"Uncredited writer"))
         with self.assertRaisesRegex(ValueError, "attribution"):
+            self.stage()
+
+    def test_new_rows_still_need_their_declared_source_group(self):
+        path = self.expanded / "train.jsonl"
+        path.write_bytes(path.read_bytes().replace(b'"wiki-en:123"', b'"banglatlit:new"'))
+        with self.assertRaisesRegex(ValueError, "group/attribution mismatch"):
             self.stage()
 
     def test_source_license_evidence_checksum_is_verified(self):
