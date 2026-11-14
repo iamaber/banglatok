@@ -77,3 +77,17 @@ Compare existing models, selected candidates, same-data/same-size SentencePiece 
 ## Publication
 
 Publish expanded corpus and new model IDs separately from immutable v1 artifacts. Retain checksums, source locks, original notices, preparation/training parameters, selection results and independent heldout results. Update package/docs/Hub cards only with observed results. A default vocabulary change requires a new minor package release and an explicit compatibility note.
+
+## Post-v2 restricted-data policy
+
+This section was adopted after the completed v2 experiment and does not change
+its preregistered inputs or result. Future experiments may use text that cannot
+be redistributed when a rights holder or authorized data controller explicitly
+permits transformation, training, commercial use and public distribution of
+derived model artifacts, and the originating platform terms also permit
+training. Such text stays in an ignored, marked private corpus; it is excluded
+from every public dataset artifact. Privacy review, manual row review,
+retention/deletion procedures, leakage protection and aggregate provenance
+remain mandatory. Public access or a wrapper repository license alone remains
+insufficient. BanglishRev and other benchmark surfaces remain evaluation-only.
+

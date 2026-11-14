@@ -46,6 +46,7 @@ FROZEN_HASHES = dict(corpus_v2.FROZEN_HASHES)
 V2_MIN_TRAIN_RECORDS = 2817380
 V2_MIN_TRAIN_CHARACTERS = 329839300
 V2_SPLITS = ("train", "validation", "test", "extra-validation", "extra-test")
+RESTRICTED_MARKER = ".restricted-corpus.json"
 V2_NOTICE_PATHS = (
     "README.md",
     "wikimedia/bnwikibooks-rightsinfo.json",
@@ -601,6 +602,8 @@ def prepare_v2(output: Path) -> dict:
         raise ValueError(f"output directory must be empty: {output}")
     corpus = ROOT / "data/processed/expanded-v2"
     baseline = ROOT / "data/processed/frozen-v1"
+    if (corpus / RESTRICTED_MARKER).exists():
+        raise ValueError("refusing to publish a corpus marked as restricted training data")
     reserved = ROOT / corpus_v2.DEFAULT_RESERVED
     for split, expected in FROZEN_HASHES.items():
         if sha256(baseline / f"{split}.jsonl") != expected:

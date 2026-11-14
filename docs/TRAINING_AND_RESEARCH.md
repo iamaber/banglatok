@@ -34,6 +34,16 @@ Research reports refer to frozen local artifacts and their checksums. A fresh cl
 
 The [corpus v2 workflow](../data/CORPUS.md#corpus-v2-expansion) adds pinned Wikimedia sources, stronger filtering and exhaustive signature-radius leakage checks while preserving v1 evaluation files. Its [protocol](../research/reports/CORPUS_V2_PROTOCOL.md) fixes growth and model-promotion gates before candidate scores; its [source report](../research/reports/CORPUS_V2_SOURCES.md) documents acquisition and limitations. Extra-validation is for selection; extra-test and all BanglishRev reviews remain evaluation-only.
 
+For natural Banglish or code-mixed text whose agreement permits training and
+model distribution but not raw redistribution, use the
+[restricted training-only workflow](../data/CORPUS.md#restricted-training-only-sources).
+`tools/prepare_restricted_corpus.py` keeps that material in an ignored, marked
+private output and applies the same quality, grouping, deduplication and
+holdout-protection logic. The public dataset publisher rejects marked corpora.
+Do not treat this boundary as permission to scrape; the local manifest requires
+documented rights, platform-term and privacy attestations.
+
+
 ## Model contract
 
 Models are versioned JSON with `version`, `algorithm`, `normalization`, learned `pieces`, and BPE merge information where applicable. The supported normalization is `nfc-whitespace-v1`. Piece scores must be finite and nonpositive. Version 2 BPE may include `space_fusion` and training-word caches. Training writes a `.meta.json` sidecar with parameters, corpus/model hashes, toolchain and duration.
