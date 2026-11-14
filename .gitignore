@@ -49,6 +49,7 @@ runs/
 
 # Logs and temporary files
 .tools/
+benchmarks/results/*.out
 data/raw/
 data/processed/
 models/
