@@ -70,7 +70,8 @@ func Prepare(records []Record, out string) (Stats, error) {
 		defer f.Close()
 		writers[s] = bufio.NewWriter(f)
 	}
-	for r := range prepared {
+	st.Rejected, st.Duplicates = prepared.rejected, prepared.duplicates
+	for _, r := range prepared.records {
 		if err := json.NewEncoder(writers[r.Split]).Encode(r); err != nil {
 			return st, err
 		}

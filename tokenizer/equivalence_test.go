@@ -164,7 +164,7 @@ func FuzzBPEMatchesReference(f *testing.F) {
 	})
 }
 
-// appendWords skips normalizing text made of cached words because a single
+// appendIfNormalized skips normalizing text made of cached words because a single
 // space keeps normalized words normalized; check that against full NFC.
 func FuzzNormalizedWordsConcatenate(f *testing.F) {
 	for _, pair := range [][2]string{{"a", "b"}, {"ক", "া"}, {"e", "́"}, {"́", "́"}, {"ে", "া"}, {"🙂", "️"}} {
@@ -197,7 +197,7 @@ func FuzzEncodeMatchesNormalizeFirst(f *testing.F) {
 		f.Add(s)
 	}
 	f.Fuzz(func(t *testing.T, text string) {
-		want, _ := tok.appendWords(nil, Normalize(text), false)
+		want := tok.appendNormalized(nil, Normalize(text))
 		if got := tok.Encode(text); !reflect.DeepEqual(got, want) && len(got)+len(want) > 0 {
 			t.Fatalf("%+q: %v, want %v", text, got, want)
 		}

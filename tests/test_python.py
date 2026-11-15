@@ -215,8 +215,11 @@ class TokenizerTests(unittest.TestCase):
                     for k, v in reference_call(tok, ["আমি ভালো"], True, 8, "max_length").items()
                 },
             )
-            big = tok(MIXED[:6] * 100, max_length=2000, padding="max_length")
-            self.assertEqual(big, reference_call(tok, MIXED[:6] * 100, True, 2000, "max_length"))
+            beyond_batch_buffer = tok(MIXED[:6] * 100, max_length=2000, padding="max_length")
+            self.assertEqual(
+                beyond_batch_buffer,
+                reference_call(tok, MIXED[:6] * 100, True, 2000, "max_length"),
+            )
             self.assertEqual(tok(["a"]), reference_call(tok, ["a"], True, None, False))
             with self.assertRaisesRegex(ValueError, "return_tensors"):
                 tok("a", return_tensors="pt")  # type: ignore[call-overload]

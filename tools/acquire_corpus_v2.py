@@ -355,10 +355,15 @@ def emit(
             "in the same global English order as the default run; skipped rows are "
             "hashed/counted under skipped_* and never written or counted as records"
         )
+    publish_shard(metadata_path, metadata, partial, destination)
+    return metadata
+
+
+def publish_shard(metadata_path: Path, metadata: dict, partial: Path, destination: Path) -> None:
+    """Write metadata before the shard: an existing shard without metadata is rejected."""
     write_json(metadata_path, metadata)
     if metadata["output"] is not None:
         partial.replace(destination)
-    return metadata
 
 
 def verify(output: Path, raw: Path) -> dict:

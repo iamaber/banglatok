@@ -49,8 +49,11 @@ FROZEN_HASHES = {
     "test": "3f39a8faf7ecc280ec32ce231d379cec788eb79a52d9a6e66917073500879834",
 }
 # Go unicode.IsSpace, unlike Python str.split(), excludes U+001C..U+001F.
-GO_UNICODE_SPACE = re.compile(r"[\t-\r \u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]+")
-SELECTION_POLICY = """Prepare expanded-v2 without changing frozen data (Python standard library only).
+GO_UNICODE_SPACE = re.compile(
+    r"[\t-\r \u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]+"
+)
+SELECTION_POLICY = """\
+Prepare expanded-v2 without changing frozen data (Python standard library only).
 
 All records, including quality failures, participate in disk-backed duplicate/group
 components BEFORE selection. Frozen evaluation and BanglishRev components exclude
@@ -255,6 +258,10 @@ def read_records(path: Path):
                 raise ValueError(f"{path}:{number}: {error}") from error
 
 
+RESERVED_FIELDS = frozenset({"Review Content", "Reply", "text"})
+MAX_RESERVED_TOKEN_CHARS = 2 * 1024 * 1024
+
+
 def reserved_texts(path: Path):
     pending = ""
     want_value = False
@@ -276,11 +283,11 @@ def reserved_texts(path: Path):
                 if want_value:
                     yield value
                     want_value = False
-                elif value in {"Review Content", "Reply", "text"}:
+                elif value in RESERVED_FIELDS:
                     want_value = True
                 end = match.end()
             pending = pending[end:]
-            if len(pending) > 2 * 1024 * 1024:
+            if len(pending) > MAX_RESERVED_TOKEN_CHARS:
                 raise ValueError("reserved evaluation contains a JSON token larger than 2 MiB")
             if not chunk:
                 break

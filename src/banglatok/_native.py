@@ -207,8 +207,7 @@ class NativeHandle:
         try:
             return text.encode("utf-8")
         except UnicodeEncodeError:
-            if not self._finalizer.alive:
-                raise RuntimeError("tokenizer is closed") from None
+            self.check_open()
             raise
 
     def encode_one(self, text: str) -> list[int]:

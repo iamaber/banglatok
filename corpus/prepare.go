@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
-	"iter"
 	"math/bits"
 	"regexp"
 	"strings"
@@ -38,7 +37,12 @@ func (g *groups) join(a, b int) {
 	g.parent[b] = a
 }
 
-func prepareRecords(records []Record, st *Stats) (iter.Seq[Record], error) {
+type prepared struct {
+	records              []Record
+	rejected, duplicates int
+}
+
+func prepareRecords(records []Record, st *Stats) (prepared, error) {
 	g := groups{make([]int, len(records))}
 	for i := range g.parent {
 		g.parent[i] = i
@@ -53,10 +57,10 @@ func prepareRecords(records []Record, st *Stats) (iter.Seq[Record], error) {
 	for i := range records {
 		r := &records[i]
 		if r.Group == "" || r.Source == "" || r.Bucket == "" {
-			return nil, fmt.Errorf("record %d requires group, source and bucket", i)
+			return prepared{}, fmt.Errorf("record %d requires group, source and bucket", i)
 		}
 		if r.Split != "" && r.Split != "train" && r.Split != "validation" && r.Split != "test" {
-			return nil, fmt.Errorf("invalid split %q", r.Split)
+			return prepared{}, fmt.Errorf("invalid split %q", r.Split)
 		}
 		r.Text = tokenizer.Normalize(r.Text)
 		if j, ok := byGroup[r.Group]; ok {
@@ -106,33 +110,31 @@ func prepareRecords(records []Record, st *Stats) (iter.Seq[Record], error) {
 			groupName[root] = r.Group
 		}
 	}
-	return func(yield func(Record) bool) {
-		seen := map[string]bool{}
-		for i, r := range records {
-			if !acceptable(r.Text) {
-				st.Rejected++
-				continue
-			}
-			key := Key(r.Text)
-			if seen[key] {
-				st.Duplicates++
-				continue
-			}
-			seen[key] = true
-			root := g.root(i)
-			r.Group = groupName[root]
-			r.Split = splitFor(r.Group)
-			if priority[root] == 1 {
-				r.Split = "validation"
-			}
-			if priority[root] == 2 {
-				r.Split = "test"
-			}
-			if !yield(r) {
-				return
-			}
+	out := prepared{records: make([]Record, 0, len(records))}
+	seen := map[string]bool{}
+	for i, r := range records {
+		if !acceptable(r.Text) {
+			out.rejected++
+			continue
 		}
-	}, nil
+		key := Key(r.Text)
+		if seen[key] {
+			out.duplicates++
+			continue
+		}
+		seen[key] = true
+		root := g.root(i)
+		r.Group = groupName[root]
+		r.Split = splitFor(r.Group)
+		if priority[root] == 1 {
+			r.Split = "validation"
+		}
+		if priority[root] == 2 {
+			r.Split = "test"
+		}
+		out.records = append(out.records, r)
+	}
+	return out, nil
 }
 
 func splitFor(group string) string {

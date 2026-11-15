@@ -188,60 +188,78 @@ func (t *Tokenizer) AppendEncode(dst []int, text string) []int {
 	if dst == nil {
 		dst = make([]int, 0, len(text)/4+8)
 	}
-	if ids, ok := t.appendWords(dst, text, true); ok {
+	if ids, ok := t.appendIfNormalized(dst, text); ok {
 		return ids
 	}
-	ids, _ := t.appendWords(dst, Normalize(text), false)
-	return ids
+	return t.appendNormalized(dst, Normalize(text))
 }
 
-func (t *Tokenizer) appendWords(dst []int, s string, verify bool) ([]int, bool) {
+// appendIfNormalized encodes text only when it is already in Normalize form,
+// skipping a full normalization pass for the common case.
+func (t *Tokenizer) appendIfNormalized(dst []int, s string) ([]int, bool) {
 	ids, first := dst, len(dst)
 	var local [128]viterbiState
 	scratch := local[:]
 	for len(s) > 0 {
 		w, rest, found := strings.Cut(s, " ")
-		if verify && (w == "" || found && rest == "") {
+		if w == "" || found && rest == "" {
 			return dst, false
 		}
-		if len(ids) > first {
-			ids = append(ids, ByteOffset+32)
-		}
-		start := len(ids)
-		if c := t.cache.find(w); c != nil {
-			// Hits carry their space-fused first ID precomputed.
-			cached := t.cache.ids[c.ids : c.ids+c.count]
-			if start > first && c.fused != 0 {
-				ids[start-1] = int(c.fused)
-				cached = cached[1:]
-			}
-			for _, id := range cached {
-				ids = append(ids, int(id))
-			}
-			s = rest
-			continue
-		}
-		if verify && !alreadyNormalized(w) {
+		c := t.cache.find(w)
+		if c == nil && !alreadyNormalized(w) {
 			return dst, false
 		}
-		if t.model.Algorithm == "bpe" {
-			ids = t.appendBPE(ids, w)
-		} else {
-			if len(scratch) < len(w)+1 {
-				scratch = make([]viterbiState, len(w)+1)
-			}
-			ids = t.appendUnigram(ids, w, scratch[:len(w)+1])
-		}
-		if start > first && len(t.spaceFusion) > 0 {
-			if fused := t.spaceFusion[ids[start]]; fused != 0 {
-				ids[start-1] = fused
-				copy(ids[start:], ids[start+1:])
-				ids = ids[:len(ids)-1]
-			}
-		}
+		ids = t.appendWord(ids, first, w, c, &scratch)
 		s = rest
 	}
 	return ids, true
+}
+
+func (t *Tokenizer) appendNormalized(dst []int, s string) []int {
+	ids, first := dst, len(dst)
+	var local [128]viterbiState
+	scratch := local[:]
+	for len(s) > 0 {
+		w, rest, _ := strings.Cut(s, " ")
+		ids = t.appendWord(ids, first, w, t.cache.find(w), &scratch)
+		s = rest
+	}
+	return ids
+}
+
+func (t *Tokenizer) appendWord(ids []int, first int, w string, c *wordSlot, scratch *[]viterbiState) []int {
+	if len(ids) > first {
+		ids = append(ids, ByteOffset+32)
+	}
+	start := len(ids)
+	if c != nil {
+		// Hits carry their space-fused first ID precomputed.
+		cached := t.cache.ids[c.ids : c.ids+c.count]
+		if start > first && c.fused != 0 {
+			ids[start-1] = int(c.fused)
+			cached = cached[1:]
+		}
+		for _, id := range cached {
+			ids = append(ids, int(id))
+		}
+		return ids
+	}
+	if t.model.Algorithm == "bpe" {
+		ids = t.appendBPE(ids, w)
+	} else {
+		if len(*scratch) < len(w)+1 {
+			*scratch = make([]viterbiState, len(w)+1)
+		}
+		ids = t.appendUnigram(ids, w, (*scratch)[:len(w)+1])
+	}
+	if start > first && len(t.spaceFusion) > 0 {
+		if fused := t.spaceFusion[ids[start]]; fused != 0 {
+			ids[start-1] = fused
+			copy(ids[start:], ids[start+1:])
+			ids = ids[:len(ids)-1]
+		}
+	}
+	return ids
 }
 
 // Vocabulary returns learned piece texts in ID order, starting at PieceOffset,
