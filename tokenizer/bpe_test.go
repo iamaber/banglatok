@@ -75,3 +75,25 @@ func TestBPETrainDeterministic(t *testing.T) {
 		}
 	}
 }
+
+func TestBPEEncodesTrainingWordsAsTrained(t *testing.T) {
+	// "ab" is the most frequent pair, so it merges first; "abab" then outweighs "abc".
+	m, err := TrainBPE(map[string]float64{"abab": 5, "abc": 1}, PieceOffset+3+2, 12, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tok, err := New(m)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pieces, _ := tok.Vocabulary()
+	for word, want := range map[string][]string{"abab": {"abab"}, "abc": {"ab", "c"}} {
+		var got []string
+		for _, id := range tok.Encode(word) {
+			got = append(got, pieces[id-PieceOffset])
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("%q: %v, want %v", word, got, want)
+		}
+	}
+}
