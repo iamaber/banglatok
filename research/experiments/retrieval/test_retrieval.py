@@ -19,12 +19,13 @@ class MetricsTests(unittest.TestCase):
             query_metrics([str(i) for i in range(10)] + ["a"], {"a": 1})["recall_at_10"],
             0,
         )
-        for ranking, qrels in [
+        cases: list[tuple[list[str], dict[str, int]]] = [
             (["a", "a"], {"a": 1}),
             (["a"], {"a": 0}),
             (["a"], {"a": -1}),
             (["a"], {"a": True}),
-        ]:
+        ]
+        for ranking, qrels in cases:
             with self.assertRaises(ValueError):
                 query_metrics(ranking, qrels)
 
@@ -66,7 +67,7 @@ class MetricsTests(unittest.TestCase):
             paired_difference(base, changed)
 
 
-class PilotTests(unittest.TestCase):
+class PilotFixture(unittest.TestCase):
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
@@ -103,6 +104,8 @@ class PilotTests(unittest.TestCase):
                 if split == "validation":
                     writer.writerows(pairs)
 
+
+class PilotTests(PilotFixture):
     def test_reproducible_pilot_and_review_queue(self) -> None:
         first, second = self.root / "pilot1", self.root / "pilot2"
         a = prepare(self.root, first, 2, 3, 42)

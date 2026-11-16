@@ -7,12 +7,9 @@ from prepare import read_rows, sha256, write_rows
 from review import import_review
 
 
-class AnnotationArchiveTests(unittest.TestCase):
-    def setUp(self):
-        test_review.ReviewTests.setUp(self)
-
+class AnnotationArchiveTests(test_review.ReviewFixture):
     def test_text_free_archive_restores_exact_agent_judgments_and_binds_source(self):
-        judgments, pairs = test_review.ReviewTests.labels(self)
+        judgments, pairs = self.labels()
         compact = self.root / "compact"
         result = archive(self.pilot, judgments, pairs, compact)
         self.assertTrue(result["annotation_coverage_complete"])
@@ -33,7 +30,7 @@ class AnnotationArchiveTests(unittest.TestCase):
         self.assertFalse((self.root / "changed").exists())
 
     def test_partial_archive_keeps_unknown_labels_unresolved(self):
-        judgments, pairs = test_review.ReviewTests.labels(self)
+        judgments, pairs = self.labels()
         rows = read_rows(judgments)
         rows[0]["grade"] = None
         write_rows(judgments, rows)
@@ -58,7 +55,7 @@ class AnnotationArchiveTests(unittest.TestCase):
             restore(self.pilot, compact, self.root / "damaged")
 
     def test_rebound_archive_cannot_duplicate_ids_or_inject_corpus_text(self):
-        judgments, pairs = test_review.ReviewTests.labels(self)
+        judgments, pairs = self.labels()
         compact = self.root / "compact"
         archive(self.pilot, judgments, pairs, compact)
         original = read_rows(compact / "judgments.jsonl")

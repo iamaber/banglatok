@@ -8,9 +8,9 @@ from prepare import read_rows, write_rows
 from review import export, import_review
 
 
-class ReviewTests(unittest.TestCase):
+class ReviewFixture(test_retrieval.PilotFixture):
     def setUp(self) -> None:
-        test_retrieval.PilotTests.setUp(self)
+        super().setUp()
         from prepare import prepare
 
         self.pilot = self.root / "pilot-review"
@@ -46,6 +46,8 @@ class ReviewTests(unittest.TestCase):
         write_rows(pair_review, pairs)
         return judgments, pair_review
 
+
+class ReviewTests(ReviewFixture):
     def test_blinded_packets_and_explicit_agent_provenance(self) -> None:
         output = self.root / "packets"
         export(self.pilot, output, calibration=1)
