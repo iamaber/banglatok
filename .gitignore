@@ -1,72 +1,48 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
 *.so
-.python-version
-
-# Virtual environments
-.venv/
-venv/
-env/
-ENV/
-
-# Packaging
-build/
-dist/
 *.egg-info/
-.eggs/
-
-# Testing and coverage
-.pytest_cache/
-.coverage
-.coverage.*
-htmlcov/
-.tox/
-.nox/
+.python-version
 .mypy_cache/
 .ruff_cache/
 
-# Jupyter
-.ipynb_checkpoints/
+# Virtual environments
+.venv/
+.venv-*/
 
-# Environment variables and secrets
-.env
-.env.*
-!.env.example
-
-
-# Trained models and checkpoints
-checkpoints/
-artifacts/
-outputs/
-runs/
-*.ckpt
-*.pt
-*.pth
-*.onnx
-*.safetensors
-
-# Logs and temporary files
+# Build outputs
+build/
+dist/
+bin/
+src/banglatok/_go.*
 .tools/
-benchmarks/results/*.out
+
+# Corpora, trained models and research checkpoints
 data/raw/
 data/processed/
 models/
-bin/
-src/banglatok/_go.*
+*.pt
+*.safetensors
+
+# Generated benchmark and research output
+benchmarks/results/*.out
 research/reports/train-*.txt
 research/reports/*.stdout.txt
 research/reports/tests.txt
 research/reports/python-build.txt
 *.log
-logs/
-tmp/
-temp/
 .cache/
+
+# Secrets
+.env
+.env.*
 
 # Editors and operating systems
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Agent instructions
+AGENTS.md
