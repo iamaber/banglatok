@@ -16,18 +16,37 @@ class OriginalComparisonTests(unittest.TestCase):
             protocol = root / "protocol.json"
             protocol.write_text("{}")
             criteria = root / "criteria.json"
-            criteria.write_text(json.dumps({"required_budgets": ["equal-data"],
-                                             "required_training_seeds": [17]}))
+            criteria.write_text(
+                json.dumps({"required_budgets": ["equal-data"], "required_training_seeds": [17]})
+            )
             checkpoint = root / "checkpoint"
             checkpoint.mkdir()
             report = checkpoint / "training-report.json"
-            report.write_text(json.dumps({"protocol_sha256": sha256(protocol),
-                                           "arm": "bpe-context", "seed": 999,
-                                           "budget": "equal-data"}))
+            report.write_text(
+                json.dumps(
+                    {
+                        "protocol_sha256": sha256(protocol),
+                        "arm": "bpe-context",
+                        "seed": 999,
+                        "budget": "equal-data",
+                    }
+                )
+            )
             inventory = root / "inventory.json"
-            inventory.write_text(json.dumps({"protocol_sha256": sha256(protocol), "runs": [
-                {"name": "equal-data/original-seed17", "directory": str(checkpoint),
-                 "training_report_sha256": sha256(report)}]}))
+            inventory.write_text(
+                json.dumps(
+                    {
+                        "protocol_sha256": sha256(protocol),
+                        "runs": [
+                            {
+                                "name": "equal-data/original-seed17",
+                                "directory": str(checkpoint),
+                                "training_report_sha256": sha256(report),
+                            }
+                        ],
+                    }
+                )
+            )
             output = root / "evaluation"
             with self.assertRaisesRegex(ValueError, "checkpoint does not match"):
                 run(root / "unread-benchmark", inventory, root / "base", criteria, output, protocol)
@@ -42,9 +61,15 @@ class OriginalComparisonTests(unittest.TestCase):
             (checkpoint / "encoder.json").write_text('{"custom_tokenizer": null}')
             weights = checkpoint / "model.safetensors"
             weights.write_bytes(b"original")
-            report = {"seed": 17, "budget_kind": "equal-data", "base_model_files": {},
-                      "tokenizer_initialization": {"method": "retain original tokenizer and input embeddings"},
-                      "checkpoint_files": {p.name: sha256(p) for p in checkpoint.iterdir()}}
+            report = {
+                "seed": 17,
+                "budget_kind": "equal-data",
+                "base_model_files": {},
+                "tokenizer_initialization": {
+                    "method": "retain original tokenizer and input embeddings"
+                },
+                "checkpoint_files": {p.name: sha256(p) for p in checkpoint.iterdir()},
+            }
             (checkpoint / "training-report.json").write_text(json.dumps(report))
             verify_short(checkpoint, base, "equal-data", 17)
             weights.write_bytes(b"replacement")

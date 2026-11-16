@@ -18,16 +18,29 @@ class ReviewTests(unittest.TestCase):
         evaluate(self.pilot, self.root / "report.json", None)
 
     def labels(self) -> tuple[Path, Path]:
-        positives = {(r["query_id"], r["document_id"])
-                     for r in read_rows(self.pilot / "qrels.jsonl")}
+        positives = {
+            (r["query_id"], r["document_id"]) for r in read_rows(self.pilot / "qrels.jsonl")
+        }
         grades = [
-            dict(r, grade=2 if (r["query_id"], r["document_id"]) in positives else 0,
-                 reviewer_id="fixture-agent", reviewer_origin="agent", rationale="fixture judgment")
+            dict(
+                r,
+                grade=2 if (r["query_id"], r["document_id"]) in positives else 0,
+                reviewer_id="fixture-agent",
+                reviewer_origin="agent",
+                rationale="fixture judgment",
+            )
             for r in read_rows(self.pilot / "review-pool.jsonl")
         ]
-        pairs = [dict(r, pair_correct=True, privacy_review_passed=True,
-                      reviewer="fixture-agent", reviewer_origin="agent")
-                 for r in read_rows(self.pilot / "authoring.jsonl")]
+        pairs = [
+            dict(
+                r,
+                pair_correct=True,
+                privacy_review_passed=True,
+                reviewer="fixture-agent",
+                reviewer_origin="agent",
+            )
+            for r in read_rows(self.pilot / "authoring.jsonl")
+        ]
         judgments, pair_review = self.root / "grades.jsonl", self.root / "pairs.jsonl"
         write_rows(judgments, grades)
         write_rows(pair_review, pairs)

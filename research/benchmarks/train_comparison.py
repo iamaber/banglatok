@@ -19,7 +19,6 @@ def sha256(path: Path) -> str:
 
 def main() -> None:
     import sentencepiece as spm
-
     from tokenizers import Tokenizer, decoders, models, pre_tokenizers, trainers
 
     if os.environ.get("TOKENIZERS_PARALLELISM") != "false":

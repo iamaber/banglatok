@@ -14,7 +14,10 @@ def verify(output: Path, protocol: Path, base: Path, arm: str, seed: int, budget
     specification = json.loads(protocol.read_text())
     report = json.loads((output / "training-report.json").read_text())
     if (report["protocol_sha256"], report["arm"], report["seed"], report["budget"]) != (
-        sha256(protocol), arm, seed, budget
+        sha256(protocol),
+        arm,
+        seed,
+        budget,
     ):
         raise ValueError("checkpoint does not match frozen protocol and run")
     if report["base_files"] != {p.name: sha256(p) for p in base.iterdir() if p.is_file()}:
@@ -35,31 +38,42 @@ def verify(output: Path, protocol: Path, base: Path, arm: str, seed: int, budget
     initialization = report["tokenizer_initialization"]
     if settings["tokenizer"]:
         digest = settings["tokenizer_sha256"]
-        if (sha256(Path(settings["tokenizer"])), metadata["tokenizer_sha256"],
-                initialization["tokenizer_sha256"]) != (digest, digest, digest):
+        if (
+            sha256(Path(settings["tokenizer"])),
+            metadata["tokenizer_sha256"],
+            initialization["tokenizer_sha256"],
+        ) != (digest, digest, digest):
             raise ValueError("custom tokenizer changed")
     if settings["initialization"]:
         digest = settings["initialization_manifest_sha256"]
-        if (initialization["artifact_manifest_sha256"],
-                sha256(Path(settings["initialization"]) / "manifest.json")) != (digest, digest):
+        if (
+            initialization["artifact_manifest_sha256"],
+            sha256(Path(settings["initialization"]) / "manifest.json"),
+        ) != (digest, digest):
             raise ValueError("context initialization changed")
     else:
-        method = "original-subword mean initialization" if settings["tokenizer"] else (
-            "retain original tokenizer and input embeddings"
+        method = (
+            "original-subword mean initialization"
+            if settings["tokenizer"]
+            else ("retain original tokenizer and input embeddings")
         )
         if initialization["method"] != method:
             raise ValueError("wrong initialization control")
     stages = report["stages"]
     for stage in ("representation", "contrastive"):
         counts = stages[stage]["query_languages"]
-        if counts != dict.fromkeys(("english", "banglish"), stages[stage]["steps"] * specification["batch_size"] // 2):
+        if counts != dict.fromkeys(
+            ("english", "banglish"), stages[stage]["steps"] * specification["batch_size"] // 2
+        ):
             raise ValueError("language exposure is not balanced")
     expected_hard = stages["contrastive"]["steps"] // 3 * specification["batch_size"]
     if stages["contrastive"]["verified_negative_examples"] != expected_hard:
         raise ValueError("verified-negative exposure differs from protocol")
     if budget == "equal-data":
-        if any(stages[stage]["steps"] != specification[f"{stage}_steps"]
-               for stage in ("representation", "contrastive")):
+        if any(
+            stages[stage]["steps"] != specification[f"{stage}_steps"]
+            for stage in ("representation", "contrastive")
+        ):
             raise ValueError("equal-data run did not finish its exposure")
     elif report["equal_compute_limit_seconds"] != specification["equal_compute_seconds"]:
         raise ValueError("different compute budget")
@@ -76,8 +90,10 @@ def run(protocol: Path, base: Path, root: Path, budget: str) -> dict:
         if sha256(directory / "manifest.json") != setting["manifest_sha256"]:
             raise ValueError("training input manifest changed")
         manifest = json.loads((directory / "manifest.json").read_text())
-        if any(Path(name).name != name or sha256(directory / name) != digest
-               for name, digest in manifest["files"].items()):
+        if any(
+            Path(name).name != name or sha256(directory / name) != digest
+            for name, digest in manifest["files"].items()
+        ):
             raise ValueError("training input file changed")
     completed = []
     for seed in specification["training_seeds"]:
@@ -87,24 +103,50 @@ def run(protocol: Path, base: Path, root: Path, budget: str) -> dict:
             output = root / budget / f"{arm}-seed{seed}"
             if not (output / "training-report.json").exists():
                 if output.exists():
-                    raise ValueError(f"incomplete checkpoint exists; inspect before retrying: {output}")
+                    raise ValueError(
+                        f"incomplete checkpoint exists; inspect before retrying: {output}"
+                    )
                 print(f"Training {budget}/{arm}/seed{seed}", flush=True)
-                subprocess.run([
-                    sys.executable, str(Path(__file__).with_name("train_extended.py")),
-                    "--protocol", str(protocol), "--base", str(base), "--arm", arm,
-                    "--seed", str(seed), "--budget", budget, "--output", str(output),
-                ], check=True)
+                subprocess.run(
+                    [
+                        sys.executable,
+                        str(Path(__file__).with_name("train_extended.py")),
+                        "--protocol",
+                        str(protocol),
+                        "--base",
+                        str(base),
+                        "--arm",
+                        arm,
+                        "--seed",
+                        str(seed),
+                        "--budget",
+                        budget,
+                        "--output",
+                        str(output),
+                    ],
+                    check=True,
+                )
             report = verify(output, protocol, base, arm, seed, budget)
-            completed.append({"arm": arm, "seed": seed, "directory": str(output),
-                              "training_report_sha256": sha256(output / "training-report.json"),
-                              "charged_seconds": report["charged_training_seconds"],
-                              "training_sequence_sha256": report["training_sequence_sha256"]})
+            completed.append(
+                {
+                    "arm": arm,
+                    "seed": seed,
+                    "directory": str(output),
+                    "training_report_sha256": sha256(output / "training-report.json"),
+                    "charged_seconds": report["charged_training_seconds"],
+                    "training_sequence_sha256": report["training_sequence_sha256"],
+                }
+            )
     if budget == "equal-data":
         for seed in specification["training_seeds"]:
             if len({r["training_sequence_sha256"] for r in completed if r["seed"] == seed}) != 1:
                 raise ValueError("equal-data arms consumed different sample sequences")
-    return {"protocol_sha256": sha256(protocol), "budget": budget, "runs": completed,
-            "equal_data_sample_order_verified": budget == "equal-data"}
+    return {
+        "protocol_sha256": sha256(protocol),
+        "budget": budget,
+        "runs": completed,
+        "equal_data_sample_order_verified": budget == "equal-data",
+    }
 
 
 if __name__ == "__main__":

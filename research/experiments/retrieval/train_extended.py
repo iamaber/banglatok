@@ -49,11 +49,17 @@ def train(protocol: Path, base: Path, arm: str, seed: int, budget: str, output: 
     negatives = specification["hard_negatives"]
     hard = verified_rows(Path(negatives["directory"]), negatives["manifest_sha256"])
     positive_lookup = {row["group"]: row for row in pairs}
-    if any(row["pair_correct"] is not True or row["negative_grade"] != 0
-           or row["group"] == row["negative_group"]
-           or row["group"] not in positive_lookup
-           or any(row[field] != positive_lookup[row["group"]][field]
-                  for field in ("query", "document", "query_language")) for row in hard):
+    if any(
+        row["pair_correct"] is not True
+        or row["negative_grade"] != 0
+        or row["group"] == row["negative_group"]
+        or row["group"] not in positive_lookup
+        or any(
+            row[field] != positive_lookup[row["group"]][field]
+            for field in ("query", "document", "query_language")
+        )
+        for row in hard
+    ):
         raise ValueError("hard negatives must be explicitly reviewed nonanswers")
     if any(row["query_language"] not in ("english", "banglish") for row in pairs):
         raise ValueError("unexpected training query language")
@@ -71,7 +77,7 @@ def train(protocol: Path, base: Path, arm: str, seed: int, budget: str, output: 
     student = Encoder(base, tokenizer, specification["maximum_tokens"])
     teacher = Encoder(base, max_length=specification["maximum_tokens"])
     teacher.model.eval().requires_grad_(False)
-    preprocessing_cost = 0.
+    preprocessing_cost = 0.0
     if settings["initialization"]:
         artifact = Path(settings["initialization"])
         if sha256(artifact / "manifest.json") != settings["initialization_manifest_sha256"]:
@@ -80,21 +86,26 @@ def train(protocol: Path, base: Path, arm: str, seed: int, budget: str, output: 
         if initializer["alignment_manifest_sha256"] != training["manifest_sha256"]:
             raise ValueError("context initialization uses different training data")
         preprocessing_cost = initializer["build_seconds"]
-    optimizer = torch.optim.AdamW(student.model.parameters(), lr=2e-5, weight_decay=.01)
+    optimizer = torch.optim.AdamW(student.model.parameters(), lr=2e-5, weight_decay=0.01)
     torch.manual_seed(seed)
     student.model.train()
-    elapsed = lambda: time.perf_counter() - started + preprocessing_cost
+
+    def elapsed():
+        return time.perf_counter() - started + preprocessing_cost
+
     limit = specification["equal_compute_seconds"] if budget == "equal-compute" else None
     if limit and elapsed() >= limit:
         raise ValueError("initialization exhausted compute budget")
-    representation_deadline = None if limit is None else elapsed() + (limit - elapsed()) * .35
+    representation_deadline = None if limit is None else elapsed() + (limit - elapsed()) * 0.35
     history, stages = [], {}
     sequence = hashlib.sha256()
     batch_size = specification["batch_size"]
     english_retention = specification["english_retention_weight"]
     try:
-        for stage, requested in (("representation", specification["representation_steps"]),
-                                 ("contrastive", specification["contrastive_steps"])):
+        for stage, requested in (
+            ("representation", specification["representation_steps"]),
+            ("contrastive", specification["contrastive_steps"]),
+        ):
             rng = random.Random(f"{seed}:{stage}")
             losses, language_counts, hard_examples = [], {"english": 0, "banglish": 0}, 0
             maximum = requested if limit is None else 100000
@@ -120,54 +131,100 @@ def train(protocol: Path, base: Path, arm: str, seed: int, budget: str, output: 
                     query_inputs, _ = student.inputs(queries)
                     doc_inputs, _ = student.inputs(documents)
                     q_vectors, d_vectors = student.pool(query_inputs), student.pool(doc_inputs)
-                    logits = q_vectors @ d_vectors.T / .05
+                    logits = q_vectors @ d_vectors.T / 0.05
                     targets = torch.arange(batch_size)
-                    loss = (F.cross_entropy(logits, targets) + F.cross_entropy(logits.T, targets)) / 2
+                    loss = (
+                        F.cross_entropy(logits, targets) + F.cross_entropy(logits.T, targets)
+                    ) / 2
                     if use_hard:
-                        negative_inputs, _ = student.inputs(["passage: " + row["negative"] for row in batch])
+                        negative_inputs, _ = student.inputs(
+                            ["passage: " + row["negative"] for row in batch]
+                        )
                         negative_vectors = student.pool(negative_inputs)
-                        pair_logits = torch.stack([(q_vectors * d_vectors).sum(1),
-                                                   (q_vectors * negative_vectors).sum(1)], dim=1) / .05
-                        loss = loss + F.cross_entropy(pair_logits, torch.zeros(batch_size, dtype=torch.long))
+                        pair_logits = (
+                            torch.stack(
+                                [
+                                    (q_vectors * d_vectors).sum(1),
+                                    (q_vectors * negative_vectors).sum(1),
+                                ],
+                                dim=1,
+                            )
+                            / 0.05
+                        )
+                        loss = loss + F.cross_entropy(
+                            pair_logits, torch.zeros(batch_size, dtype=torch.long)
+                        )
                         hard_examples += batch_size
-                    english_inputs, _ = teacher.inputs(queries[:batch_size // 2])
+                    english_inputs, _ = teacher.inputs(queries[: batch_size // 2])
                     with torch.no_grad():
                         retained = teacher.pool(english_inputs)
-                    retention_loss = (1 - (q_vectors[:batch_size // 2] * retained).sum(1)).mean()
+                    retention_loss = (1 - (q_vectors[: batch_size // 2] * retained).sum(1)).mean()
                     loss = loss + english_retention * retention_loss
                 if not torch.isfinite(loss):
                     raise ValueError("non-finite loss")
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(student.model.parameters(), 1., error_if_nonfinite=True)
+                torch.nn.utils.clip_grad_norm_(
+                    student.model.parameters(), 1.0, error_if_nonfinite=True
+                )
                 optimizer.step()
                 losses.append(float(loss.detach()))
                 if step % 32 == 0:
-                    entry = {"stage": stage, "steps": step + 1, "loss": losses[-1], "charged_seconds": elapsed()}
+                    entry = {
+                        "stage": stage,
+                        "steps": step + 1,
+                        "loss": losses[-1],
+                        "charged_seconds": elapsed(),
+                    }
                     history.append(entry)
                     print(json.dumps(entry), flush=True)
             if not losses:
                 raise ValueError("budget allowed no steps in stage")
-            stages[stage] = {"steps": len(losses), "mean_loss": sum(losses) / len(losses),
-                             "first_loss": losses[0], "last_loss": losses[-1],
-                             "query_languages": language_counts, "verified_negative_examples": hard_examples}
+            stages[stage] = {
+                "steps": len(losses),
+                "mean_loss": sum(losses) / len(losses),
+                "first_loss": losses[0],
+                "last_loss": losses[-1],
+                "query_languages": language_counts,
+                "verified_negative_examples": hard_examples,
+            }
         training_seconds = elapsed()
         output.mkdir(parents=True)
         student.save(output)
-        result = {"arm": arm, "seed": seed, "budget": budget,
-                  "protocol_sha256": sha256(protocol), "stages": stages, "history": history,
-                  "charged_training_seconds": training_seconds, "preprocessing_charged_seconds": preprocessing_cost,
-                  "equal_compute_limit_seconds": limit,
-                  "overrun_seconds": max(0, training_seconds - limit) if limit else 0,
-                  "tokenizer_initialization": student.initialization,
-                  "training_sequence_sha256": sequence.hexdigest(),
-                  "base_files": {p.name: sha256(p) for p in base.iterdir() if p.is_file()},
-                  "checkpoint_files": {p.name: sha256(p) for p in output.iterdir() if p.is_file()},
-                  "implementations": {p.name: sha256(p) for p in (Path(__file__), Path(__file__).with_name("encoder.py"), Path(__file__).with_name("context_transfer.py"))},
-                  "objective": "cosine teacher adaptation; symmetric in-batch CE plus verified-negative CE and English teacher cosine retention",
-                  "english_sampling": "eight English and eight Banglish queries per batch; no reversal",
-                  "limitations": ["single-agent negative judgments", "bulk in-batch semantic negatives remain unreviewed",
-                                  "balanced replay and retention do not guarantee English quality",
-                                  "cached context artifact build cost conservatively charged in full per run"]}
+        result = {
+            "arm": arm,
+            "seed": seed,
+            "budget": budget,
+            "protocol_sha256": sha256(protocol),
+            "stages": stages,
+            "history": history,
+            "charged_training_seconds": training_seconds,
+            "preprocessing_charged_seconds": preprocessing_cost,
+            "equal_compute_limit_seconds": limit,
+            "overrun_seconds": max(0, training_seconds - limit) if limit else 0,
+            "tokenizer_initialization": student.initialization,
+            "training_sequence_sha256": sequence.hexdigest(),
+            "base_files": {p.name: sha256(p) for p in base.iterdir() if p.is_file()},
+            "checkpoint_files": {p.name: sha256(p) for p in output.iterdir() if p.is_file()},
+            "implementations": {
+                p.name: sha256(p)
+                for p in (
+                    Path(__file__),
+                    Path(__file__).with_name("encoder.py"),
+                    Path(__file__).with_name("context_transfer.py"),
+                )
+            },
+            "objective": (
+                "cosine teacher adaptation; symmetric in-batch CE plus verified-negative CE "
+                "and English teacher cosine retention"
+            ),
+            "english_sampling": "eight English and eight Banglish queries per batch; no reversal",
+            "limitations": [
+                "single-agent negative judgments",
+                "bulk in-batch semantic negatives remain unreviewed",
+                "balanced replay and retention do not guarantee English quality",
+                "cached context artifact build cost conservatively charged in full per run",
+            ],
+        }
         (output / "training-report.json").write_text(json.dumps(result, indent=2) + "\n")
         return result
     finally:

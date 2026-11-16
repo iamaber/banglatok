@@ -22,15 +22,20 @@ def analyze(dataset: Path, suite: Path, selection: Path, output: Path) -> dict:
     decision = json.loads(selection.read_text())
     if not decision["selection_frozen_before_reserved_test"]:
         raise ValueError("original selection is not frozen")
-    previous = next(Path(row["directory"]) for row in specification["runs"]
-                    if row["name"] == "unchanged")
-    original = json.loads((previous / "report.json").read_text())["results"]["retrieval-reviewed-v1"]
+    previous = next(
+        Path(row["directory"]) for row in specification["runs"] if row["name"] == "unchanged"
+    )
+    original = json.loads((previous / "report.json").read_text())["results"][
+        "retrieval-reviewed-v1"
+    ]
     source = Path(original["dataset"])
     verify_manifest(source)
     if manifest["previous_manifest_sha256"] != sha256(source / "manifest.json"):
         raise ValueError("expanded labels refer to a different cohort")
-    if any(sha256(dataset / name) != sha256(source / name)
-           for name in ("queries.jsonl", "documents.jsonl")):
+    if any(
+        sha256(dataset / name) != sha256(source / name)
+        for name in ("queries.jsonl", "documents.jsonl")
+    ):
         raise ValueError("expanded analysis requires identical query/document inputs")
     query_ids = {r["id"] for r in read_rows(dataset / "queries.jsonl")}
     if query_ids != {r["query_id"] for r in read_rows(dataset / "qrels.jsonl") if r["grade"] == 2}:
@@ -40,7 +45,9 @@ def analyze(dataset: Path, suite: Path, selection: Path, output: Path) -> dict:
         name, directory = run["name"], Path(run["directory"])
         if name in rankings or sha256(directory / "report.json") != run["report_sha256"]:
             raise ValueError("duplicate or changed model report")
-        detail = json.loads((directory / "report.json").read_text())["results"]["retrieval-reviewed-v1"]
+        detail = json.loads((directory / "report.json").read_text())["results"][
+            "retrieval-reviewed-v1"
+        ]
         ranking = directory / "retrieval-reviewed-v1" / "rankings.jsonl"
         if detail["dataset_manifest_sha256"] != sha256(source / "manifest.json") or (
             sha256(ranking) != detail["ranking_sha256"]
@@ -63,24 +70,45 @@ def analyze(dataset: Path, suite: Path, selection: Path, output: Path) -> dict:
             )
             for arm in ("unigram-32000", "bpe-32000"):
                 candidates = {s: scores[f"{budget}/{arm}-seed{s}"] for s in controls}
-                comparisons[f"{budget}/{arm}_minus_adapted_original"] = paired_seeds(controls, candidates)
-        views[view] = {"summary": {name: summarize(rows) for name, rows in scores.items()},
-                       "paired_comparisons": comparisons}
-    result = {"dataset": str(dataset), "dataset_manifest_sha256": sha256(dataset / "manifest.json"),
-              "suite_sha256": sha256(suite), "rankings_recomputed": False,
-              "ranking_sha256": {name: sha256(path) for name, path in rankings.items()},
-              "frozen_original_selection": decision["selection"], "selection_sha256": sha256(selection),
-              "selection_changed": False, "pool_coverage": pool_coverage, "label_views": views,
-              "implementations": {
-                  name: sha256(Path(__file__).with_name(name))
-                  for name in ("expanded_analysis.py", "expand_pool.py", "prepare.py",
-                               "compare.py", "metrics.py", "seed_analysis.py", "sentence_analysis.py")
-              },
-              "limits": ["agent sentence-correspondence review; no human judgments",
-                         "all 19 pooled systems have complete top-ten coverage; outside-pool relevance remains unknown",
-                         "larger judged answer sets also change ideal ranking and recall denominators",
-                         "secondary rescore cannot change the original frozen domain choice",
-                         "bootstrap excludes annotation uncertainty"]}
+                comparisons[f"{budget}/{arm}_minus_adapted_original"] = paired_seeds(
+                    controls, candidates
+                )
+        views[view] = {
+            "summary": {name: summarize(rows) for name, rows in scores.items()},
+            "paired_comparisons": comparisons,
+        }
+    result = {
+        "dataset": str(dataset),
+        "dataset_manifest_sha256": sha256(dataset / "manifest.json"),
+        "suite_sha256": sha256(suite),
+        "rankings_recomputed": False,
+        "ranking_sha256": {name: sha256(path) for name, path in rankings.items()},
+        "frozen_original_selection": decision["selection"],
+        "selection_sha256": sha256(selection),
+        "selection_changed": False,
+        "pool_coverage": pool_coverage,
+        "label_views": views,
+        "implementations": {
+            name: sha256(Path(__file__).with_name(name))
+            for name in (
+                "expanded_analysis.py",
+                "expand_pool.py",
+                "prepare.py",
+                "compare.py",
+                "metrics.py",
+                "seed_analysis.py",
+                "sentence_analysis.py",
+            )
+        },
+        "limits": [
+            "agent sentence-correspondence review; no human judgments",
+            "all 19 pooled systems have complete top-ten coverage; "
+            "outside-pool relevance remains unknown",
+            "larger judged answer sets also change ideal ranking and recall denominators",
+            "secondary rescore cannot change the original frozen domain choice",
+            "bootstrap excludes annotation uncertainty",
+        ],
+    }
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, indent=2) + "\n")
     return result

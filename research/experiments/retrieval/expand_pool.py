@@ -46,7 +46,8 @@ def build(source: Path, suite: Path, output: Path) -> dict:
         ranking_path = directory / source.name / "rankings.jsonl"
         digest = sha256(ranking_path)
         if (report["dataset_manifest_sha256"], report["ranking_sha256"]) != (
-            sha256(source / "manifest.json"), digest
+            sha256(source / "manifest.json"),
+            digest,
         ):
             raise ValueError("ranking or dataset checksum mismatch")
         rows = read_rows(ranking_path)
@@ -59,21 +60,37 @@ def build(source: Path, suite: Path, output: Path) -> dict:
             candidates.update((row["query_id"], did) for did in ids)
         ranking_hashes[str(ranking_path)] = digest
     packet = [
-        {"query_id": qid, "document_id": did, "query": queries[qid]["text"],
-         "document": documents[did]["text"], "group": queries[qid]["group"],
-         "grade": None, "rationale": None, "reviewer_id": None, "reviewer_origin": None}
+        {
+            "query_id": qid,
+            "document_id": did,
+            "query": queries[qid]["text"],
+            "document": documents[did]["text"],
+            "group": queries[qid]["group"],
+            "grade": None,
+            "rationale": None,
+            "reviewer_id": None,
+            "reviewer_origin": None,
+        }
         for qid, did in sorted(candidates - known)
     ]
     random.Random(20261009).shuffle(packet)
     manifest = {
-        "source": str(source), "source_manifest_sha256": sha256(source / "manifest.json"),
-        "suite": str(suite), "suite_sha256": sha256(suite),
-        "ranking_files": ranking_hashes, "models": sorted(names),
-        "queries": len(queries), "documents": len(documents),
-        "previous_judgments": len(previous), "new_pairs": len(packet),
+        "source": str(source),
+        "source_manifest_sha256": sha256(source / "manifest.json"),
+        "suite": str(suite),
+        "suite_sha256": sha256(suite),
+        "ranking_files": ranking_hashes,
+        "models": sorted(names),
+        "queries": len(queries),
+        "documents": len(documents),
+        "previous_judgments": len(previous),
+        "new_pairs": len(packet),
         "top10_union_pairs": len(candidates),
-        "rubric": {"2": "same essential meaning", "1": "related but partly different",
-                   "0": "unrelated or contradicts; preserve negation, names and numbers"},
+        "rubric": {
+            "2": "same essential meaning",
+            "1": "related but partly different",
+            "0": "unrelated or contradicts; preserve negation, names and numbers",
+        },
         "blindness": "packet hides system names and ranks; implementation agent knows experiment",
     }
     output.mkdir(parents=True)
@@ -105,8 +122,10 @@ def import_labels(pool: Path, labels: Path, output: Path) -> dict:
             raise ValueError("duplicate, unknown or non-text-free label")
         if type(row["grade"]) is not int or row["grade"] not in (0, 1, 2):
             raise ValueError("unresolved or invalid grade")
-        if any(not isinstance(row[field], str) or not row[field].strip()
-               for field in ("rationale", "reviewer_id")):
+        if any(
+            not isinstance(row[field], str) or not row[field].strip()
+            for field in ("rationale", "reviewer_id")
+        ):
             raise ValueError("rationale and reviewer required")
         if row["reviewer_origin"] not in ("agent", "human"):
             raise ValueError("explicit reviewer origin required")
@@ -115,10 +134,14 @@ def import_labels(pool: Path, labels: Path, output: Path) -> dict:
         raise ValueError("every new candidate must be judged")
     previous = read_rows(source / "qrels.jsonl")
     additions = [
-        {"query_id": row["query_id"], "document_id": row["document_id"],
-         "grade": row["grade"], "rationale": row["rationale"],
-         "label_origin": row["reviewer_origin"] + "_reviewed",
-         "reviewer_id": row["reviewer_id"]}
+        {
+            "query_id": row["query_id"],
+            "document_id": row["document_id"],
+            "grade": row["grade"],
+            "rationale": row["rationale"],
+            "label_origin": row["reviewer_origin"] + "_reviewed",
+            "reviewer_id": row["reviewer_id"],
+        }
         for _, row in sorted(judged.items())
     ]
     output.mkdir(parents=True)
@@ -126,20 +149,27 @@ def import_labels(pool: Path, labels: Path, output: Path) -> dict:
         shutil.copyfile(source / name, output / name)
     write_rows(output / "qrels.jsonl", previous + additions)
     result = {
-        **original, "label_status": "agent-reviewed original and adapted-system top10 union",
+        **original,
+        "label_status": "agent-reviewed original and adapted-system top10 union",
         "previous_manifest_sha256": manifest["source_manifest_sha256"],
         "pool_manifest_sha256": sha256(pool / "manifest.json"),
         "new_labels_sha256": sha256(labels),
         "new_grade_counts": dict(Counter(r["grade"] for r in additions)),
         "previous_labels_preserved": len(previous),
-        "new_labels": len(additions), "pooled_system_top10_coverage": 1.0,
-        "reviewer_ids": sorted({r["reviewer_id"] for r in previous + additions if r.get("reviewer_id")}),
-        "judgment_origins": dict(Counter(r.get("label_origin", "unknown").split("_", 1)[0]
-                                         for r in previous + additions)),
-        "human_review_completed": False, "independent_review_verified": False,
-        "files": {name: sha256(output / name) for name in (
-            "queries.jsonl", "documents.jsonl", "qrels.jsonl"
-        )},
+        "new_labels": len(additions),
+        "pooled_system_top10_coverage": 1.0,
+        "reviewer_ids": sorted(
+            {r["reviewer_id"] for r in previous + additions if r.get("reviewer_id")}
+        ),
+        "judgment_origins": dict(
+            Counter(r.get("label_origin", "unknown").split("_", 1)[0] for r in previous + additions)
+        ),
+        "human_review_completed": False,
+        "independent_review_verified": False,
+        "files": {
+            name: sha256(output / name)
+            for name in ("queries.jsonl", "documents.jsonl", "qrels.jsonl")
+        },
     }
     (output / "manifest.json").write_text(json.dumps(result, indent=2) + "\n")
     return result

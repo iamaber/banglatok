@@ -22,7 +22,9 @@ def review_pool(directory: Path) -> list[dict]:
             raise ValueError("duplicate or unknown review pair")
         query, document = queries[key[0]], documents[key[1]]
         if (row["query"], row["document"], row["group"]) != (
-            query["text"], document["text"], query["group"]
+            query["text"],
+            document["text"],
+            query["group"],
         ):
             raise ValueError("review text/group does not match frozen dataset")
         seen.add(key)
@@ -40,9 +42,13 @@ def export(directory: Path, output: Path, seed: int = 17, calibration: int = 30)
     calibration_groups = set(groups[:calibration])
     blinded = [
         {
-            "query_id": r["query_id"], "document_id": r["document_id"],
-            "group": r["group"], "query": r["query"], "document": r["document"],
-            "grade": None, "rationale": None,
+            "query_id": r["query_id"],
+            "document_id": r["document_id"],
+            "group": r["group"],
+            "query": r["query"],
+            "document": r["document"],
+            "grade": None,
+            "rationale": None,
         }
         for r in pool
     ]
@@ -56,20 +62,28 @@ def export(directory: Path, output: Path, seed: int = 17, calibration: int = 30)
         )
     shutil.copyfile(directory / "authoring.jsonl", output / "pair-review.jsonl")
     instructions = {
-        "rubric": {"2": "same essential meaning", "1": "related but partly different",
-                   "0": "unrelated or contradicts; preserve negation, names and numbers"},
+        "rubric": {
+            "2": "same essential meaning",
+            "1": "related but partly different",
+            "0": "unrelated or contradicts; preserve negation, names and numbers",
+        },
         "unresolved": "Leave grade null; null is never a negative.",
         "provenance": "reviewer_origin must be agent or human; never invent human review",
         "independence": "Keep packets separate until grades are recorded independently.",
-        "calibration_groups": len(calibration_groups), "seed": seed,
-        "pool_sha256": sha256(directory / "review-pool.jsonl"), "pairs": len(pool),
+        "calibration_groups": len(calibration_groups),
+        "seed": seed,
+        "pool_sha256": sha256(directory / "review-pool.jsonl"),
+        "pairs": len(pool),
     }
     (output / "instructions.json").write_text(json.dumps(instructions, indent=2) + "\n")
     return instructions
 
 
 def import_review(
-    directory: Path, judgments: Path, pair_review: Path, output: Path,
+    directory: Path,
+    judgments: Path,
+    pair_review: Path,
+    output: Path,
 ) -> dict:
     """Import final judgments; do not infer a negative from an unfinished field."""
     if output.exists():
@@ -126,9 +140,10 @@ def import_review(
         query_id = row["query_id"]
         if query_id not in query_ids or query_id in decisions:
             raise ValueError("duplicate or unknown pair decision")
-        if any(row.get(k) != source_pairs[query_id][k] for k in (
-            "group", "source_banglish", "paired_bengali"
-        )):
+        if any(
+            row.get(k) != source_pairs[query_id][k]
+            for k in ("group", "source_banglish", "paired_bengali")
+        ):
             raise ValueError("pair review changed the original pair or group")
         if any(type(row.get(k)) is not bool for k in ("pair_correct", "privacy_review_passed")):
             raise ValueError("source-pair and privacy decisions must be explicit booleans")
@@ -144,13 +159,21 @@ def import_review(
     private_groups = {r["group"] for r in decisions.values() if not r["privacy_review_passed"]}
     documents = [d for d in documents if d["group"] not in private_groups]
     document_ids = {d["id"] for d in documents}
-    queries = [q for q in queries if decisions[q["id"]]["pair_correct"]
-               and q["group"] not in private_groups]
+    queries = [
+        q
+        for q in queries
+        if decisions[q["id"]]["pair_correct"] and q["group"] not in private_groups
+    ]
     kept_ids = {q["id"] for q in queries}
     qrels = [
-        {"query_id": qid, "document_id": did, "grade": row["grade"],
-         "label_origin": f"{row['reviewer_origin']}_reviewed",
-         "reviewer_id": row["reviewer_id"], "rationale": row["rationale"]}
+        {
+            "query_id": qid,
+            "document_id": did,
+            "grade": row["grade"],
+            "label_origin": f"{row['reviewer_origin']}_reviewed",
+            "reviewer_id": row["reviewer_id"],
+            "rationale": row["rationale"],
+        }
         for (qid, did), row in sorted(labels.items())
         if qid in kept_ids and did in document_ids
     ]
@@ -160,34 +183,50 @@ def import_review(
     output.mkdir(parents=True)
     for name, rows in (("documents", documents), ("queries", queries), ("qrels", qrels)):
         write_rows(output / f"{name}.jsonl", rows)
-    write_rows(output / "judgments.jsonl", [
-        row for (qid, did), row in sorted(labels.items()) if qid in kept_ids and did in document_ids
-    ])
-    write_rows(output / "pair-review.jsonl", [
-        row for qid, row in sorted(decisions.items()) if qid in kept_ids
-    ])
+    write_rows(
+        output / "judgments.jsonl",
+        [
+            row
+            for (qid, did), row in sorted(labels.items())
+            if qid in kept_ids and did in document_ids
+        ],
+    )
+    write_rows(
+        output / "pair-review.jsonl",
+        [row for qid, row in sorted(decisions.items()) if qid in kept_ids],
+    )
     manifest = {
-        **original, "queries": len(queries), "documents": len(documents),
+        **original,
+        "queries": len(queries),
+        "documents": len(documents),
         "buckets": dict(Counter(q["bucket"] for q in queries)),
         "independent_groups": len({q["group"] for q in queries}),
         "label_status": "reviewed development sentence correspondence; see reviewer provenance",
-        "human_review_completed": "agent" not in origins and all(
-            r["reviewer_origin"] == "human" for r in decisions.values()
-        ),
+        "human_review_completed": "agent" not in origins
+        and all(r["reviewer_origin"] == "human" for r in decisions.values()),
         "independent_review_verified": False,
-        "reviewer_ids": sorted(reviewers), "judgment_origins": dict(origins),
+        "reviewer_ids": sorted(reviewers),
+        "judgment_origins": dict(origins),
         "exclusions": [
             {"query_id": qid, "reason": r.get("exclusion_reason", "group privacy exclusion")}
-            for qid, r in sorted(decisions.items()) if qid not in kept_ids
+            for qid, r in sorted(decisions.items())
+            if qid not in kept_ids
         ],
         "unjudged_documents": "unknown; pooled judged set is incomplete outside its coverage",
-        "review_inputs": {str(p): sha256(p) for p in (
-            directory / "manifest.json", directory / "review-pool.jsonl",
-            directory / "authoring.jsonl", judgments, pair_review
-        )},
-        "files": {f"{n}.jsonl": sha256(output / f"{n}.jsonl") for n in (
-            "documents", "queries", "qrels", "judgments", "pair-review"
-        )},
+        "review_inputs": {
+            str(p): sha256(p)
+            for p in (
+                directory / "manifest.json",
+                directory / "review-pool.jsonl",
+                directory / "authoring.jsonl",
+                judgments,
+                pair_review,
+            )
+        },
+        "files": {
+            f"{n}.jsonl": sha256(output / f"{n}.jsonl")
+            for n in ("documents", "queries", "qrels", "judgments", "pair-review")
+        },
     }
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     return manifest

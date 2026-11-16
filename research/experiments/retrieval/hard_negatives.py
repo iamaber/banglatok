@@ -10,8 +10,15 @@ import torch
 from encoder import Encoder
 from prepare import canonical, read_rows, sha256, write_rows
 
-REVIEW_FIELDS = {"group", "negative_group", "pair_correct", "negative_grade",
-                "rationale", "reviewer_id", "reviewer_origin"}
+REVIEW_FIELDS = {
+    "group",
+    "negative_group",
+    "pair_correct",
+    "negative_grade",
+    "rationale",
+    "reviewer_id",
+    "reviewer_origin",
+}
 
 
 def mine(base: Path, alignment: Path, output: Path) -> dict:
@@ -26,7 +33,9 @@ def mine(base: Path, alignment: Path, output: Path) -> dict:
     rng = random.Random(29)
     selected = []
     for language in ("banglish", "english"):
-        candidates = sorted([row for row in pairs if row["query_language"] == language], key=lambda r: r["group"])
+        candidates = sorted(
+            [row for row in pairs if row["query_language"] == language], key=lambda r: r["group"]
+        )
         if len(candidates) < 64:
             raise ValueError("require 64 training pairs per query language")
         selected.extend(rng.sample(candidates, 64))
@@ -40,20 +49,38 @@ def mine(base: Path, alignment: Path, output: Path) -> dict:
             orders = (queries @ documents.T).argsort(descending=True, stable=True).tolist()
         rows = []
         for row, order in zip(selected, orders, strict=True):
-            negative = next(pairs[i] for i in order if pairs[i]["group"] != row["group"]
-                            and canonical(pairs[i]["document"]) != canonical(row["document"]))
-            rows.append({**row, "negative": negative["document"], "negative_group": negative["group"],
-                         "pair_correct": None, "negative_grade": None, "rationale": None,
-                         "reviewer_id": None, "reviewer_origin": None})
+            negative = next(
+                pairs[i]
+                for i in order
+                if pairs[i]["group"] != row["group"]
+                and canonical(pairs[i]["document"]) != canonical(row["document"])
+            )
+            rows.append(
+                {
+                    **row,
+                    "negative": negative["document"],
+                    "negative_group": negative["group"],
+                    "pair_correct": None,
+                    "negative_grade": None,
+                    "rationale": None,
+                    "reviewer_id": None,
+                    "reviewer_origin": None,
+                }
+            )
     finally:
         encoder.close()
     output.mkdir(parents=True)
     write_rows(output / "packet.jsonl", rows)
-    result = {"alignment": str(alignment), "alignment_manifest_sha256": sha256(alignment / "manifest.json"),
-              "packet_sha256": sha256(output / "packet.jsonl"), "queries": len(rows),
-              "mining": "pinned unchanged E5 nearest different-group training document",
-              "base_files": {p.name: sha256(p) for p in base.iterdir() if p.is_file()},
-              "holdout_used": False, "implementation_sha256": sha256(Path(__file__))}
+    result = {
+        "alignment": str(alignment),
+        "alignment_manifest_sha256": sha256(alignment / "manifest.json"),
+        "packet_sha256": sha256(output / "packet.jsonl"),
+        "queries": len(rows),
+        "mining": "pinned unchanged E5 nearest different-group training document",
+        "base_files": {p.name: sha256(p) for p in base.iterdir() if p.is_file()},
+        "holdout_used": False,
+        "implementation_sha256": sha256(Path(__file__)),
+    }
     (output / "manifest.json").write_text(json.dumps(result, indent=2) + "\n")
     return result
 
@@ -74,19 +101,29 @@ def freeze(packet: Path, judgments: Path, output: Path) -> dict:
         if set(row) != REVIEW_FIELDS:
             raise ValueError("judgments must use the exact text-free review schema")
         group = row["group"]
-        if group not in expected or group in reviewed or row["negative_group"] != expected[group]["negative_group"]:
+        if (
+            group not in expected
+            or group in reviewed
+            or row["negative_group"] != expected[group]["negative_group"]
+        ):
             raise ValueError("duplicate or changed negative pair")
-        if type(row["pair_correct"]) is not bool or type(row["negative_grade"]) is not int or row["negative_grade"] not in (0, 1, 2):
+        if (
+            type(row["pair_correct"]) is not bool
+            or type(row["negative_grade"]) is not int
+            or row["negative_grade"] not in (0, 1, 2)
+        ):
             raise ValueError("explicit pair correctness and negative relevance required")
         if row["reviewer_origin"] not in ("human", "agent") or any(
-            not isinstance(row[field], str) or not row[field].strip() for field in ("reviewer_id", "rationale")
+            not isinstance(row[field], str) or not row[field].strip()
+            for field in ("reviewer_id", "rationale")
         ):
             raise ValueError("explicit reviewer and rationale required")
         reviewed[group] = row
     if reviewed.keys() != expected.keys():
         raise ValueError("every mined pair must be reviewed")
     accepted = [
-        {**expected[group], **decision} for group, decision in sorted(reviewed.items())
+        {**expected[group], **decision}
+        for group, decision in sorted(reviewed.items())
         if decision["pair_correct"] and decision["negative_grade"] == 0
     ]
     counts = Counter(row["query_language"] for row in accepted)
@@ -94,12 +131,16 @@ def freeze(packet: Path, judgments: Path, output: Path) -> dict:
         raise ValueError("require at least 16 verified negatives per language")
     output.mkdir(parents=True)
     write_rows(output / "pairs.jsonl", accepted)
-    result = {"mining_manifest_sha256": sha256(packet / "manifest.json"),
-              "alignment_manifest_sha256": manifest["alignment_manifest_sha256"],
-              "judgments_sha256": sha256(judgments), "accepted": len(accepted),
-              "accepted_by_language": dict(counts), "excluded": len(rows) - len(accepted),
-              "label_origin": "explicit single-agent review; not independent human judgments",
-              "files": {"pairs.jsonl": sha256(output / "pairs.jsonl")}}
+    result = {
+        "mining_manifest_sha256": sha256(packet / "manifest.json"),
+        "alignment_manifest_sha256": manifest["alignment_manifest_sha256"],
+        "judgments_sha256": sha256(judgments),
+        "accepted": len(accepted),
+        "accepted_by_language": dict(counts),
+        "excluded": len(rows) - len(accepted),
+        "label_origin": "explicit single-agent review; not independent human judgments",
+        "files": {"pairs.jsonl": sha256(output / "pairs.jsonl")},
+    }
     (output / "manifest.json").write_text(json.dumps(result, indent=2) + "\n")
     return result
 
@@ -126,19 +167,27 @@ def clean_alignment(alignment: Path, bank: Path, judgments: Path, output: Path) 
     kept = [row for row in pairs if row["group"] not in excluded]
     output.mkdir(parents=True)
     write_rows(output / "pairs.jsonl", kept)
-    write_rows(output / "adaptation.jsonl", [
-        {"text": row[field], "group": row["group"], "source": row["source"]}
-        for row in kept for field in ("query", "document")
-    ])
-    result = {**previous, "pairs": len(kept), "unique_groups": len(kept),
-              "parent_alignment_manifest_sha256": sha256(alignment / "manifest.json"),
-              "negative_bank_manifest_sha256": sha256(bank / "manifest.json"),
-              "reviewed_judgments_sha256": sha256(judgments),
-              "known_pair_errors_removed": len(excluded),
-              "pairs_by_source": dict(Counter(row["source"] for row in kept)),
-              "pairs_by_query_language": dict(Counter(row["query_language"] for row in kept)),
-              "review_scope": "128 sampled pairs reviewed; remaining unsampled pair fidelity unverified",
-              "files": {n: sha256(output / n) for n in ("pairs.jsonl", "adaptation.jsonl")}}
+    write_rows(
+        output / "adaptation.jsonl",
+        [
+            {"text": row[field], "group": row["group"], "source": row["source"]}
+            for row in kept
+            for field in ("query", "document")
+        ],
+    )
+    result = {
+        **previous,
+        "pairs": len(kept),
+        "unique_groups": len(kept),
+        "parent_alignment_manifest_sha256": sha256(alignment / "manifest.json"),
+        "negative_bank_manifest_sha256": sha256(bank / "manifest.json"),
+        "reviewed_judgments_sha256": sha256(judgments),
+        "known_pair_errors_removed": len(excluded),
+        "pairs_by_source": dict(Counter(row["source"] for row in kept)),
+        "pairs_by_query_language": dict(Counter(row["query_language"] for row in kept)),
+        "review_scope": "128 sampled pairs reviewed; remaining unsampled pair fidelity unverified",
+        "files": {n: sha256(output / n) for n in ("pairs.jsonl", "adaptation.jsonl")},
+    }
     (output / "manifest.json").write_text(json.dumps(result, indent=2) + "\n")
     return result
 

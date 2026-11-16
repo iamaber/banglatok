@@ -40,8 +40,11 @@ def build(base: Path, tokenizer: Path, alignment: Path, output: Path) -> dict:
     try:
         old_vocabulary = original.tokenizer.get_vocab()
         pieces = json.loads(tokenizer.read_text())["pieces"]
-        anchors = [(260 + i, old_vocabulary[piece["text"]]) for i, piece in enumerate(pieces)
-                   if piece["text"] in old_vocabulary]
+        anchors = [
+            (260 + i, old_vocabulary[piece["text"]])
+            for i, piece in enumerate(pieces)
+            if piece["text"] in old_vocabulary
+        ]
         if not anchors:
             raise ValueError("no exact overlap anchors")
         size = student.model.config.vocab_size
@@ -51,17 +54,20 @@ def build(base: Path, tokenizer: Path, alignment: Path, output: Path) -> dict:
         occurrences = torch.zeros(size, dtype=torch.int64)
         # Multiplicative hash is stable across processes; no Python randomized hash.
         for start in range(0, len(texts), 256):
-            encoded = student.tokenizer.encode_batch(texts[start:start + 256])
+            encoded = student.tokenizer.encode_batch(texts[start : start + 256])
             centers, neighbours = [], []
             for ids in encoded:
                 occurrences += torch.bincount(torch.tensor(ids, dtype=torch.int64), minlength=size)
                 for offset in range(1, window + 1):
-                    centers.extend(ids[:-offset]); neighbours.extend(ids[offset:])
-                    centers.extend(ids[offset:]); neighbours.extend(ids[:-offset])
+                    centers.extend(ids[:-offset])
+                    neighbours.extend(ids[offset:])
+                    centers.extend(ids[offset:])
+                    neighbours.extend(ids[:-offset])
             if centers:
-                indices = torch.tensor(centers) * dimensions + (
-                    (torch.tensor(neighbours) * 2654435761) & 0xffffffff
-                ) % dimensions
+                indices = (
+                    torch.tensor(centers) * dimensions
+                    + ((torch.tensor(neighbours) * 2654435761) & 0xFFFFFFFF) % dimensions
+                )
                 flat.index_add_(0, indices, torch.ones(len(indices)))
         row_mass = contexts.sum(1, keepdim=True)
         column_mass = contexts.sum(0, keepdim=True)
@@ -87,7 +93,7 @@ def build(base: Path, tokenizer: Path, alignment: Path, output: Path) -> dict:
             for new, old in anchors:
                 initialized[new] = old_weights[old]
             for start in range(0, len(candidates), 128):
-                ids = candidates[start:start + 128]
+                ids = candidates[start : start + 128]
                 weights = sparsemax(vectors[ids] @ anchor_vectors.T)
                 initialized[ids] = weights @ anchor_weights
                 support_counts.extend((weights > 0).sum(1).tolist())
@@ -98,30 +104,45 @@ def build(base: Path, tokenizer: Path, alignment: Path, output: Path) -> dict:
         torch.save(initialized, output / "embeddings.pt")
         report = {
             "method": "FOCUS-inspired exact-overlap and hashed-PPMI sparsemax transfer",
-            "focus_reproduction": False, "build_seconds": seconds,
+            "focus_reproduction": False,
+            "build_seconds": seconds,
             "tokenizer_sha256": sha256(tokenizer),
             "alignment_manifest_sha256": sha256(alignment / "manifest.json"),
             "base_files": {p.name: sha256(p) for p in base.iterdir() if p.is_file()},
-            "embedding_sha256": sha256(output / "embeddings.pt"), "shape": list(initialized.shape),
-            "exact_overlap_anchors": len(anchors), "observed_context_anchors": len(valid_anchors),
+            "embedding_sha256": sha256(output / "embeddings.pt"),
+            "shape": list(initialized.shape),
+            "exact_overlap_anchors": len(anchors),
+            "observed_context_anchors": len(valid_anchors),
             "context_initialized_pieces": len(candidates),
             "decomposition_fallback_pieces": size - 260 - len(anchors) - len(candidates),
             "controls_and_bytes": "retain existing semantic control remap and byte decomposition",
-            "anchor_rule": "exact raw piece string equals original token; boundary markers not stripped",
-            "contexts": {"texts": len(texts), "dimensions": dimensions, "symmetric_window": window,
-                         "hash": "((token_id * 2654435761) & 0xffffffff) % 512",
-                         "transform": "positive PMI then L2 normalization", "observed_tokens": int((occurrences > 0).sum())},
-            "sparse_support": {"mean": sum(support_counts) / len(support_counts) if support_counts else 0,
-                               "maximum": max(support_counts, default=0)},
+            "anchor_rule": (
+                "exact raw piece string equals original token; boundary markers not stripped"
+            ),
+            "contexts": {
+                "texts": len(texts),
+                "dimensions": dimensions,
+                "symmetric_window": window,
+                "hash": "((token_id * 2654435761) & 0xffffffff) % 512",
+                "transform": "positive PMI then L2 normalization",
+                "observed_tokens": int((occurrences > 0).sum()),
+            },
+            "sparse_support": {
+                "mean": sum(support_counts) / len(support_counts) if support_counts else 0,
+                "maximum": max(support_counts, default=0),
+            },
             "implementation_sha256": sha256(Path(__file__)),
-            "limitations": ["hashed co-occurrence replaces FOCUS fastText space",
-                            "native pieces lack original boundary semantics",
-                            "initialization quality must be measured after matched adaptation"],
+            "limitations": [
+                "hashed co-occurrence replaces FOCUS fastText space",
+                "native pieces lack original boundary semantics",
+                "initialization quality must be measured after matched adaptation",
+            ],
         }
         (output / "manifest.json").write_text(json.dumps(report, indent=2) + "\n")
         return report
     finally:
-        original.close(); student.close()
+        original.close()
+        student.close()
 
 
 def apply(encoder: Encoder, artifact: Path, base: Path) -> dict:
@@ -134,11 +155,18 @@ def apply(encoder: Encoder, artifact: Path, base: Path) -> dict:
         raise ValueError("initialization checksum mismatch")
     weights = torch.load(artifact / "embeddings.pt", map_location="cpu", weights_only=True)
     table = encoder.model.get_input_embeddings().weight
-    if weights.shape != table.shape or not torch.isfinite(weights).all() or torch.count_nonzero(weights[0]):
+    if (
+        weights.shape != table.shape
+        or not torch.isfinite(weights).all()
+        or torch.count_nonzero(weights[0])
+    ):
         raise ValueError("invalid initialization tensor")
     with torch.no_grad():
         table.copy_(weights)
-    encoder.initialization = {**report, "artifact_manifest_sha256": sha256(artifact / "manifest.json")}
+    encoder.initialization = {
+        **report,
+        "artifact_manifest_sha256": sha256(artifact / "manifest.json"),
+    }
     return encoder.initialization
 
 

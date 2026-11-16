@@ -24,9 +24,10 @@ def distribution(seconds: list[float]) -> dict:
         raise ValueError("require finite positive latency samples")
     ordered = sorted(seconds)
     return {
-        "samples": len(seconds), "p50_ms": statistics.median(seconds) * 1000,
-        "p95_ms": ordered[math.ceil(len(ordered) * .95) - 1] * 1000,
-        "p99_ms": ordered[math.ceil(len(ordered) * .99) - 1] * 1000,
+        "samples": len(seconds),
+        "p50_ms": statistics.median(seconds) * 1000,
+        "p95_ms": ordered[math.ceil(len(ordered) * 0.95) - 1] * 1000,
+        "p99_ms": ordered[math.ceil(len(ordered) * 0.99) - 1] * 1000,
         "seconds": seconds,
     }
 
@@ -61,14 +62,17 @@ def workload(alignment: Path, output: Path) -> dict:
         words = text.split()
         for length in ("short", "128-words", "512-words"):
             target = 0 if length == "short" else int(length.split("-")[0])
-            content = text if not target else " ".join((words * (target // len(words) + 1))[:target])
+            content = (
+                text if not target else " ".join((words * (target // len(words) + 1))[:target])
+            )
             queries.append({"text": "query: " + content, "language": language, "length": length})
     output.mkdir(parents=True)
     write_rows(output / "documents.jsonl", documents)
     write_rows(output / "queries.jsonl", queries)
     result = {
         "alignment_manifest_sha256": sha256(alignment / "manifest.json"),
-        "documents": len(documents), "queries": len(queries),
+        "documents": len(documents),
+        "queries": len(queries),
         "source": "distinct natural audited training forms; quality not measured",
         "long_inputs": "repeated training sentences, synthetic stress inputs, not natural traffic",
         "files": {n: sha256(output / n) for n in ("documents.jsonl", "queries.jsonl")},
@@ -91,15 +95,21 @@ def cold(model: Path, workload_path: Path, index: Path) -> dict:
     encoder = Encoder(model, max_length=512)
     try:
         vectors = torch.load(index, map_location="cpu", weights_only=True)
-        if vectors.shape != (10000, encoder.model.config.hidden_size) or not torch.isfinite(vectors).all():
+        if (
+            vectors.shape != (10000, encoder.model.config.hidden_size)
+            or not torch.isfinite(vectors).all()
+        ):
             raise ValueError("invalid serving index")
         loaded = time.perf_counter() - started
         vector, counts = encoder.encode([read_rows(workload_path / "queries.jsonl")[0]["text"]], 1)
         with torch.inference_mode():
             (vector @ vectors.T).argsort(descending=True, stable=True)[:, :10].tolist()
-        return {"load_model_and_index_seconds": loaded,
-                "first_response_seconds": time.perf_counter() - started,
-                "peak_process_rss_mib": peak_mib(), "query_tokens": counts}
+        return {
+            "load_model_and_index_seconds": loaded,
+            "first_response_seconds": time.perf_counter() - started,
+            "peak_process_rss_mib": peak_mib(),
+            "query_tokens": counts,
+        }
     finally:
         encoder.close()
 
@@ -120,7 +130,9 @@ def benchmark(model: Path, workload_path: Path, output: Path) -> dict:
         index_path = output / "index.pt"
         torch.save(indexed, index_path)
 
-        def request(row: dict, size: int, submitted: float | None = None) -> tuple[float, list[int], float]:
+        def request(
+            row: dict, size: int, submitted: float | None = None
+        ) -> tuple[float, list[int], float]:
             started = time.perf_counter()
             with lock:
                 inputs, _ = encoder.inputs([row["text"]])
@@ -135,50 +147,95 @@ def benchmark(model: Path, workload_path: Path, output: Path) -> dict:
         settings = []
         for size in (1000, 10000):
             for length in ("short", "128-words", "512-words"):
-                requests = [(i, row) for _ in range(12) for i, row in enumerate(queries) if row["length"] == length]
+                requests = [
+                    (i, row)
+                    for _ in range(12)
+                    for i, row in enumerate(queries)
+                    if row["length"] == length
+                ]
                 for concurrency in (1, 4, 8):
                     started = time.perf_counter()
                     with ThreadPoolExecutor(max_workers=concurrency) as executor:
-                        futures = [executor.submit(request, row, size, time.perf_counter()) for _, row in requests]
+                        futures = [
+                            executor.submit(request, row, size, time.perf_counter())
+                            for _, row in requests
+                        ]
                         samples = [future.result() for future in futures]
                     elapsed = time.perf_counter() - started
-                    if any(ids != reference[size][i] for (i, _), (_, ids, _) in zip(requests, samples, strict=True)):
+                    if any(
+                        ids != reference[size][i]
+                        for (i, _), (_, ids, _) in zip(requests, samples, strict=True)
+                    ):
                         raise ValueError("concurrent retrieval differs from serial reference")
-                    settings.append({"index_documents": size, "input_length": length,
-                                     "concurrency": concurrency, "elapsed_seconds": elapsed,
-                                     "requests_per_second": len(samples) / elapsed,
-                                     "service_latency": distribution([seconds for seconds, _, _ in samples]),
-                                     "burst_response_latency": distribution([response for _, _, response in samples]),
-                                     "burst_scope": "36 requests submitted together; includes executor queue",
-                                     "latency_scope": "execution plus tokenizer-lock wait; excludes executor queue",
-                                     "serial_rankings_verified": True})
+                    settings.append(
+                        {
+                            "index_documents": size,
+                            "input_length": length,
+                            "concurrency": concurrency,
+                            "elapsed_seconds": elapsed,
+                            "requests_per_second": len(samples) / elapsed,
+                            "service_latency": distribution([seconds for seconds, _, _ in samples]),
+                            "burst_response_latency": distribution(
+                                [response for _, _, response in samples]
+                            ),
+                            "burst_scope": (
+                                "36 requests submitted together; includes executor queue"
+                            ),
+                            "latency_scope": (
+                                "execution plus tokenizer-lock wait; excludes executor queue"
+                            ),
+                            "serial_rankings_verified": True,
+                        }
+                    )
         token_counts = []
         for row in queries:
             _, statistics_row = encoder.inputs([row["text"]])
-            token_counts.append({"language": row["language"], "length": row["length"], **statistics_row})
+            token_counts.append(
+                {"language": row["language"], "length": row["length"], **statistics_row}
+            )
         warm_peak = peak_mib()
     finally:
         encoder.close()
     cold_runs = []
     for _ in range(3):
-        command = [sys.executable, str(Path(__file__).resolve()), "cold", "--model", str(model),
-                   "--workload", str(workload_path), "--index", str(index_path)]
+        command = [
+            sys.executable,
+            str(Path(__file__).resolve()),
+            "cold",
+            "--model",
+            str(model),
+            "--workload",
+            str(workload_path),
+            "--index",
+            str(index_path),
+        ]
         process = subprocess.run(command, check=True, capture_output=True, text=True)
         cold_runs.append(json.loads(process.stdout))
     result = {
-        "model": str(model), "model_files": {p.name: sha256(p) for p in model.iterdir() if p.is_file()},
+        "model": str(model),
+        "model_files": {p.name: sha256(p) for p in model.iterdir() if p.is_file()},
         "workload_manifest_sha256": sha256(workload_path / "manifest.json"),
-        "workload": manifest, "index_sha256": sha256(index_path),
-        "index_encoding": counts, "index_tensor_bytes": indexed.numel() * indexed.element_size(),
-        "input_tokens": token_counts, "warm_workloads": settings, "cold_starts": cold_runs,
-        "warm_peak_process_rss_mib": warm_peak, "torch_intraop_threads": 4,
-        "platform": platform.platform(), "torch": torch.__version__,
-        "implementation_sha256": {p.name: sha256(p) for p in (Path(__file__), Path(__file__).with_name("encoder.py"))},
-        "limitations": ["CPU exact search, not ANN or distributed service",
-                        "synthetic repeated long inputs; no natural-traffic claim",
-                        "36 requests per setting; p99 is sample maximum, not stable tail estimate",
-                        "cold time starts after Python/module import; includes model and saved-index load",
-                        "service latency excludes queued requests; throughput includes scheduling"],
+        "workload": manifest,
+        "index_sha256": sha256(index_path),
+        "index_encoding": counts,
+        "index_tensor_bytes": indexed.numel() * indexed.element_size(),
+        "input_tokens": token_counts,
+        "warm_workloads": settings,
+        "cold_starts": cold_runs,
+        "warm_peak_process_rss_mib": warm_peak,
+        "torch_intraop_threads": 4,
+        "platform": platform.platform(),
+        "torch": torch.__version__,
+        "implementation_sha256": {
+            p.name: sha256(p) for p in (Path(__file__), Path(__file__).with_name("encoder.py"))
+        },
+        "limitations": [
+            "CPU exact search, not ANN or distributed service",
+            "synthetic repeated long inputs; no natural-traffic claim",
+            "36 requests per setting; p99 is sample maximum, not stable tail estimate",
+            "cold time starts after Python/module import; includes model and saved-index load",
+            "service latency excludes queued requests; throughput includes scheduling",
+        ],
     }
     (output / "report.json").write_text(json.dumps(result, indent=2) + "\n")
     return result
@@ -205,6 +262,14 @@ if __name__ == "__main__":
         if not args.model or not args.workload or not args.output:
             parser.error("benchmark requires --model, --workload and --output")
         result = benchmark(args.model, args.workload, args.output)
-    print(json.dumps(result if args.command != "benchmark" else {
-        "warm_workloads": len(result["warm_workloads"]), "cold_starts": result["cold_starts"]
-    }, indent=2))
+    print(
+        json.dumps(
+            result
+            if args.command != "benchmark"
+            else {
+                "warm_workloads": len(result["warm_workloads"]),
+                "cold_starts": result["cold_starts"],
+            },
+            indent=2,
+        )
+    )

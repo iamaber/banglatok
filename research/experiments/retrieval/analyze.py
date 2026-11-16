@@ -38,26 +38,41 @@ def failure_audit(directory: Path, ranking: Path, output: Path) -> dict:
             continue
         bucket_counts[query["bucket"]] += 1
         text = query["text"]
-        failures.append({
-            "query_id": qid, "group": query["group"], "query": text,
-            "bucket": query["bucket"], "words": len(text.split()),
-            "has_bengali_script": any("\u0980" <= c <= "\u09ff" for c in text),
-            "has_latin_script": any("LATIN" in unicodedata.name(c, "") for c in text),
-            "has_digits": any(c.isdecimal() for c in text),
-            "reviewed_positives": [documents[d] for d in sorted(relevant[qid])],
-            "top_10": [documents[d] for d in rankings[qid]],
-            "primary_failure_category": None, "reviewer_id": None,
-            "reviewer_origin": None, "notes": None,
-        })
+        failures.append(
+            {
+                "query_id": qid,
+                "group": query["group"],
+                "query": text,
+                "bucket": query["bucket"],
+                "words": len(text.split()),
+                "has_bengali_script": any("\u0980" <= c <= "\u09ff" for c in text),
+                "has_latin_script": any("LATIN" in unicodedata.name(c, "") for c in text),
+                "has_digits": any(c.isdecimal() for c in text),
+                "reviewed_positives": [documents[d] for d in sorted(relevant[qid])],
+                "top_10": [documents[d] for d in rankings[qid]],
+                "primary_failure_category": None,
+                "reviewer_id": None,
+                "reviewer_origin": None,
+                "notes": None,
+            }
+        )
     output.mkdir(parents=True)
     write_rows(output / "failure-review.jsonl", failures)
     result = {
-        "queries": len(queries), "misses_at_10": len(failures),
+        "queries": len(queries),
+        "misses_at_10": len(failures),
         "misses_by_bucket": dict(bucket_counts),
         "label_status": manifest.get("label_status", "unreviewed source counterparts"),
         "causal_categories_completed": False,
-        "suggested_categories": ["spelling_variation", "english_insertion", "name_or_number",
-                                 "negation", "wrong_source_pair", "domain_gap", "other"],
+        "suggested_categories": [
+            "spelling_variation",
+            "english_insertion",
+            "name_or_number",
+            "negation",
+            "wrong_source_pair",
+            "domain_gap",
+            "other",
+        ],
         "note": "Observed script/digit/length features do not establish a failure cause.",
         "inputs": {str(p): sha256(p) for p in (directory / "manifest.json", ranking)},
         "files": {"failure-review.jsonl": sha256(output / "failure-review.jsonl")},

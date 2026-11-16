@@ -7,9 +7,7 @@ BASE = Path(
     "models/hf-cache/models--intfloat--multilingual-e5-small/snapshots/"
     "614241f622f53c4eeff9890bdc4f31cfecc418b3"
 )
-HAS_RUNTIME = all(
-    importlib.util.find_spec(name) for name in ("torch", "transformers", "banglatok")
-)
+HAS_RUNTIME = all(importlib.util.find_spec(name) for name in ("torch", "transformers", "banglatok"))
 
 
 @unittest.skipUnless(HAS_RUNTIME and BASE.exists(), "requires local pinned research environment")

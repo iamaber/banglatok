@@ -29,7 +29,9 @@ def sha256(path: Path) -> str:
 def recorded(path: str) -> Path:
     """Resolve a path frozen before reports/ and experiments/ moved under research/."""
     moved = Path(path)
-    return Path("research") / moved if moved.parts[:1] in (("reports",), ("experiments",)) else moved
+    return (
+        Path("research") / moved if moved.parts[:1] in (("reports",), ("experiments",)) else moved
+    )
 
 
 def read_rows(path: Path) -> list[dict]:

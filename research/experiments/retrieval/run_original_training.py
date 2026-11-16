@@ -21,19 +21,43 @@ def run(protocol: Path, base: Path, root: Path, output: Path) -> dict:
             if not (directory / "training-report.json").exists():
                 if directory.exists():
                     raise ValueError(f"incomplete checkpoint requires inspection: {directory}")
-                subprocess.run([
-                    sys.executable, str(Path(__file__).with_name("train_extended.py")),
-                    "--protocol", str(protocol), "--base", str(base), "--arm", "original",
-                    "--seed", str(seed), "--budget", budget, "--output", str(directory),
-                ], check=True)
+                subprocess.run(
+                    [
+                        sys.executable,
+                        str(Path(__file__).with_name("train_extended.py")),
+                        "--protocol",
+                        str(protocol),
+                        "--base",
+                        str(base),
+                        "--arm",
+                        "original",
+                        "--seed",
+                        str(seed),
+                        "--budget",
+                        budget,
+                        "--output",
+                        str(directory),
+                    ],
+                    check=True,
+                )
             report = verify(directory, protocol, base, "original", seed, budget)
-            completed.append({"name": f"{budget}/original-seed{seed}", "directory": str(directory),
-                              "training_report_sha256": sha256(directory / "training-report.json"),
-                              "stages": report["stages"],
-                              "charged_seconds": report["charged_training_seconds"]})
-    result = {"protocol_sha256": sha256(protocol), "runs": completed,
-              "scope": "original tokenizer only; stronger-transfer arms not run",
-              "limitations": "joint longer-training, negative and replay intervention; no isolated causal ablation"}
+            completed.append(
+                {
+                    "name": f"{budget}/original-seed{seed}",
+                    "directory": str(directory),
+                    "training_report_sha256": sha256(directory / "training-report.json"),
+                    "stages": report["stages"],
+                    "charged_seconds": report["charged_training_seconds"],
+                }
+            )
+    result = {
+        "protocol_sha256": sha256(protocol),
+        "runs": completed,
+        "scope": "original tokenizer only; stronger-transfer arms not run",
+        "limitations": (
+            "joint longer-training, negative and replay intervention; no isolated causal ablation"
+        ),
+    }
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, indent=2) + "\n")
     return result

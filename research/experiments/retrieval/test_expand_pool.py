@@ -16,39 +16,77 @@ class PoolTests(unittest.TestCase):
         self.source = self.root / "reviewed"
         self.source.mkdir()
         write_rows(self.source / "queries.jsonl", [{"id": "q", "text": "query", "group": "g"}])
-        write_rows(self.source / "documents.jsonl", [
-            {"id": str(i), "text": f"document {i}"} for i in range(10)
-        ])
-        self.previous = {"query_id": "q", "document_id": "0", "grade": 2,
-                         "rationale": "prior judgment", "label_origin": "agent_reviewed"}
+        write_rows(
+            self.source / "documents.jsonl",
+            [{"id": str(i), "text": f"document {i}"} for i in range(10)],
+        )
+        self.previous = {
+            "query_id": "q",
+            "document_id": "0",
+            "grade": 2,
+            "rationale": "prior judgment",
+            "label_origin": "agent_reviewed",
+        }
         write_rows(self.source / "qrels.jsonl", [self.previous])
-        (self.source / "manifest.json").write_text(json.dumps({
-            "files": {n: sha256(self.source / n) for n in (
-                "queries.jsonl", "documents.jsonl", "qrels.jsonl"
-            )}
-        }))
+        (self.source / "manifest.json").write_text(
+            json.dumps(
+                {
+                    "files": {
+                        n: sha256(self.source / n)
+                        for n in ("queries.jsonl", "documents.jsonl", "qrels.jsonl")
+                    }
+                }
+            )
+        )
         run = self.root / "run"
         rankings = run / "reviewed" / "rankings.jsonl"
         rankings.parent.mkdir(parents=True)
         write_rows(rankings, [{"query_id": "q", "documents": list(map(str, range(10)))}])
-        (run / "report.json").write_text(json.dumps({"results": {"reviewed": {
-            "dataset_manifest_sha256": sha256(self.source / "manifest.json"),
-            "ranking_sha256": sha256(rankings)
-        }}}))
+        (run / "report.json").write_text(
+            json.dumps(
+                {
+                    "results": {
+                        "reviewed": {
+                            "dataset_manifest_sha256": sha256(self.source / "manifest.json"),
+                            "ranking_sha256": sha256(rankings),
+                        }
+                    }
+                }
+            )
+        )
         self.suite = self.root / "suite.json"
-        self.suite.write_text(json.dumps({
-            "datasets": {"reviewed": sha256(self.source / "manifest.json")},
-            "runs": [{"name": name, "directory": str(run),
-                      "report_sha256": sha256(run / "report.json")} for name in EXPECTED_MODELS]
-        }))
+        self.suite.write_text(
+            json.dumps(
+                {
+                    "datasets": {"reviewed": sha256(self.source / "manifest.json")},
+                    "runs": [
+                        {
+                            "name": name,
+                            "directory": str(run),
+                            "report_sha256": sha256(run / "report.json"),
+                        }
+                        for name in EXPECTED_MODELS
+                    ],
+                }
+            )
+        )
         self.pool = self.root / "pool"
         build(self.source, self.suite, self.pool)
         self.labels = self.root / "labels.jsonl"
-        write_rows(self.labels, [
-            {"query_id": r["query_id"], "document_id": r["document_id"], "grade": 0,
-             "rationale": "different intent", "reviewer_id": "test", "reviewer_origin": "agent"}
-            for r in read_rows(self.pool / "packet.jsonl")
-        ])
+        write_rows(
+            self.labels,
+            [
+                {
+                    "query_id": r["query_id"],
+                    "document_id": r["document_id"],
+                    "grade": 0,
+                    "rationale": "different intent",
+                    "reviewer_id": "test",
+                    "reviewer_origin": "agent",
+                }
+                for r in read_rows(self.pool / "packet.jsonl")
+            ],
+        )
 
     def tearDown(self):
         self.temp.cleanup()

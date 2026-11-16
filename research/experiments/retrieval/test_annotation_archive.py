@@ -1,10 +1,10 @@
 import json
 import unittest
 
+import test_review
 from annotation_archive import archive, restore
 from prepare import read_rows, sha256, write_rows
 from review import import_review
-import test_review
 
 
 class AnnotationArchiveTests(unittest.TestCase):

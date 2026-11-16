@@ -64,7 +64,10 @@ def summarize(rows: list[dict], seed: int = 20260921, repeats: int = 2000) -> di
 
 
 def paired_difference(
-    reference: list[dict], candidate: list[dict], seed: int = 17, repeats: int = 2000,
+    reference: list[dict],
+    candidate: list[dict],
+    seed: int = 17,
+    repeats: int = 2000,
 ) -> dict:
     """Resample the same intent groups in both systems; variants share group weight."""
     left = {r["query_id"]: r for r in reference}
@@ -80,10 +83,13 @@ def paired_difference(
             raise ValueError("paired metric sets differ")
         if any(not math.isfinite(value) for r in (base, other) for value in r["metrics"].values()):
             raise ValueError("paired metrics must be finite")
-        differences.append({
-            "group": base["group"], "query_id": query_id,
-            "metrics": {m: other["metrics"][m] - value for m, value in base["metrics"].items()},
-        })
+        differences.append(
+            {
+                "group": base["group"],
+                "query_id": query_id,
+                "metrics": {m: other["metrics"][m] - value for m, value in base["metrics"].items()},
+            }
+        )
     result = summarize(differences, seed, repeats)
     result["effect"] = "candidate minus reference; paired equal-group bootstrap"
     return result

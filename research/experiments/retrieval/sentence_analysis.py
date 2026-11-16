@@ -48,9 +48,10 @@ def analyze(suite: Path, selection: Path, output: Path) -> dict:
     if specification["frozen_selection_sha256"] != sha256(selection):
         raise ValueError("sentence suite does not bind the frozen domain choice")
     decision = json.loads(selection.read_text())
-    if not decision.get("selection_frozen_before_reserved_test") or sha256(
-        recorded(decision["evaluation_suite"])
-    ) != decision["evaluation_suite_sha256"]:
+    if (
+        not decision.get("selection_frozen_before_reserved_test")
+        or sha256(recorded(decision["evaluation_suite"])) != decision["evaluation_suite_sha256"]
+    ):
         raise ValueError("frozen development evidence differs")
     records = {}
     for run in specification["runs"]:
@@ -84,7 +85,13 @@ def analyze(suite: Path, selection: Path, output: Path) -> dict:
         ],
         "implementations": {
             name: sha256(Path(__file__).with_name(name))
-            for name in ("sentence_analysis.py", "seed_analysis.py", "compare.py", "metrics.py", "evaluate.py")
+            for name in (
+                "sentence_analysis.py",
+                "seed_analysis.py",
+                "compare.py",
+                "metrics.py",
+                "evaluate.py",
+            )
         },
     }
     # Validate every binding before writing any analysis outputs.
@@ -100,13 +107,19 @@ def analyze(suite: Path, selection: Path, output: Path) -> dict:
                 raise ValueError("sentence dataset checksum differs")
             if key == "retrieval-reviewed-v1":
                 exact_queries = {
-                    row["query_id"] for row in read_rows(dataset / "qrels.jsonl")
+                    row["query_id"]
+                    for row in read_rows(dataset / "qrels.jsonl")
                     if row["grade"] == 2
                 }
                 if exact_queries != {row["id"] for row in read_rows(dataset / "queries.jsonl")}:
-                    raise ValueError("exact sensitivity requires a grade-2 positive for every reviewed query")
+                    raise ValueError(
+                        "exact sensitivity requires a grade-2 positive for every reviewed query"
+                    )
             directory = records[name][0]
-            for filename, field in (("rankings.jsonl", "ranking_sha256"), ("scores.jsonl", "scores_sha256")):
+            for filename, field in (
+                ("rankings.jsonl", "ranking_sha256"),
+                ("scores.jsonl", "scores_sha256"),
+            ):
                 if sha256(directory / key / filename) != detail[field]:
                     raise ValueError("sentence ranking/score checksum differs")
     output.mkdir(parents=True)
@@ -117,18 +130,34 @@ def analyze(suite: Path, selection: Path, output: Path) -> dict:
         ranked, runtime = bm25(docs, queries)
         lexical = output / key / "bm25-rankings.jsonl"
         lexical.parent.mkdir()
-        write_rows(lexical, [{"query_id": q["id"], "documents": r} for q, r in zip(queries, ranked, strict=True)])
-        data = {"manifest_sha256": sha256(dataset / "manifest.json"), "bm25_execution": runtime, "label_views": {}}
+        write_rows(
+            lexical,
+            [{"query_id": q["id"], "documents": r} for q, r in zip(queries, ranked, strict=True)],
+        )
+        data = {
+            "manifest_sha256": sha256(dataset / "manifest.json"),
+            "bm25_execution": runtime,
+            "label_views": {},
+        }
         views = [("graded", score_rankings)]
         if key == "retrieval-reviewed-v1":
             views.append(("exact_grade2", exact_scores))
-            data["exact_sensitivity_eligibility"] = "Every reviewed query has at least one grade-2 positive; no query omitted."
+            data["exact_sensitivity_eligibility"] = (
+                "Every reviewed query has at least one grade-2 positive; no query omitted."
+            )
         else:
-            data["exact_sensitivity_unavailable"] = "Provisional source labels are grade 1, not reviewed grade-2 correspondence."
+            data["exact_sensitivity_unavailable"] = (
+                "Provisional source labels are grade 1, not reviewed grade-2 correspondence."
+            )
         for view, scorer in views:
-            scores = {name: scorer(dataset, directory / key / "rankings.jsonl") for name, (directory, _) in records.items()}
+            scores = {
+                name: scorer(dataset, directory / key / "rankings.jsonl")
+                for name, (directory, _) in records.items()
+            }
             scores["bm25"] = scorer(dataset, lexical)
-            comparisons = {"unchanged_minus_bm25": paired_difference(scores["bm25"], scores["unchanged"])}
+            comparisons = {
+                "unchanged_minus_bm25": paired_difference(scores["bm25"], scores["unchanged"])
+            }
             for budget in ("equal-data", "equal-compute"):
                 control = {s: scores[f"{budget}/original-seed{s}"] for s in (17, 29, 43)}
                 for arm in ("original", "unigram-32000", "bpe-32000"):
@@ -137,14 +166,20 @@ def analyze(suite: Path, selection: Path, output: Path) -> dict:
                         {s: scores["unchanged"] for s in candidate}, candidate
                     )
                     if arm != "original":
-                        comparisons[f"{budget}/{arm}_minus_adapted_original"] = paired_seeds(control, candidate)
+                        comparisons[f"{budget}/{arm}_minus_adapted_original"] = paired_seeds(
+                            control, candidate
+                        )
             data["label_views"][view] = {
                 "summary": {name: summarize(rows) for name, rows in scores.items()},
                 "paired_comparisons": comparisons,
-                "misses_no_positive_at_10": {name: sum(row["metrics"]["mrr_at_10"] == 0 for row in rows) for name, rows in scores.items()},
+                "misses_no_positive_at_10": {
+                    name: sum(row["metrics"]["mrr_at_10"] == 0 for row in rows)
+                    for name, rows in scores.items()
+                },
             }
         data["pool_coverage"] = {
-            name: coverage(dataset, directory / key / "rankings.jsonl") for name, (directory, _) in records.items()
+            name: coverage(dataset, directory / key / "rankings.jsonl")
+            for name, (directory, _) in records.items()
         }
         data["pool_coverage"]["bm25"] = coverage(dataset, lexical)
         result["datasets"][key] = data
@@ -163,4 +198,11 @@ if __name__ == "__main__":
         parser.error("report exists; preserve versions")
     result = analyze(args.suite, args.selection, args.output)
     args.report.write_text(json.dumps(result, indent=2) + "\n")
-    print(json.dumps({k: v["label_views"]["graded"]["misses_no_positive_at_10"]["unchanged"] for k, v in result["datasets"].items()}))
+    print(
+        json.dumps(
+            {
+                k: v["label_views"]["graded"]["misses_no_positive_at_10"]["unchanged"]
+                for k, v in result["datasets"].items()
+            }
+        )
+    )

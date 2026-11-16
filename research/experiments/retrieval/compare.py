@@ -27,9 +27,13 @@ def score_rankings(directory: Path, path: Path) -> list[dict]:
     if len(query_ids) != len(queries) or rankings.keys() != query_ids or qrels.keys() != query_ids:
         raise ValueError("rankings and labels must cover exactly the dataset queries")
     return [
-        {"query_id": q["id"], "group": q["group"], "bucket": q["bucket"],
-         "domain": q.get("domain", "unspecified"),
-         "metrics": query_metrics(rankings[q["id"]], qrels[q["id"]])}
+        {
+            "query_id": q["id"],
+            "group": q["group"],
+            "bucket": q["bucket"],
+            "domain": q.get("domain", "unspecified"),
+            "metrics": query_metrics(rankings[q["id"]], qrels[q["id"]]),
+        }
         for q in queries
     ]
 
@@ -41,15 +45,22 @@ def compare(directory: Path, reference: Path, candidate: Path, seed: int = 17) -
         "dataset_sha256": sha256(directory / "manifest.json"),
         "label_status": manifest.get("label_status", "unreviewed source counterparts"),
         "ranking_sha256": {"reference": sha256(reference), "candidate": sha256(candidate)},
-        "seed": seed, "all": paired_difference(left, right, seed),
+        "seed": seed,
+        "all": paired_difference(left, right, seed),
         "buckets": {
-            bucket: paired_difference([r for r in left if r["bucket"] == bucket],
-                                      [r for r in right if r["bucket"] == bucket], seed)
+            bucket: paired_difference(
+                [r for r in left if r["bucket"] == bucket],
+                [r for r in right if r["bucket"] == bucket],
+                seed,
+            )
             for bucket in sorted({r["bucket"] for r in left})
         },
         "domains": {
-            domain: paired_difference([r for r in left if r["domain"] == domain],
-                                      [r for r in right if r["domain"] == domain], seed)
+            domain: paired_difference(
+                [r for r in left if r["domain"] == domain],
+                [r for r in right if r["domain"] == domain],
+                seed,
+            )
             for domain in sorted({r["domain"] for r in left})
         },
         "uncertainty_scope": "query-group sampling; single run, excludes training-seed variance",

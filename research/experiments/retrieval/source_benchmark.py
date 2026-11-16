@@ -50,7 +50,7 @@ def validate(records: list[dict]) -> None:
 
 def shingles(text: str) -> set[tuple[str, ...]]:
     words = [canonical(w) for w in normalize(text).split()]
-    return {tuple(words[i:i + 8]) for i in range(len(words) - 7)}
+    return {tuple(words[i : i + 8]) for i in range(len(words) - 7)}
 
 
 def audit_overlap(records: list[dict], paths: list[Path]) -> dict:
@@ -78,17 +78,38 @@ def audit_overlap(records: list[dict], paths: list[Path]) -> dict:
                     text = row[field]
                     count += 1
                     if canonical(text) in exact:
-                        hits.append({"file": str(path), "row": count, "kind": "canonical",
-                                     "intent": exact[canonical(text)][0]})
+                        hits.append(
+                            {
+                                "file": str(path),
+                                "row": count,
+                                "kind": "canonical",
+                                "intent": exact[canonical(text)][0],
+                            }
+                        )
                     shared = Counter(k for gram in shingles(text) for k in inverted.get(gram, ()))
                     for key, matches in shared.items():
-                        if matches >= 3 and matches / sizes[key] >= .8:
-                            hits.append({"file": str(path), "row": count,
-                                         "kind": "eight-word-shingle-containment", "intent": key[0]})
+                        if matches >= 3 and matches / sizes[key] >= 0.8:
+                            hits.append(
+                                {
+                                    "file": str(path),
+                                    "row": count,
+                                    "kind": "eight-word-shingle-containment",
+                                    "intent": key[0],
+                                }
+                            )
         counts[str(path)] = {"sha256": sha256(path), "surfaces_checked": count}
-    return {"inputs": counts, "matches": hits,
-            "method": "canonical equality and >=80% benchmark eight-word shingle containment with >=3 shared shingles",
-            "limits": "lexical checks only; cannot rule out semantic overlap or base-model pretraining exposure"}
+    return {
+        "inputs": counts,
+        "matches": hits,
+        "method": (
+            "canonical equality and >=80% benchmark eight-word shingle containment "
+            "with >=3 shared shingles"
+        ),
+        "limits": (
+            "lexical checks only; cannot rule out semantic overlap "
+            "or base-model pretraining exposure"
+        ),
+    }
 
 
 def build(root: Path, overlap: Path, output: Path) -> dict:
@@ -129,9 +150,14 @@ def build(root: Path, overlap: Path, output: Path) -> dict:
     for row in records:
         detail = labels[row["id"]]
         candidates = {r["id"] for r in records if r["split"] == row["split"]}
-        if (not detail["rationale"] or not detail["positive_grades"]
-                or not detail["positive_grades"].keys() <= candidates
-                or any(type(g) is not int or g not in (1, 2) for g in detail["positive_grades"].values())):
+        if (
+            not detail["rationale"]
+            or not detail["positive_grades"]
+            or not detail["positive_grades"].keys() <= candidates
+            or any(
+                type(g) is not int or g not in (1, 2) for g in detail["positive_grades"].values()
+            )
+        ):
             raise ValueError("invalid positive review")
     output.mkdir(parents=True)
     files = {}
@@ -143,51 +169,95 @@ def build(root: Path, overlap: Path, output: Path) -> dict:
                 destination.mkdir(parents=True)
                 documents, queries, qrels = [], [], []
                 for row in subset:
-                    documents.append({"id": row["id"], "group": row["source_group"],
-                                      "text": row[dlang], "domain": row["domain"],
-                                      "language": LANGUAGES[dlang], "source": row["source_id"],
-                                      "attribution": sources[row["source_id"]]["attribution"]})
+                    documents.append(
+                        {
+                            "id": row["id"],
+                            "group": row["source_group"],
+                            "text": row[dlang],
+                            "domain": row["domain"],
+                            "language": LANGUAGES[dlang],
+                            "source": row["source_id"],
+                            "attribution": sources[row["source_id"]]["attribution"],
+                        }
+                    )
                     variants = [row[f"q_{qlang}"]] + (row["q_bl_variants"] if qlang == "bl" else [])
                     for index, text in enumerate(variants):
                         qid = f"{row['id']}:{qlang}:{index}"
-                        queries.append({"id": qid, "group": row["domain"],
-                                        "source_group": row["source_group"],
-                                        "intent": row["id"], "text": text, "domain": row["domain"],
-                                        "bucket": LANGUAGES[qlang], "split": split,
-                                        "variant": "canonical" if index == 0 else "spelling",
-                                        "author_origin": "agent"})
+                        queries.append(
+                            {
+                                "id": qid,
+                                "group": row["domain"],
+                                "source_group": row["source_group"],
+                                "intent": row["id"],
+                                "text": text,
+                                "domain": row["domain"],
+                                "bucket": LANGUAGES[qlang],
+                                "split": split,
+                                "variant": "canonical" if index == 0 else "spelling",
+                                "author_origin": "agent",
+                            }
+                        )
                         detail = labels[row["id"]]
                         for doc in subset:
-                            qrels.append({"query_id": qid, "document_id": doc["id"],
-                                          "grade": detail["positive_grades"].get(doc["id"], 0),
-                                          "reviewer_id": detail["reviewer_id"],
-                                          "label_origin": "agent_reviewed_source_intent_matrix",
-                                          "rationale": detail["rationale"]})
-                for name, rows in (("documents", documents), ("queries", queries), ("qrels", qrels)):
+                            qrels.append(
+                                {
+                                    "query_id": qid,
+                                    "document_id": doc["id"],
+                                    "grade": detail["positive_grades"].get(doc["id"], 0),
+                                    "reviewer_id": detail["reviewer_id"],
+                                    "label_origin": "agent_reviewed_source_intent_matrix",
+                                    "rationale": detail["rationale"],
+                                }
+                            )
+                for name, rows in (
+                    ("documents", documents),
+                    ("queries", queries),
+                    ("qrels", qrels),
+                ):
                     write_rows(destination / f"{name}.jsonl", rows)
-                manifest = {"task": "source-backed agent-authored multilingual retrieval",
-                            "split": split, "direction": destination.name,
-                            "queries": len(queries), "documents": len(documents),
-                            "source_groups": len({r["source_group"] for r in subset}),
-                            "metric_weighting": "equal domain weight; variants share their domain block",
-                            "label_status": "agent-reviewed complete same-split source-intent judgments projected across parallel forms",
-                            "human_review_completed": False, "unjudged_candidates": 0,
-                            "files": {f"{n}.jsonl": sha256(destination / f"{n}.jsonl")
-                                      for n in ("documents", "queries", "qrels")}}
+                manifest = {
+                    "task": "source-backed agent-authored multilingual retrieval",
+                    "split": split,
+                    "direction": destination.name,
+                    "queries": len(queries),
+                    "documents": len(documents),
+                    "source_groups": len({r["source_group"] for r in subset}),
+                    "metric_weighting": "equal domain weight; variants share their domain block",
+                    "label_status": (
+                        "agent-reviewed complete same-split source-intent judgments "
+                        "projected across parallel forms"
+                    ),
+                    "human_review_completed": False,
+                    "unjudged_candidates": 0,
+                    "files": {
+                        f"{n}.jsonl": sha256(destination / f"{n}.jsonl")
+                        for n in ("documents", "queries", "qrels")
+                    },
+                }
                 (destination / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
-                files[f"{split}/{destination.name}/manifest.json"] = sha256(destination / "manifest.json")
-    result = {"intent_groups": len(records), "split_counts": dict(Counter(r["split"] for r in records)),
-              "material_sha256": hashes, "sources_sha256": sha256(root / "sources.json"),
-              "reviews": {p.name: sha256(p) for p in sorted(root.glob("review-*.json"))},
-              "overlap_audit_sha256": sha256(overlap), "files": files,
-              "implementation_sha256": sha256(Path(__file__)),
-              "test_policy": "freeze development choice before reserved-test scoring",
-              "limits": ["90 agent-authored intents; not the proposed 180-intent benchmark",
-                         "source/topic shifts between splits and few independent source groups",
-                         "uncertainty resamples six domain blocks and training seeds, not individual variants",
-                         "agent-translated documents and synthetic spelling variants; not natural traffic",
-                         "short source extracts/summaries; not a long-document benchmark",
-                         "agent review only; lexical overlap audit cannot exclude semantic or pretraining overlap"]}
+                files[f"{split}/{destination.name}/manifest.json"] = sha256(
+                    destination / "manifest.json"
+                )
+    result = {
+        "intent_groups": len(records),
+        "split_counts": dict(Counter(r["split"] for r in records)),
+        "material_sha256": hashes,
+        "sources_sha256": sha256(root / "sources.json"),
+        "reviews": {p.name: sha256(p) for p in sorted(root.glob("review-*.json"))},
+        "overlap_audit_sha256": sha256(overlap),
+        "files": files,
+        "implementation_sha256": sha256(Path(__file__)),
+        "test_policy": "freeze development choice before reserved-test scoring",
+        "limits": [
+            "90 agent-authored intents; not the proposed 180-intent benchmark",
+            "source/topic shifts between splits and few independent source groups",
+            "uncertainty resamples six domain blocks and training seeds, not individual variants",
+            "agent-translated documents and synthetic spelling variants; not natural traffic",
+            "short source extracts/summaries; not a long-document benchmark",
+            "agent review only; "
+            "lexical overlap audit cannot exclude semantic or pretraining overlap",
+        ],
+    }
     (output / "manifest.json").write_text(json.dumps(result, indent=2) + "\n")
     return result
 
@@ -207,7 +277,9 @@ if __name__ == "__main__":
             parser.error("audit requires corpus inputs")
         rows = material_rows(args.material)
         result = audit_overlap(rows, args.corpus)
-        result["material_sha256"] = {f"{d}.jsonl": sha256(args.material / f"{d}.jsonl") for d in sorted(DOMAINS)}
+        result["material_sha256"] = {
+            f"{d}.jsonl": sha256(args.material / f"{d}.jsonl") for d in sorted(DOMAINS)
+        }
         args.output.write_text(json.dumps(result, indent=2) + "\n")
         print(json.dumps({"matches": len(result["matches"])}))
     else:
