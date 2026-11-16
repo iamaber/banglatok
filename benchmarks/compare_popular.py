@@ -162,6 +162,7 @@ def candidates(
 
     for label, repository in HF_MODELS:
         hf = AutoTokenizer.from_pretrained(repository, cache_dir=str(cache_dir))
+        assert hf is not None
         backend = hf.backend_tokenizer
         result.append(
             Candidate(

@@ -90,3 +90,13 @@ manylinux-aarch64-image = "manylinux_2_28"
 
 [tool.cibuildwheel.macos]
 environment = { MACOSX_DEPLOYMENT_TARGET = "14.0" }
+
+[tool.ty.environment]
+python = ".venv/dev"
+extra-paths = [
+    ".venv/corpus-v2/lib/python3.12/site-packages",
+    ".venv/retrieval/lib/python3.12/site-packages",
+]
+
+[tool.ty.analysis]
+allowed-unresolved-imports = ["bnlp"]

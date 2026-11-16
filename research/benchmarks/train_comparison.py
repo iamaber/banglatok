@@ -7,6 +7,7 @@ import unicodedata
 from importlib.metadata import version
 from pathlib import Path
 from time import perf_counter
+from typing import Any
 
 
 def normalized(text: str) -> str:
@@ -38,7 +39,7 @@ def main() -> None:
             max_bytes = max(max_bytes, len(text.encode()))
             stream.write(text + "\n")
             counts[record["bucket"]] = counts.get(record["bucket"], 0) + 1
-    settings = {
+    settings: dict[str, Any] = {
         "model_type": "unigram",
         "vocab_size": 32000,
         "character_coverage": 1.0,

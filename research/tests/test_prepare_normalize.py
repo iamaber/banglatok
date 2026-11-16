@@ -4,20 +4,18 @@ import unicodedata
 import unittest
 from pathlib import Path
 
-try:
-    import banglatok
-except ImportError:
-    banglatok = None
-
 SCRIPT = Path(__file__).resolve().parents[2] / "tools" / "prepare_corpus_v2.py"
 spec = importlib.util.spec_from_file_location("prepare_corpus_v2", SCRIPT)
+assert spec is not None and spec.loader is not None
 prepare = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(prepare)
 
 
-@unittest.skipIf(banglatok is None, "banglatok is not installed")
+@unittest.skipUnless(importlib.util.find_spec("banglatok"), "banglatok is not installed")
 class NormalizeMatchesGoTests(unittest.TestCase):
     def test_separators_and_controls_collapse_like_the_go_tokenizer(self):
+        import banglatok
+
         candidates = [
             chr(code)
             for code in range(sys.maxunicode + 1)

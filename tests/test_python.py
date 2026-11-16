@@ -1,6 +1,7 @@
 """Integration tests exercise the actual installed Go library, without mocks."""
 
 import gc
+import importlib.util
 import json
 import multiprocessing
 import os
@@ -13,13 +14,9 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from importlib.resources import as_file, files
 from pathlib import Path
+from typing import Any, cast
 
 from banglatok import BOS_ID, EOS_ID, PAD_ID, Tokenizer, _native, normalize
-
-try:
-    import numpy
-except ImportError:
-    numpy = None
 
 
 @contextmanager
@@ -59,7 +56,7 @@ def reference_call(
 def _use_in_forked_child(tok: Tokenizer) -> None:
     attempts = [
         lambda: tok.encode("ami"),
-        lambda: tok.encode(None),
+        lambda: tok.encode(cast(Any, None)),
         lambda: tok.count_tokens("ami"),
         lambda: tok.encode_batch(["ami"]),
         lambda: tok(["ami"], padding=True),
@@ -135,11 +132,11 @@ class TokenizerTests(unittest.TestCase):
     def test_text_validation_order(self) -> None:
         with Tokenizer(self.path) as tok:
             with self.assertRaises(UnicodeEncodeError):
-                tok.encode_batch(["\ud800", None])
+                tok.encode_batch(cast(Any, ["\ud800", None]))
             with self.assertRaises(TypeError):
-                tok.encode_batch([None, "\ud800"])
+                tok.encode_batch(cast(Any, [None, "\ud800"]))
             with self.assertRaises(TypeError):
-                tok.encode(123)
+                tok.encode(cast(Any, 123))
         with self.assertRaises(UnicodeEncodeError):
             normalize("\ud800")
 
@@ -180,7 +177,7 @@ class TokenizerTests(unittest.TestCase):
                 self.assertEqual(tok.encode_batch(texts), expected)
             for bad in (0, -1, 1.0, True, "2"):
                 with self.assertRaisesRegex(ValueError, "num_threads"):
-                    tok.encode_batch(texts, num_threads=bad)  # type: ignore[arg-type]
+                    tok.encode_batch(texts, num_threads=cast(Any, bad))
             for setting in ("0", "x", "-2"):
                 with environment("BANGLATOK_NUM_THREADS", setting):
                     with self.assertRaisesRegex(ValueError, "BANGLATOK_NUM_THREADS"):
@@ -222,10 +219,12 @@ class TokenizerTests(unittest.TestCase):
             )
             self.assertEqual(tok(["a"]), reference_call(tok, ["a"], True, None, False))
             with self.assertRaisesRegex(ValueError, "return_tensors"):
-                tok("a", return_tensors="pt")  # type: ignore[call-overload]
+                tok("a", return_tensors=cast(Any, "pt"))
 
-    @unittest.skipIf(numpy is None, "NumPy is not installed")
+    @unittest.skipUnless(importlib.util.find_spec("numpy"), "NumPy is not installed")
     def test_call_numpy(self) -> None:
+        import numpy
+
         with Tokenizer.from_pretrained("bn-bpe-28k") as tok:
             for padding, max_length in ((True, None), ("longest", 9), ("max_length", 600)):
                 want = tok(MIXED, padding=padding, max_length=max_length)
@@ -244,7 +243,7 @@ class TokenizerTests(unittest.TestCase):
 
     def test_call_numpy_missing(self) -> None:
         saved = sys.modules.get("numpy")
-        sys.modules["numpy"] = None  # type: ignore[assignment]
+        sys.modules["numpy"] = cast(Any, None)
         try:
             with Tokenizer(self.path) as tok, self.assertRaisesRegex(ImportError, "requires NumPy"):
                 tok("a", return_tensors="np")
@@ -344,7 +343,7 @@ class TokenizerTests(unittest.TestCase):
         tok.close()
         self.assertEqual(tok.vocab_size, 262)
         for action in (
-            lambda: tok.encode(None),
+            lambda: tok.encode(cast(Any, None)),
             lambda: tok.encode_batch("not a batch"),
             lambda: tok.decode([True]),
             lambda: tok.__enter__(),
@@ -356,7 +355,7 @@ class TokenizerTests(unittest.TestCase):
         native = _native.NativeHandle(str(self.path))
         handle = native._handle
         reference = weakref.ref(native)
-        native.cycle = native
+        cast(Any, native).cycle = native
         del native
         gc.collect()
         self.assertIsNone(reference())

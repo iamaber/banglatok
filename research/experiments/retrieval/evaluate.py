@@ -65,6 +65,7 @@ def dense(documents: list[dict], queries: list[dict], path: Path) -> tuple[list[
     torch.manual_seed(20260921)
     started = time.perf_counter()
     tokenizer = AutoTokenizer.from_pretrained(path, local_files_only=True, trust_remote_code=False)
+    assert tokenizer is not None
     model = AutoModel.from_pretrained(path, local_files_only=True, trust_remote_code=False).eval()
     load_seconds = time.perf_counter() - started
 

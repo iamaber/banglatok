@@ -3,6 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 
 import torch
 from context_transfer import apply, sparsemax
@@ -42,7 +43,7 @@ class SparseTransferTests(unittest.TestCase):
             }
             (artifact / "manifest.json").write_text(json.dumps(manifest))
             table = torch.nn.Embedding(2, 3, padding_idx=0)
-            encoder = SimpleNamespace(
+            encoder: Any = SimpleNamespace(
                 custom_path=tokenizer, model=SimpleNamespace(get_input_embeddings=lambda: table)
             )
             apply(encoder, artifact, base)

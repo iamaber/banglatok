@@ -12,6 +12,7 @@ import inspect
 import json
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any, cast
 
 from banglatok import Tokenizer, available_models
 
@@ -40,7 +41,7 @@ def outcome(action: Callable[[], object]) -> str:
 def cases(
     tok: Tokenizer, corpus: list[str], threads: int | None
 ) -> dict[str, Callable[[], object]]:
-    extra = {} if threads is None else {"num_threads": threads}
+    extra: dict[str, Any] = {} if threads is None else {"num_threads": threads}
     mixed = [corpus[i % len(corpus)] * (1 + i % 7) for i in range(300)] + EDGE
     batches = {"corpus": corpus, "edge": EDGE, "mixed": mixed, "empty": [], "one": ["আমি"]}
     result: dict[str, Callable[[], object]] = {
@@ -48,18 +49,18 @@ def cases(
         "count_tokens": lambda: [tok.count_tokens(t) for t in corpus + EDGE],
         "tokenize": lambda: [tok.tokenize(t) for t in EDGE],
         "encode_batch/tuple": lambda: tok.encode_batch(tuple(EDGE), **extra),
-        "encode_batch/generator": lambda: tok.encode_batch((t for t in EDGE), **extra),
+        "encode_batch/generator": lambda: tok.encode_batch(cast(Any, (t for t in EDGE)), **extra),
         "encode_batch/64": lambda: [
             tok.encode_batch(corpus[i : i + 64], **extra) for i in range(0, len(corpus), 64)
         ],
         "errors/encode": lambda: [
-            outcome(lambda v=v: tok.encode(v)) for v in (None, b"a", 1, "\ud800")
+            outcome(lambda v=v: tok.encode(cast(Any, v))) for v in (None, b"a", 1, "\ud800")
         ],
         "errors/count": lambda: [
-            outcome(lambda v=v: tok.count_tokens(v)) for v in (None, b"a", "\ud800")
+            outcome(lambda v=v: tok.count_tokens(cast(Any, v))) for v in (None, b"a", "\ud800")
         ],
         "errors/batch": lambda: [
-            outcome(lambda v=v: tok.encode_batch(v, **extra))
+            outcome(lambda v=v: tok.encode_batch(cast(Any, v), **extra))
             for v in (
                 "ab",
                 b"ab",
@@ -72,7 +73,7 @@ def cases(
             )
         ],
         "errors/call": lambda: [
-            outcome(lambda v=v, kw=kw: tok(v, **kw, **extra))
+            outcome(lambda v=v, kw=kw: cast(Any, tok)(v, **kw, **extra))
             for v, kw in [
                 (b"ab", {}),
                 (["a", None], {}),
@@ -108,16 +109,16 @@ def closed_errors(model: str) -> str:
     closed.close()
     actions: list[Callable[[], object]] = [
         lambda: closed.encode("a"),
-        lambda: closed.encode(None),  # type: ignore[arg-type]
+        lambda: closed.encode(cast(Any, None)),
         lambda: closed.encode("\ud800"),
-        lambda: closed.encode(b"a"),  # type: ignore[arg-type]
+        lambda: closed.encode(cast(Any, b"a")),
         lambda: closed.count_tokens("a"),
-        lambda: closed.count_tokens(None),  # type: ignore[arg-type]
+        lambda: closed.count_tokens(cast(Any, None)),
         lambda: closed.count_tokens("\ud800"),
         lambda: closed.tokenize("a"),
         lambda: closed.encode_batch(["a"]),
         lambda: closed.encode_batch("a"),
-        lambda: closed(["a"], padding="x"),  # type: ignore[call-overload]
+        lambda: closed(["a"], padding=cast(Any, "x")),
         lambda: closed(["a"]),
         lambda: closed.decode([5]),
     ]

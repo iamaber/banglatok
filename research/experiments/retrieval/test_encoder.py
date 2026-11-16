@@ -2,6 +2,7 @@ import importlib.util
 import tempfile
 import unittest
 from pathlib import Path
+from typing import cast
 
 BASE = Path(
     "models/hf-cache/models--intfloat--multilingual-e5-small/snapshots/"
@@ -39,14 +40,14 @@ class EncoderTests(unittest.TestCase):
 
     def test_original_padding_matches_tokenizer_so_bos_can_train(self) -> None:
         from encoder import Encoder
+        from transformers import PreTrainedTokenizerBase
 
         original = Encoder(BASE)
         self.addCleanup(original.close)
-        self.assertEqual(
-            original.model.get_input_embeddings().padding_idx, original.tokenizer.pad_token_id
-        )
+        tokenizer = cast(PreTrainedTokenizerBase, original.tokenizer)
+        self.assertEqual(original.model.get_input_embeddings().padding_idx, tokenizer.pad_token_id)
         self.assertNotEqual(
-            original.model.get_input_embeddings().padding_idx, original.tokenizer.bos_token_id
+            original.model.get_input_embeddings().padding_idx, tokenizer.bos_token_id
         )
 
 
