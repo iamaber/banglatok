@@ -13,6 +13,7 @@ import glob
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 import prepare_corpus_v2 as corpus
 
@@ -191,7 +192,7 @@ def prepare(args: argparse.Namespace) -> bool:
     )
     if prepared:
         audit = json.loads((output / "audit.json").read_text(encoding="utf-8"))
-        accepted = {
+        accepted: dict[str, dict[str, Any]] = {
             source: {
                 "description": declarations[source]["public_description"],
                 "rights_basis": declarations[source]["rights_basis"],

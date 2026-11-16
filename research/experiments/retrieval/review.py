@@ -165,7 +165,7 @@ def import_review(
         if decisions[q["id"]]["pair_correct"] and q["group"] not in private_groups
     ]
     kept_ids = {q["id"] for q in queries}
-    qrels = [
+    qrels: list[dict] = [
         {
             "query_id": qid,
             "document_id": did,

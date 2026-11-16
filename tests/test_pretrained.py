@@ -11,6 +11,7 @@ import unittest
 from concurrent.futures import ThreadPoolExecutor
 from importlib.resources import as_file, files
 from pathlib import Path
+from typing import Any, cast
 
 from banglatok import (
     BOS_ID,
@@ -150,7 +151,7 @@ class PretrainedTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             tok(texts, max_length=1)
         with self.assertRaises(ValueError):
-            tok(texts, padding="sideways")  # type: ignore[call-overload]
+            tok(texts, padding=cast(Any, "sideways"))
 
 
 @unittest.skipUnless(importlib.util.find_spec("tokenizers"), "tokenizers is not installed")

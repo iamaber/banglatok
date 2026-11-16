@@ -6,6 +6,7 @@ from unittest import mock
 
 SCRIPT = Path(__file__).resolve().parents[2] / "tools" / "acquire_corpus_v2.py"
 spec = importlib.util.spec_from_file_location("acquire_corpus_v2", SCRIPT)
+assert spec is not None and spec.loader is not None
 acquire = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(acquire)
 

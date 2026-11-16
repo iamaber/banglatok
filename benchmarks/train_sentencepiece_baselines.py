@@ -13,6 +13,7 @@ from concurrent.futures import ProcessPoolExecutor
 from importlib.metadata import version
 from pathlib import Path
 from time import perf_counter
+from typing import Any
 
 # Total ID space of bn-bpe-28k and bn-bpe-58k.
 SIZES = [27760, 57925]
@@ -41,7 +42,7 @@ def write_training_text(source: Path, target: Path) -> int:
     return longest
 
 
-def train(job: tuple[Path, Path, dict[str, object]]) -> tuple[str, float]:
+def train(job: tuple[Path, Path, dict[str, Any]]) -> tuple[str, float]:
     import sentencepiece as spm
 
     training, prefix, settings = job

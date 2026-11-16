@@ -106,6 +106,7 @@ def paired_seeds(
         }
         for s in seeds
     }
+    assert common_queries is not None
     return {
         "groups": len(groups),
         "queries": len(common_queries),
@@ -141,7 +142,7 @@ def analyze(suite: Path, criteria: Path, output: Path) -> dict:
         runs[row["name"]] = selection_scores(directory, report)
         reports[row["name"]] = report
     directions = sorted(runs["unchanged"])
-    decisions = {}
+    decisions: dict[str, dict] = {}
     original_adaptation_effect = {}
     for budget in ("equal-data", "equal-compute"):
         controls = {s: runs[f"{budget}/original-seed{s}"] for s in seeds}

@@ -34,7 +34,7 @@ def _text(value: str) -> str:
 
 def _utf8(texts: Iterable[str]) -> tuple[bytes, "array[int]"]:
     """One UTF-8 payload for a batch, with each text's code-point count."""
-    items = texts if type(texts) is list else list(texts)
+    items = cast(list[str], texts) if type(texts) is list else list(texts)
     try:
         data = "".join(items).encode("utf-8")
     except (TypeError, UnicodeEncodeError):

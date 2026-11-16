@@ -130,7 +130,8 @@ def quality(candidate: Candidate, texts: list[str]) -> dict[str, int | float]:
     tokens = sum(lengths)
     words = sum(len(text.split()) for text in texts)
     exact = sum(candidate.decode(ids) == text for ids, text in zip(encoded, texts, strict=True))
-    unknowns = sum(ids.count(candidate.unknown_id) for ids in encoded)
+    unknown_id = candidate.unknown_id
+    unknowns = 0 if unknown_id is None else sum(ids.count(unknown_id) for ids in encoded)
     return {
         "texts": len(texts),
         "tokens": tokens,

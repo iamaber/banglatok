@@ -4,11 +4,12 @@ import json
 import shutil
 import time
 from pathlib import Path
+from typing import cast
 
 import torch
 from prepare import sha256
 from torch import nn
-from transformers import AutoModel, AutoTokenizer
+from transformers import AutoModel, AutoTokenizer, PreTrainedTokenizerBase
 
 
 def transfer_embeddings(model, original_tokenizer, path: Path) -> dict:
@@ -113,8 +114,9 @@ class Encoder:
                 raise ValueError("tokenizer and encoder embedding vocabulary differ")
             self.pad_id = 0
         else:
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                path, local_files_only=True, trust_remote_code=False
+            self.tokenizer = cast(
+                PreTrainedTokenizerBase,
+                AutoTokenizer.from_pretrained(path, local_files_only=True, trust_remote_code=False),
             )
             self.pad_id = self.tokenizer.pad_token_id
             # The pinned checkpoint's Bert config says PAD=0 while its XLM-R
@@ -127,8 +129,9 @@ class Encoder:
         if not texts:
             raise ValueError("empty encoder batch")
         if self.custom_path is None:
-            full = self.tokenizer(texts, padding=False, truncation=False)["input_ids"]
-            batch = self.tokenizer(
+            tokenizer = cast(PreTrainedTokenizerBase, self.tokenizer)
+            full = tokenizer(texts, padding=False, truncation=False)["input_ids"]
+            batch = tokenizer(
                 texts,
                 padding=True,
                 truncation=True,
@@ -184,7 +187,7 @@ class Encoder:
     def save(self, output: Path) -> None:
         self.model.save_pretrained(output)
         if self.custom_path is None:
-            self.tokenizer.save_pretrained(output)
+            cast(PreTrainedTokenizerBase, self.tokenizer).save_pretrained(output)
             metadata = {"custom_tokenizer": None, "maximum_tokens": self.max_length}
         else:
             destination = output / "go-tokenizer.json"

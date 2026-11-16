@@ -494,10 +494,9 @@ def main() -> None:
     if args.model and not args.training.is_file():
         parser.error(f"exact custom training file does not exist: {args.training}")
     training_hash = sha256(args.training) if args.model else None
-    if args.model:
-        assert training_hash is not None
     restricted_summary = None
     if args.model:
+        assert training_hash is not None
         marker = args.training.parent / ".restricted-corpus.json"
         summary_path = args.restricted_summary
         if marker.is_file() and summary_path is None:

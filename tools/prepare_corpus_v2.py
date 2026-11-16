@@ -38,6 +38,7 @@ import unicodedata
 from collections import Counter
 from functools import lru_cache
 from pathlib import Path
+from typing import cast
 
 FIELDS = ("text", "bucket", "source", "group", "attribution", "split")
 BUCKETS = {"bangla", "english", "banglish", "code-mixed"}
@@ -325,7 +326,7 @@ class Index:
         if row:
             return row[0]
         cursor = self.db.execute("INSERT INTO groups(name,parent,flags) VALUES (?,0,0)", (name,))
-        value = cursor.lastrowid
+        value = cast(int, cursor.lastrowid)
         self.db.execute("UPDATE groups SET parent=? WHERE id=?", (value, value))
         return value
 

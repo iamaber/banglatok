@@ -29,6 +29,7 @@ from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
 from dataclasses import dataclass, field
 from importlib.metadata import version
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 FUSE = ROOT / "benchmarks/build_fused_model.py"
@@ -60,7 +61,7 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def training_summary(path: Path) -> dict[str, object]:
+def training_summary(path: Path) -> dict[str, Any]:
     digest, rows = hashlib.sha256(), 0
     with path.open("rb") as stream:
         for chunk in iter(lambda: stream.read(1 << 22), b""):

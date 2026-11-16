@@ -21,6 +21,8 @@ mypy --strict src/banglatok
 
 With plain pip, replace `uv venv` with `python -m venv` and `uv pip` with `python -m pip`.
 
+`ty check` type-checks the whole checkout, including `tools/`, `benchmarks/` and `research/`. It reads the research dependencies (torch, pyarrow) from `.venv/retrieval` and `.venv/corpus-v2`, the paths listed under `[tool.ty.environment]` in `pyproject.toml`. CI does not run it, because CI does not install those environments.
+
 Tests exercise the installed Go shared library. After changing Go or Python package code, reinstall with `uv pip install --reinstall .` before testing. Running against an old wheel can test an obsolete native runtime.
 
 Format changed Go files with `gofmt`. Prefer the standard library and the existing small API over new dependencies or generic abstractions. Add a focused regression test for behavior changes, and test actual native behavior rather than mocked return values.

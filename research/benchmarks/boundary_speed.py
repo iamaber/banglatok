@@ -16,6 +16,7 @@ from collections.abc import Callable
 from importlib.metadata import version
 from pathlib import Path
 from time import perf_counter
+from typing import Any
 
 from banglatok import Tokenizer
 
@@ -66,7 +67,7 @@ def measure(operation: Callable[[], object], size: int, repeats: int, seconds: f
 
 
 def cases(tok: Tokenizer, texts: dict[str, list[str]], threads: int | None) -> dict:
-    batch_options = {}
+    batch_options: dict[str, Any] = {}
     if threads is not None:
         batch_options["num_threads"] = threads
     result: dict[str, tuple[Callable[[], object], list[str]]] = {}

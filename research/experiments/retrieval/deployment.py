@@ -51,7 +51,7 @@ def workload(alignment: Path, output: Path) -> dict:
         raise ValueError("require ten thousand distinct real document texts")
     documents = [{"text": "passage: " + text} for text in texts[:10000]]
     # Use training text for performance only; no search-quality inference is made.
-    examples = {}
+    examples: dict[str, str] = {}
     for row in pairs:
         examples.setdefault(row["query_language"], row["query"])
         examples.setdefault("bangla", row["document"])
