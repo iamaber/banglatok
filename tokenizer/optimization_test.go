@@ -92,3 +92,18 @@ func TestAlreadyNormalizedMatchesNFC(t *testing.T) {
 		}
 	}
 }
+
+func TestIndexSpace(t *testing.T) {
+	for n := range 20 {
+		base := strings.Repeat("\x00া\xa0!", 5)[:n]
+		if got := indexSpace(base); got != n {
+			t.Fatalf("%q: %d", base, got)
+		}
+		for i := range n {
+			s := base[:i] + " " + base[i+1:] + " "
+			if got := indexSpace(s); got != i {
+				t.Fatalf("%q: %d, want %d", s, got, i)
+			}
+		}
+	}
+}

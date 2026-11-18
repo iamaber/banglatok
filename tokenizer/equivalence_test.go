@@ -148,6 +148,58 @@ func TestBPEMatchesReference(t *testing.T) {
 	}
 }
 
+// When several merges produce the same piece, a merge can create a pair that
+// ranks before the one just applied; the remaining occurrences of the applied
+// pair must still merge first, as in the reference loop.
+func TestBPEMatchesReferenceWithRepeatedResults(t *testing.T) {
+	// Merging the first "ab"+"c" creates "abc"+"ab", which ranks before it;
+	// the second "ab"+"c" must merge first, leaving ["abc", "abc"].
+	m := Model{Version: 1, Algorithm: "bpe", Normalization: Normalization,
+		Pieces: []Piece{{"a", 0}, {"b", 0}, {"c", 0}, {"ab", 0}, {"bc", 0}, {"abc", 0}, {"abcab", 0}},
+		Merges: []Merge{{0, 1, 3}, {1, 2, 4}, {0, 4, 5}, {5, 3, 6}, {3, 2, 5}}}
+	tok, err := New(m)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := tok.appendBPE(nil, "abcabc"); !reflect.DeepEqual(got, []int{PieceOffset + 5, PieceOffset + 5}) {
+		t.Fatalf("abcabc: %v", got)
+	}
+	rng := rand.New(rand.NewSource(3))
+	for range 200 {
+		m := Model{Version: 1, Algorithm: "bpe", Normalization: Normalization, Pieces: []Piece{{"a", 0}, {"b", 0}, {"c", 0}}}
+		index := map[string]int{"a": 0, "b": 1, "c": 2}
+		pairs := map[[2]int]bool{}
+		for range 40 {
+			left, right := rng.Intn(len(m.Pieces)), rng.Intn(len(m.Pieces))
+			text := m.Pieces[left].Text + m.Pieces[right].Text
+			if pairs[[2]int{left, right}] || len(text) > 6 {
+				continue
+			}
+			pairs[[2]int{left, right}] = true
+			result, ok := index[text]
+			if !ok {
+				result = len(m.Pieces)
+				index[text] = result
+				m.Pieces = append(m.Pieces, Piece{text, 0})
+			}
+			m.Merges = append(m.Merges, Merge{left, right, result})
+		}
+		tok, err := New(m)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for range 50 {
+			word := make([]byte, 1+rng.Intn(100))
+			for i := range word {
+				word[i] = "abc"[rng.Intn(3)]
+			}
+			if got, want := tok.appendBPE(nil, string(word)), referenceBPE(m, string(word)); !reflect.DeepEqual(got, want) {
+				t.Fatalf("%q: %v, want %v", word, got, want)
+			}
+		}
+	}
+}
+
 func FuzzBPEMatchesReference(f *testing.F) {
 	m := smallBPE(f)
 	tok, err := New(m)
@@ -197,7 +249,7 @@ func FuzzEncodeMatchesNormalizeFirst(f *testing.F) {
 		f.Add(s)
 	}
 	f.Fuzz(func(t *testing.T, text string) {
-		want := tok.appendNormalized(nil, Normalize(text))
+		want := tok.appendNormalized(nil, Normalize(text), new([]viterbiState))
 		if got := tok.Encode(text); !reflect.DeepEqual(got, want) && len(got)+len(want) > 0 {
 			t.Fatalf("%+q: %v, want %v", text, got, want)
 		}

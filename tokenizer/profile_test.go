@@ -9,6 +9,31 @@ import (
 
 // BenchmarkValidation uses the same normalized corpus as the Python comparison.
 func BenchmarkValidation(b *testing.B) {
+	tok, texts, bytes := loadValidation(b)
+	b.ReportAllocs()
+	b.SetBytes(bytes)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, text := range texts {
+			tok.Encode(text)
+		}
+	}
+}
+
+// BenchmarkValidationAppend reuses one buffer, isolating encoding from result allocation.
+func BenchmarkValidationAppend(b *testing.B) {
+	tok, texts, bytes := loadValidation(b)
+	var ids []int
+	b.ReportAllocs()
+	b.SetBytes(bytes)
+	for b.Loop() {
+		for _, text := range texts {
+			ids = tok.AppendEncode(ids[:0], text)
+		}
+	}
+}
+
+func loadValidation(b *testing.B) (*Tokenizer, []string, int64) {
 	model, corpus := os.Getenv("BNTOK_MODEL"), os.Getenv("BNTOK_CORPUS")
 	if model == "" || corpus == "" {
 		b.Skip("set BNTOK_MODEL and BNTOK_CORPUS")
@@ -43,14 +68,7 @@ func BenchmarkValidation(b *testing.B) {
 	if len(texts) == 0 {
 		b.Fatal("empty corpus")
 	}
-	b.ReportAllocs()
-	b.SetBytes(bytes)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		for _, text := range texts {
-			tok.Encode(text)
-		}
-	}
+	return tok, texts, bytes
 }
 
 // BenchmarkLoad measures cold model construction from BNTOK_MODEL.

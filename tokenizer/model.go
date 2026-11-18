@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"math/bits"
 	"os"
 	"strings"
 	"unicode/utf8"
@@ -188,40 +189,59 @@ func (t *Tokenizer) AppendEncode(dst []int, text string) []int {
 	if dst == nil {
 		dst = make([]int, 0, len(text)/4+8)
 	}
-	if ids, ok := t.appendIfNormalized(dst, text); ok {
+	// Only Unigram uses the Viterbi scratch; BPE skips zeroing it per text.
+	var scratch []viterbiState
+	if t.model.Algorithm != "bpe" {
+		var local [128]viterbiState
+		scratch = local[:]
+	}
+	if ids, ok := t.appendIfNormalized(dst, text, &scratch); ok {
 		return ids
 	}
-	return t.appendNormalized(dst, Normalize(text))
+	return t.appendNormalized(dst, Normalize(text), &scratch)
 }
 
 // appendIfNormalized encodes text only when it is already in Normalize form,
 // skipping a full normalization pass for the common case.
-func (t *Tokenizer) appendIfNormalized(dst []int, s string) ([]int, bool) {
+func (t *Tokenizer) appendIfNormalized(dst []int, s string, scratch *[]viterbiState) ([]int, bool) {
 	ids, first := dst, len(dst)
-	var local [128]viterbiState
-	scratch := local[:]
 	for len(s) > 0 {
-		w, rest, found := strings.Cut(s, " ")
-		if w == "" || found && rest == "" {
+		n := indexSpace(s)
+		if n == 0 || n == len(s)-1 {
 			return dst, false
 		}
+		w := s[:n]
 		c := t.cache.find(w)
 		if c == nil && !alreadyNormalized(w) {
 			return dst, false
 		}
-		ids = t.appendWord(ids, first, w, c, &scratch)
-		s = rest
+		ids = t.appendWord(ids, first, w, c, scratch)
+		s = s[min(n+1, len(s)):]
 	}
 	return ids, true
 }
 
-func (t *Tokenizer) appendNormalized(dst []int, s string) []int {
+// indexSpace returns the index of the first space in s, or len(s). Words are
+// short, so an inline 8-byte scan beats a strings.IndexByte call.
+func indexSpace(s string) int {
+	n := 0
+	for ; n+8 <= len(s); n += 8 {
+		x := load64(s[n:]) ^ 0x2020202020202020
+		if z := (x - 0x0101010101010101) &^ x & 0x8080808080808080; z != 0 {
+			return n + bits.TrailingZeros64(z)>>3
+		}
+	}
+	for n < len(s) && s[n] != ' ' {
+		n++
+	}
+	return n
+}
+
+func (t *Tokenizer) appendNormalized(dst []int, s string, scratch *[]viterbiState) []int {
 	ids, first := dst, len(dst)
-	var local [128]viterbiState
-	scratch := local[:]
 	for len(s) > 0 {
 		w, rest, _ := strings.Cut(s, " ")
-		ids = t.appendWord(ids, first, w, t.cache.find(w), &scratch)
+		ids = t.appendWord(ids, first, w, t.cache.find(w), scratch)
 		s = rest
 	}
 	return ids

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Performance
+
+- Encoding is faster with unchanged token IDs. The Go encoder finds BPE merges in one branch-free pass, hashes cache words with a cheaper seeded hash, scans for spaces eight bytes at a time and no longer clears Unigram scratch for BPE models: single-thread native encoding of the validation split takes 12.2 ms instead of 14.6 ms (`bn-bpe-58k`, Apple M5, median of 7).
+- Python calls into the native library skip ctypes argument conversion, and batches pass UTF-8 byte lengths instead of code-point counts, so Go no longer scans the batch serially before splitting it. Together with the encoder change, end-to-end throughput on the validation split rose from 89 to 103 MB/s for `encode()`, 121 to 145 MB/s for `encode_batch()` of 64 texts and 97 to 116 MB/s for padded `tok()` calls (single thread, median of 7).
+- A `max_length` of 2**31 or more no longer wraps around in the native call; it truncates nothing, and with `padding="max_length"` it raises `MemoryError` as other oversized widths already did.
+
 ## 0.2.3, 2026-11-14
 
 ### Performance

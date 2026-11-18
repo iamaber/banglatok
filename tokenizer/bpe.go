@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"math/bits"
 	"sort"
 	"unicode/utf8"
 )
@@ -156,36 +157,53 @@ func (t *Tokenizer) appendBPE(ids []int, s string) []int {
 		merges[i] = t.merge(word[i], word[i+1])
 	}
 	for len(word) > 1 {
-		best := uint64(noMerge)
-		for _, m := range merges[:len(word)-1] {
-			best = min(best, m)
+		// The minimum over rank<<32 | index finds the best rank and its first
+		// occurrence without a data-dependent branch.
+		first := uint64(noMerge)
+		for i, m := range merges[:len(word)-1] {
+			key := m&^math.MaxUint32 | uint64(i)
+			_, less := bits.Sub64(key, first, 0)
+			first ^= (key ^ first) & -less
 		}
-		if best == noMerge {
+		if first>>32 == noMerge>>32 {
 			break
 		}
+		// Merge every occurrence left to right, compacting in place from the
+		// first one; earlier tokens and their merges stay put. An unmerged
+		// token keeps its old right-pair merge, which stays valid unless its
+		// right neighbour was merged.
+		p := int(uint32(first))
+		best := merges[p]
 		result := int(uint32(best))
-		// Compact in place; an unmerged token keeps its old right-pair merge,
-		// which stays valid unless its right neighbour was merged.
-		n := 0
-		for i := 0; i < len(word); i++ {
-			if i+1 < len(word) && merges[i] == best {
+		word[p] = result
+		n, again := p+1, false
+		for i := p + 2; i < len(word); i++ {
+			if merges[i] == best && i+1 < len(word) {
 				word[n] = result
 				i++
+				again = true
 			} else {
 				word[n], merges[n] = word[i], merges[i]
 			}
 			n++
 		}
 		word = word[:n]
-		for i, id := range word {
-			if id != result {
+		if p > 0 {
+			merges[p-1] = t.merge(word[p-1], result)
+		}
+		if p+1 < n {
+			merges[p] = t.merge(result, word[p+1])
+		}
+		if !again {
+			continue
+		}
+		for i := p + 1; i < n; i++ {
+			if word[i] != result {
 				continue
 			}
-			if i > 0 {
-				merges[i-1] = t.merge(word[i-1], id)
-			}
-			if i+1 < len(word) {
-				merges[i] = t.merge(id, word[i+1])
+			merges[i-1] = t.merge(word[i-1], result)
+			if i+1 < n {
+				merges[i] = t.merge(result, word[i+1])
 			}
 		}
 	}
