@@ -12,7 +12,8 @@
 
 ### Documentation
 
-- Reran the popular-tokenizer comparison on the Apple M5 with the current encoder. On the unseen BanglishRev reviews, `bn-bpe-58k` now encodes 98.2 MB/s in single calls and 122.0 MB/s in batches of 64, up from 58.5 and 71.6 MB/s with 0.2.0. Token counts and losslessness are unchanged. The README and `benchmarks/POPULAR_COMPARISON.md` show the new numbers, and the README is reorganized around a short feature list.
+- Reran the popular-tokenizer comparison on the Apple M5 with the current encoder. On the unseen BanglishRev reviews, `bn-bpe-58k` now encodes 98.2 MB/s in single calls and 122.0 MB/s in batches of 64, up from 58.5 and 71.6 MB/s with 0.2.0. Token counts and losslessness are unchanged. The README and `benchmarks/POPULAR_COMPARISON.md` show the new numbers.
+- The README opens with a short feature list, recommends uv before pip, and no longer has a research section; its one practical finding, that a swapped-in vocabulary did not improve multilingual-E5, moved to the models section.
 
 ## 0.2.3, 2026-11-14
 

@@ -26,14 +26,18 @@ banglatok splits real Bangla text, as people type it, into short and reversible 
 
 ## Install
 
+We recommend [uv](https://docs.astral.sh/uv/):
+
 ```sh
-pip install banglatok
+uv add banglatok                  # add it to a uv project
+uv pip install banglatok          # or install it into the active virtual environment
+uvx banglatok "আমি বাংলা বলি"       # or run the command line once without installing
 ```
 
-With [uv](https://docs.astral.sh/uv/), run `uv add banglatok` in a project, or try the command line without installing anything:
+pip works too:
 
 ```sh
-uvx banglatok "আমি বাংলা বলি"
+pip install banglatok
 ```
 
 Prebuilt wheels cover CPython 3.10–3.15 on Linux (x86_64, aarch64), macOS (x86_64, arm64) and Windows (x86_64). Other platforms build from source, which needs Go 1.24.9 or later and a C compiler. The [install guide](https://github.com/iamaber/banglatok/blob/main/docs/USAGE.md#install) has the details.
@@ -151,7 +155,7 @@ The [full report](https://github.com/iamaber/banglatok/blob/main/benchmarks/POPU
 
 Both models are BPE vocabularies with *space fusion*. A space and the token after it can share one ID, which removes most standalone space tokens without reserving a marker character such as `▁`. Both were learned from 563k records of Bengali Wikipedia, Tatoeba and BanglaTLit. On the Hub they are [`iamaber/banglatok-bn-bpe-58k`](https://huggingface.co/iamaber/banglatok-bn-bpe-58k) and [`iamaber/banglatok-bn-bpe-28k`](https://huggingface.co/iamaber/banglatok-bn-bpe-28k).
 
-Their IDs differ from those of pretrained encoders such as BanglaBERT or XLM-R. To pair one with such an encoder, you must adapt the encoder's embeddings. [docs/MODELS.md](https://github.com/iamaber/banglatok/blob/main/docs/MODELS.md) lists the build commands, checksums, behavior and limitations.
+Their IDs differ from those of pretrained encoders such as BanglaBERT or XLM-R. To pair one with such an encoder, you must adapt the encoder's embeddings. In our experiments, swapping a banglatok vocabulary into multilingual-E5 did not beat the unchanged model. Treat these vocabularies as a starting point for training a model, not as a drop-in accuracy gain for an existing encoder. [docs/MODELS.md](https://github.com/iamaber/banglatok/blob/main/docs/MODELS.md) lists the build commands, checksums, behavior and limitations.
 
 ## Training data
 
@@ -183,12 +187,6 @@ python benchmarks/build_fused_model.py --base models/toy-bpe.json --budget 512 \
 | [Training and research](https://github.com/iamaber/banglatok/blob/main/docs/TRAINING_AND_RESEARCH.md) | Training your own models, corpus format, model contract |
 | [Benchmarks](https://github.com/iamaber/banglatok/blob/main/benchmarks/POPULAR_COMPARISON.md) | Full comparison with popular tokenizers |
 | [Changelog](https://github.com/iamaber/banglatok/blob/main/CHANGELOG.md) | Release notes |
-
-## Research
-
-The research behind the models lives in [research/](https://github.com/iamaber/banglatok/tree/main/research). [data/CORPUS.md](https://github.com/iamaber/banglatok/blob/main/data/CORPUS.md) documents how the corpus was built, where each source came from, and how leakage between splits was prevented. [RESULTS.md](https://github.com/iamaber/banglatok/blob/main/research/reports/RESULTS.md) has the intrinsic evaluation. The retrieval experiments are in [research/experiments/retrieval/](https://github.com/iamaber/banglatok/blob/main/research/experiments/retrieval/README.md), and [ROUND2_ORIGINAL_COMPARISON.md](https://github.com/iamaber/banglatok/blob/main/research/reports/ROUND2_ORIGINAL_COMPARISON.md) has the encoder-adaptation results.
-
-In those experiments, swapping a custom vocabulary into multilingual-E5 did not beat the unchanged model. Treat these vocabularies as a strong starting point for training, not as a drop-in accuracy gain for existing encoders.
 
 ## Contributing
 
