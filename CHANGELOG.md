@@ -1,19 +1,24 @@
 # Changelog
 
-## Unreleased
+## 0.2.4, 2026-11-18
 
 ### Performance
 
 - Encoding is faster with unchanged token IDs. The Go encoder finds BPE merges in one branch-free pass, hashes cache words with a cheaper seeded hash, scans for spaces eight bytes at a time and no longer clears Unigram scratch for BPE models: single-thread native encoding of the validation split takes 12.2 ms instead of 14.6 ms (`bn-bpe-58k`, Apple M5, median of 7).
 - Python calls into the native library skip ctypes argument conversion, and batches pass UTF-8 byte lengths instead of code-point counts, so Go no longer scans the batch serially before splitting it. Together with the encoder change, end-to-end throughput on the validation split rose from 89 to 103 MB/s for `encode()`, 121 to 145 MB/s for `encode_batch()` of 64 texts and 97 to 116 MB/s for padded `tok()` calls (single thread, median of 7).
-- A `max_length` of 2**31 or more no longer wraps around in the native call; it truncates nothing, and with `padding="max_length"` it raises `MemoryError` as other oversized widths already did.
 - Loading is faster with unchanged token IDs and the same sidecar checks. Both sidecar checksums are computed while the payload is decoded, the word cache is built while the model is validated, the JSON is hashed as a stream instead of read whole, and validation no longer copies the decoded model. `tokenizer.Load` of `bn-bpe-58k` takes 6.1 ms instead of 12.5 ms and allocates 24.6 MB instead of 30.8 MB (`bn-bpe-28k`: 4.5 ms instead of 9.4 ms; Apple M5, median of 7). The Go package initializer builds its normalization tables without allocating.
 - `import banglatok` no longer imports `importlib.metadata`, `importlib.resources` or `pathlib`; `__version__` is looked up on first access. A fresh `python -c "import banglatok; banglatok.Tokenizer.from_pretrained()"` takes 27 ms instead of 48 ms (median of 20).
 
+### Fixed
+
+- A `max_length` of 2**31 or more no longer wraps around in the native call; it truncates nothing, and with `padding="max_length"` it raises `MemoryError` as other oversized widths already did.
+
 ### Documentation
 
-- Reran the popular-tokenizer comparison on the Apple M5 with the current encoder. On the unseen BanglishRev reviews, `bn-bpe-58k` now encodes 98.2 MB/s in single calls and 122.0 MB/s in batches of 64, up from 58.5 and 71.6 MB/s with 0.2.0. Token counts and losslessness are unchanged. The README and `benchmarks/POPULAR_COMPARISON.md` show the new numbers.
-- The README opens with a short feature list, recommends uv before pip, and no longer has a research section; its one practical finding, that a swapped-in vocabulary did not improve multilingual-E5, moved to the models section.
+- Reran the popular-tokenizer comparison with this release on an Apple M5 and on a 4-vCPU Linux x86_64 GitHub Actions VM (AMD EPYC 9V74), with byte-identical inputs. On the unseen BanglishRev reviews, `bn-bpe-58k` encodes 99.4 MB/s in single calls and 119.4 MB/s in batches of 64 on the M5 (58.5 and 71.6 MB/s with 0.2.0), and 40.9 and 55.4 MB/s on Linux (24.4 and 29.7 MB/s with 0.2.0). Token counts and losslessness are unchanged.
+- `benchmarks/compare_popular.py` also times banglatok batches of 1,024 texts on every CPU, after checking that the IDs match a one-thread encode: 229 MB/s on the M5 and 94 MB/s on the Linux VM for the reviews.
+- `benchmarks/plot_comparison.py` draws the README chart, `assets/benchmark.svg`, from a result file.
+- The README opens with a short feature list, the chart and a side-by-side split of one review. It recommends uv before pip and no longer has a research section. Its one practical finding, that a swapped-in vocabulary did not improve multilingual-E5, moved to the models section.
 
 ## 0.2.3, 2026-11-14
 
