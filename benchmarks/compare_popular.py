@@ -4,7 +4,8 @@ Two corpora: the frozen in-domain validation split, and an unseen-source
 sample of natural e-commerce reviews (BanglishRev) in Bengali script, Latin
 script (English and Banglish) and mixed script. Every candidate gets the same
 NFC/whitespace-normalized text. Timings are single-threaded and include each
-API's own preprocessing and conversion to Python ID lists.
+API's own preprocessing and conversion to Python ID lists; banglatok batches
+are also timed on every CPU, reported separately.
 """
 
 import argparse
@@ -297,8 +298,48 @@ def load_validation(path: Path) -> list[tuple[str, str]]:
     return [(record["bucket"], normalize(record["text"])) for record in records]
 
 
+def all_core_timings(texts: list[str], repeats: int, batch_size: int) -> dict[str, dict]:
+    """banglatok batches on every CPU; every other candidate stays single-threaded."""
+    threads = os.cpu_count() or 1
+    batches = [texts[i : i + batch_size] for i in range(0, len(texts), batch_size)]
+    models = {
+        f"banglatok {name}": Tokenizer.from_pretrained(name)
+        for name in sorted(available_models(), key=lambda n: n != DEFAULT_MODEL)
+    }
+    for name, tok in models.items():
+        parallel = [
+            ids for batch in batches for ids in tok.encode_batch(batch, num_threads=threads)
+        ]
+        if parallel != tok.encode_batch(texts, num_threads=1):
+            raise RuntimeError(f"{name}: multi-threaded batches changed the IDs")
+    samples: dict[str, list[float]] = {name: [] for name in models}
+    order = list(models)
+    rng = random.Random(SEED)
+    for _ in range(repeats):
+        rng.shuffle(order)
+        for name in order:
+            started = perf_counter()
+            for batch in batches:
+                models[name].encode_batch(batch, num_threads=threads)
+            samples[name].append(perf_counter() - started)
+    size = sum(len(text.encode()) for text in texts)
+    return {
+        name: {
+            "MB_per_second": size / 1e6 / statistics.median(values),
+            "seconds": values,
+            "batch_size": batch_size,
+            "threads": threads,
+        }
+        for name, values in samples.items()
+    }
+
+
 def evaluate(
-    engines: list[Candidate], corpus: list[tuple[str, str]], repeats: int, batch: int
+    engines: list[Candidate],
+    corpus: list[tuple[str, str]],
+    repeats: int,
+    batch: int,
+    parallel_batch: int,
 ) -> dict:
     texts = [text for _, text in corpus]
     groups: dict[str, list[str]] = defaultdict(list)
@@ -319,6 +360,7 @@ def evaluate(
             }
             for engine in engines
         },
+        "all_core_batch": all_core_timings(texts, repeats, parallel_batch),
     }
 
 
@@ -348,6 +390,11 @@ def markdown(result: dict) -> str:
         for name, row in corpus["candidates"].items():
             cells = [f"{row['quality'][b]['tokens_per_word']:.3f}" for b in buckets]
             lines.append(f"| {name} | " + " | ".join(cells) + " |")
+        for name, row in corpus["all_core_batch"].items():
+            lines.append(
+                f"\n{name}, batches of {row['batch_size']:,} on {row['threads']} threads:"
+                f" {row['MB_per_second']:.1f} MB/s"
+            )
     return "\n".join(lines) + "\n"
 
 
@@ -367,6 +414,7 @@ def main() -> None:
     parser.add_argument("--hf-cache", type=Path, default=Path("models/hf-cache"))
     parser.add_argument("--repeats", type=int, default=5)
     parser.add_argument("--batch-size", type=int, default=64)
+    parser.add_argument("--parallel-batch-size", type=int, default=1024)
     parser.add_argument("--cpu-model", default=platform.processor())
     parser.add_argument(
         "--output", type=Path, default=Path("benchmarks/results/popular-comparison.json")
@@ -410,6 +458,7 @@ def main() -> None:
         },
         "repeats": args.repeats,
         "batch_size": args.batch_size,
+        "parallel_batch_size": args.parallel_batch_size,
         "seed": SEED,
         "review_offset": args.review_offset,
         "harness_sha256": sha256(Path(__file__)),
@@ -427,7 +476,7 @@ def main() -> None:
         },
         "corpora": {
             name: {"source": str(path), "source_sha256": sha256(path)}
-            | evaluate(engines, corpus, args.repeats, args.batch_size)
+            | evaluate(engines, corpus, args.repeats, args.batch_size, args.parallel_batch_size)
             for name, (path, corpus) in corpora.items()
         },
     }
