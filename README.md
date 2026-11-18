@@ -26,10 +26,10 @@ banglatok splits real Bangla text, as people type it, into short and reversible 
 
 <img src="https://raw.githubusercontent.com/iamaber/banglatok/main/assets/benchmark.svg" alt="Tokens per word and single-thread MB/s for banglatok, same-data SentencePiece Unigram, tiktoken o200k_base, MuRIL, BanglaBERT, XLM-R and Qwen3 on 10,000 unseen BanglishRev reviews" width="100%">
 
-Here is one product review, split by banglatok and by GPT-4o's tokenizer:
+Here is one product review ("The delivery came very late, but the product is good."), split by banglatok and by GPT-4o's tokenizer:
 
 ```text
-ডেলিভারি অনেক দেরিতে এসেছে কিন্তু প্রোডাক্ট ভালো      "The delivery came very late, but the product is good."
+text                        ডেলিভারি অনেক দেরিতে এসেছে কিন্তু প্রোডাক্ট ভালো
 
 banglatok bn-bpe-58k (10)   ডেলি|ভারি| অনেক| দের|িতে| এসেছে| কিন্তু| প্রো|ডাক্ট| ভালো
 tiktoken o200k_base  (16)   ড|েল|িভ|ারি| অনেক| দ|ের|িতে| এসেছে| কিন্তু| প্র|ো|ড|াক|্ট| ভালো
