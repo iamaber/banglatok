@@ -41,10 +41,7 @@ _MAX_KEPT_IDS = 1 << 20
 _MAX_PAYLOAD = 2**31 - 1
 # Batch worker limit; more workers than CPUs only add scheduling.
 _MAX_THREADS = 1024
-# No row exceeds _MAX_PAYLOAD IDs, so larger max_length and width values act
-# alike; clamping them here keeps c_longlong from wrapping huge ints, and a
-# width of 2**31 still fails as "too large" for any nonempty batch.
-_MAX_LAYOUT = 2**31
+_LONGER_THAN_ANY_ROW = _MAX_PAYLOAD + 1
 
 
 def threads(value: int | None) -> int:
@@ -74,9 +71,6 @@ def library() -> ctypes.CDLL:
     lib.bntok_call.restype = ctypes.c_void_p
     lib.bntok_free.argtypes = [ctypes.c_void_p]
     lib.bntok_free.restype = None
-    # The encode entry points take C ints and ctypes objects without argtypes:
-    # argtypes would call from_param for every argument, doubling the cost of
-    # a short call. Callers must keep every int below 2**31.
     lib.bntok_encode_into.restype = ctypes.c_longlong
     lib.bntok_encode_batch.restype = ctypes.c_longlong
     return lib
@@ -241,8 +235,8 @@ class NativeHandle:
         """
         if 4 * len(lengths) + len(data) > _MAX_PAYLOAD:
             raise ValueError("encode input exceeds 2 GiB")
-        max_length = min(max_length, _MAX_LAYOUT)
-        width = min(width, _MAX_LAYOUT)
+        max_length = min(max_length, _LONGER_THAN_ANY_ROW)
+        width = min(width, _LONGER_THAN_ANY_ROW)
         buffers = self._buffers
         # Borrow the buffer so a re-entrant call on this thread cannot overwrite it.
         out, buffers.batch = buffers.batch or _IDs(1024), None

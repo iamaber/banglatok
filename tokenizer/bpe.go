@@ -29,8 +29,7 @@ func (t *Tokenizer) initBPE() error {
 	}
 	available, reachable := make([]bool, len(t.model.Pieces)), 0
 	for i, p := range t.model.Pieces {
-		// New has checked that p.Text is valid UTF-8 and not empty.
-		if r, size := utf8.DecodeRuneInString(p.Text); size == len(p.Text) {
+		if r, size := utf8.DecodeRuneInString(p.Text); size > 0 && size == len(p.Text) {
 			if r < denseRunes {
 				t.denseCharacters[r] = int32(i)
 			} else {
@@ -156,22 +155,12 @@ func (t *Tokenizer) appendBPE(ids []int, s string) []int {
 		merges[i] = t.merge(word[i], word[i+1])
 	}
 	for len(word) > 1 {
-		// The minimum over rank<<32 | index finds the best rank and its first
-		// occurrence without a data-dependent branch.
-		first := uint64(noMerge)
-		for i, m := range merges[:len(word)-1] {
-			key := m&^math.MaxUint32 | uint64(i)
-			_, less := bits.Sub64(key, first, 0)
-			first ^= (key ^ first) & -less
-		}
-		if first>>32 == noMerge>>32 {
+		p, ok := bestMerge(merges[:len(word)-1])
+		if !ok {
 			break
 		}
-		// Merge every occurrence left to right, compacting in place from the
-		// first one; earlier tokens and their merges stay put. An unmerged
-		// token keeps its old right-pair merge, which stays valid unless its
-		// right neighbour was merged.
-		p := int(uint32(first))
+		// Compact in place; an unmerged token keeps its old right-pair merge,
+		// which stays valid unless its right neighbour was merged.
 		best := merges[p]
 		result := int(uint32(best))
 		word[p] = result
@@ -207,6 +196,18 @@ func (t *Tokenizer) appendBPE(ids []int, s string) []int {
 		}
 	}
 	return ids[:start+len(word)]
+}
+
+// bestMerge returns the position of the lowest-ranked merge, the first one if
+// several share that rank, without a data-dependent branch.
+func bestMerge(merges []uint64) (int, bool) {
+	first := uint64(noMerge)
+	for i, m := range merges {
+		key := m&^math.MaxUint32 | uint64(i)
+		_, less := bits.Sub64(key, first, 0)
+		first ^= (key ^ first) & -less
+	}
+	return int(uint32(first)), first>>32 != noMerge>>32
 }
 
 type pairItem struct {

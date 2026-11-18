@@ -41,7 +41,7 @@ func TestCompiledMatchesJSON(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		compiled, err := loadCompiled(CompiledPath(path), source)
+		compiled, err := loadSidecar(path)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -77,7 +77,7 @@ func TestCompiledRejectsDamage(t *testing.T) {
 		if err := os.WriteFile(path, json, 0644); err != nil {
 			t.Fatal(err)
 		}
-		if _, err := loadCompiled(CompiledPath(path), json); err == nil {
+		if _, err := loadSidecar(path); err == nil {
 			t.Fatalf("%s: accepted", name)
 		}
 		tok, err := Load(path)
@@ -107,30 +107,6 @@ func TestCompiledRejectsDamage(t *testing.T) {
 	check("forged", forged, source)
 }
 
-// Load hashes the JSON as a stream; it must accept a current sidecar and
-// reject one whose JSON changed.
-func TestLoadSidecarHashesJSON(t *testing.T) {
-	m := smallBPE(t)
-	m.CacheWords = []string{"abab", "aaaa"}
-	path := writeCompiledModel(t, m)
-	if _, err := loadSidecar(path); err != nil {
-		t.Fatal(err)
-	}
-	source, _ := os.ReadFile(path)
-	if err := os.WriteFile(path, append(source, ' '), 0644); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := loadSidecar(path); err == nil {
-		t.Fatal("stale sidecar accepted")
-	}
-	if err := os.Remove(path); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := loadSidecar(path); err == nil {
-		t.Fatal("sidecar accepted without its JSON")
-	}
-}
-
 // The shipped sidecars must be exactly what this code compiles.
 func TestBundledCompiledCurrent(t *testing.T) {
 	for _, path := range bundledModels {
@@ -146,7 +122,7 @@ func TestBundledCompiledCurrent(t *testing.T) {
 		if err != nil || !bytes.Equal(got, want) {
 			t.Fatalf("%s is stale; run go run ./tools/compile_model %s", CompiledPath(path), path)
 		}
-		if _, err := loadCompiled(CompiledPath(path), source); err != nil {
+		if _, err := loadSidecar(path); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -170,7 +146,7 @@ func FuzzCompiledPayload(f *testing.F) {
 		b := append(bytes.Clone(good[:compiledHeader]), payload...)
 		sum := sha256.Sum256(payload)
 		copy(b[compiledHeader-sha256.Size:], sum[:])
-		if tok, err := parseCompiled(b, source); err == nil {
+		if tok, err := parseCompiled(b, bytes.NewReader(source)); err == nil {
 			for _, text := range compiledTexts {
 				if _, err := tok.Decode(tok.Encode(text)); err != nil {
 					t.Fatal(err)

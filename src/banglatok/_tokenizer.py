@@ -22,7 +22,6 @@ _PIECE_OFFSET = 260
 _SPACE_ID = _BYTE_OFFSET + 0x20
 
 DEFAULT_MODEL = "bn-bpe-58k"
-# A real directory: the native library beside it cannot load from a zip either.
 _PRETRAINED = os.path.join(os.path.dirname(__file__), "pretrained")
 
 
@@ -210,7 +209,7 @@ class Tokenizer:
         ``encode_special_tokens = True`` so literal ``<s>`` text is not a control
         token; ``transformers`` does this from the saved configuration.
         """
-        from pathlib import Path  # Deferred: importing pathlib slows `import banglatok`.
+        from pathlib import Path
 
         if self.algorithm != "bpe":
             raise ValueError("Hugging Face export supports BPE models only")

@@ -26,8 +26,7 @@ type wordSlot struct {
 }
 
 // newWordCache indexes words[i], whose IDs are ids[ends[i-1]:ends[i]].
-// A repeated word keeps its last IDs. Call fuse before use if the model has
-// space fusion.
+// A repeated word keeps its last IDs.
 func newWordCache(words []string, ids []uint32, ends []uint32) *wordCache {
 	bits := uint(3)
 	for 1<<bits < 2*len(words) {
@@ -49,8 +48,6 @@ func newWordCache(words []string, ids []uint32, ends []uint32) *wordCache {
 	return c
 }
 
-// fuse precomputes each word's space-fused first ID; spaceFusion covers
-// every cached ID.
 func (c *wordCache) fuse(spaceFusion []int) {
 	if len(spaceFusion) == 0 {
 		return
@@ -64,10 +61,6 @@ func (c *wordCache) fuse(spaceFusion []int) {
 
 func (c *wordCache) word(s *wordSlot) string { return c.words[s.word : s.word+s.length] }
 
-// hash is a seeded multiply-fold hash in the style of wyhash, cheaper than
-// maphash for the short words that dominate lookups. Caller text only probes
-// the table; it never inserts, so a lookup costs at most the longest cluster
-// built from model words at load time, whatever the input.
 func (c *wordCache) hash(w string) uint64 {
 	n := len(w)
 	var a, b uint64

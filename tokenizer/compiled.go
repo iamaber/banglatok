@@ -123,7 +123,6 @@ func (r *compiledReader) str() string {
 	return s
 }
 
-// u32s reads a counted array of uint32 values.
 func (r *compiledReader) u32s() []uint32 {
 	out := make([]uint32, r.count(4))
 	for i := range out {
@@ -134,16 +133,6 @@ func (r *compiledReader) u32s() []uint32 {
 	return out
 }
 
-func loadCompiled(path string, source []byte) (*Tokenizer, error) {
-	b, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	return parseCompiled(b, source)
-}
-
-// loadSidecar loads the sidecar of the JSON model at path. It streams the
-// JSON into the hash, so the JSON is read whole only when falling back.
 func loadSidecar(path string) (*Tokenizer, error) {
 	b, err := os.ReadFile(CompiledPath(path))
 	if err != nil {
@@ -154,23 +143,15 @@ func loadSidecar(path string) (*Tokenizer, error) {
 		return nil, err
 	}
 	defer f.Close()
-	return parseCompiledFrom(b, bufio.NewReaderSize(f, 256<<10))
+	return parseCompiled(b, bufio.NewReaderSize(f, 256<<10))
 }
 
-func parseCompiled(b, source []byte) (*Tokenizer, error) {
-	return parseCompiledFrom(b, bytes.NewReader(source))
-}
-
-// parseCompiledFrom accepts b only if it records the SHA-256 of everything
-// source yields; source is fully consumed before it returns.
-func parseCompiledFrom(b []byte, source io.Reader) (*Tokenizer, error) {
+func parseCompiled(b []byte, source io.Reader) (*Tokenizer, error) {
 	if len(b) < compiledHeader || string(b[:len(compiledMagic)]) != compiledMagic ||
 		binary.LittleEndian.Uint32(b[len(compiledMagic):]) != compiledVersion {
 		return nil, fmt.Errorf("unsupported compiled model")
 	}
 	sums, payload := b[len(compiledMagic)+4:compiledHeader], b[compiledHeader:]
-	// Both checksums are computed while decoding, which is safe on any bytes;
-	// the result is discarded unless both match.
 	sourceOK, payloadOK := make(chan bool, 1), make(chan bool, 1)
 	go func() {
 		h := sha256.New()
@@ -182,14 +163,13 @@ func parseCompiledFrom(b []byte, source io.Reader) (*Tokenizer, error) {
 		payloadOK <- bytes.Equal(sums[sha256.Size:], sum[:])
 	}()
 	t, err := decodeCompiled(payload)
-	// Receive sourceOK first: the caller may close source once this returns.
-	if !<-sourceOK || !<-payloadOK {
+	sourceMatches, payloadMatches := <-sourceOK, <-payloadOK
+	if !sourceMatches || !payloadMatches {
 		return nil, fmt.Errorf("stale or corrupt compiled model")
 	}
 	return t, err
 }
 
-// decodeCompiled builds a Tokenizer from a payload.
 func decodeCompiled(payload []byte) (*Tokenizer, error) {
 	r := &compiledReader{data: string(payload)}
 	m := Model{Version: int(r.u32()), Algorithm: r.str(), Normalization: r.str()}
@@ -227,8 +207,6 @@ func decodeCompiled(payload []byte) (*Tokenizer, error) {
 	if len(m.CacheWords) == 0 {
 		m.CacheWords = nil
 	}
-	// The cache needs only the payload, so it is checked and indexed while
-	// newOwned validates the model; it is used only if both succeed.
 	var words []string
 	var cache *wordCache
 	cacheErr := make(chan error, 1)
@@ -271,8 +249,6 @@ func decodeCompiled(payload []byte) (*Tokenizer, error) {
 	return t, nil
 }
 
-// checkCompiledCache checks that ends splits ids into one non-empty run per
-// word and that every ID is below limit.
 func checkCompiledCache(words []string, ids, ends []uint32, limit uint32) error {
 	if len(ends) != len(words) {
 		return fmt.Errorf("malformed compiled cache")

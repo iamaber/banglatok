@@ -53,7 +53,6 @@ func New(m Model) (*Tokenizer, error) {
 	return newOwned(m)
 }
 
-// newOwned is New for a model whose slices no caller retains or modifies.
 func newOwned(m Model) (*Tokenizer, error) {
 	if uint64(len(m.Pieces))+uint64(len(m.SpaceFusion)) > math.MaxUint32-PieceOffset {
 		return nil, fmt.Errorf("vocabulary exceeds 32-bit token IDs")
@@ -196,7 +195,6 @@ func (t *Tokenizer) AppendEncode(dst []int, text string) []int {
 	if dst == nil {
 		dst = make([]int, 0, len(text)/4+8)
 	}
-	// Only Unigram uses the Viterbi scratch; BPE skips zeroing it per text.
 	var scratch []viterbiState
 	if t.model.Algorithm != "bpe" {
 		var local [128]viterbiState
@@ -228,8 +226,6 @@ func (t *Tokenizer) appendIfNormalized(dst []int, s string, scratch *[]viterbiSt
 	return ids, true
 }
 
-// indexSpace returns the index of the first space in s, or len(s). Words are
-// short, so an inline 8-byte scan beats a strings.IndexByte call.
 func indexSpace(s string) int {
 	n := 0
 	for ; n+8 <= len(s); n += 8 {

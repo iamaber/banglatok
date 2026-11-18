@@ -19,7 +19,6 @@ if TYPE_CHECKING:
 
 
 def __getattr__(name: str) -> str:
-    # importlib.metadata costs more than the rest of the import; load it on demand.
     if name != "__version__":
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
     from importlib.metadata import PackageNotFoundError, version

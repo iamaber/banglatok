@@ -148,12 +148,7 @@ func TestBPEMatchesReference(t *testing.T) {
 	}
 }
 
-// When several merges produce the same piece, a merge can create a pair that
-// ranks before the one just applied; the remaining occurrences of the applied
-// pair must still merge first, as in the reference loop.
 func TestBPEMatchesReferenceWithRepeatedResults(t *testing.T) {
-	// Merging the first "ab"+"c" creates "abc"+"ab", which ranks before it;
-	// the second "ab"+"c" must merge first, leaving ["abc", "abc"].
 	m := Model{Version: 1, Algorithm: "bpe", Normalization: Normalization,
 		Pieces: []Piece{{"a", 0}, {"b", 0}, {"c", 0}, {"ab", 0}, {"bc", 0}, {"abc", 0}, {"abcab", 0}},
 		Merges: []Merge{{0, 1, 3}, {1, 2, 4}, {0, 4, 5}, {5, 3, 6}, {3, 2, 5}}}

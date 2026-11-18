@@ -20,7 +20,6 @@ func BenchmarkValidation(b *testing.B) {
 	}
 }
 
-// BenchmarkValidationAppend reuses one buffer, isolating encoding from result allocation.
 func BenchmarkValidationAppend(b *testing.B) {
 	tok, texts, bytes := loadValidation(b)
 	var ids []int

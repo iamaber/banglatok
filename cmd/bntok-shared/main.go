@@ -28,9 +28,6 @@ const (
 	encodeTooLarge = -4
 )
 
-// Lengths and capacities are C ints, which ctypes passes without per-argument
-// conversion; negative values are rejected.
-
 // bntok_encode_into encodes one UTF-8 text into a caller-owned uint32 buffer.
 // It returns the ID count; a count above capacity means retry with that size.
 // Input and output memory are only used during the call.

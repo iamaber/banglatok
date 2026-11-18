@@ -160,13 +160,9 @@ func alreadyNormalized(s string) bool {
 	for i := 0; i < len(s); {
 		r, width := rune(s[i]), 1
 		if r >= utf8.RuneSelf {
-			// Bengali is three bytes; decode that inline and leave other
-			// lengths, invalid, overlong and surrogate encodings to utf8.
-			if r&0xf0 == 0xe0 && i+2 < len(s) && s[i+1]&0xc0 == 0x80 && s[i+2]&0xc0 == 0x80 {
-				r = (r&0x0f)<<12 | rune(s[i+1]&0x3f)<<6 | rune(s[i+2]&0x3f)
-				width = 3
-			}
-			if width == 1 || r < 0x800 || r >= 0xd800 && r <= 0xdfff {
+			if bengali, ok := decodeThreeBytes(s[i:]); ok {
+				r, width = bengali, 3
+			} else {
 				r, width = utf8.DecodeRuneInString(s[i:])
 			}
 		}
@@ -182,4 +178,14 @@ func alreadyNormalized(s string) bool {
 		previous, previousFlags = r, flags
 	}
 	return previous != ' '
+}
+
+// decodeThreeBytes decodes a valid three-byte UTF-8 rune, such as Bengali,
+// at the start of s; it reports false for anything else.
+func decodeThreeBytes(s string) (rune, bool) {
+	if len(s) < 3 || s[0]&0xf0 != 0xe0 || s[1]&0xc0 != 0x80 || s[2]&0xc0 != 0x80 {
+		return 0, false
+	}
+	r := rune(s[0]&0x0f)<<12 | rune(s[1]&0x3f)<<6 | rune(s[2]&0x3f)
+	return r, r >= 0x800 && (r < 0xd800 || r > 0xdfff)
 }
