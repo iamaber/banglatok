@@ -21,8 +21,21 @@ banglatok splits real Bangla text, as people type it, into short and reversible 
 
 - **Fewer tokens.** On product reviews from a source it never trained on, the default model `bn-bpe-58k` emits 22% fewer tokens than BanglaBERT and GPT-4o's `o200k_base`, 21% fewer than XLM-R, mE5 and BGE-M3, 8% fewer than MuRIL, and 62% fewer than Qwen3.
 - **Nothing lost.** `decode(encode(text))` returns the normalized text exactly, for every input. There is no `[UNK]` token and no lowercasing. Bengali combining marks, ZWJ and ZWNJ, emoji and mixed scripts all survive the round trip.
-- **Fast on one core.** On one Apple M5 thread it encodes 98–122 MB/s of those reviews. That is 2.3–3.0× the speed of SentencePiece Unigram, 2.7–10× tiktoken `o200k_base`, and 11–21× Hugging Face `tokenizers`. Batches can also spread across every core.
+- **Fast on one core.** On one Apple M5 thread it encodes 99–119 MB/s of those reviews. That is 2.2–2.9× the speed of SentencePiece Unigram, 2.7–10× tiktoken `o200k_base`, and 11–20× Hugging Face `tokenizers`. Batches of 1,024 texts reach 229 MB/s on all 10 cores.
 - **No dependencies.** A Go engine runs behind `ctypes`, so the wheel needs no other Python package and no compiler. The API is typed and thread-safe. Both models ship in the wheel and on the Hugging Face Hub with identical IDs.
+
+<img src="https://raw.githubusercontent.com/iamaber/banglatok/main/assets/benchmark.svg" alt="Tokens per word and single-thread MB/s for banglatok, same-data SentencePiece Unigram, tiktoken o200k_base, MuRIL, BanglaBERT, XLM-R and Qwen3 on 10,000 unseen BanglishRev reviews" width="100%">
+
+Here is one product review, split by banglatok and by GPT-4o's tokenizer:
+
+```text
+ডেলিভারি অনেক দেরিতে এসেছে কিন্তু প্রোডাক্ট ভালো      "The delivery came very late, but the product is good."
+
+banglatok bn-bpe-58k (10)   ডেলি|ভারি| অনেক| দের|িতে| এসেছে| কিন্তু| প্রো|ডাক্ট| ভালো
+tiktoken o200k_base  (16)   ড|েল|িভ|ারি| অনেক| দ|ের|িতে| এসেছে| কিন্তু| প্র|ো|ড|াক|্ট| ভালো
+```
+
+The same holds for romanized Bengali. `ami kal office e jabo, tumi asbe?` ("I'll go to the office tomorrow, will you come?") is 8 tokens in banglatok and 12 in `o200k_base`.
 
 ## Install
 
@@ -119,28 +132,30 @@ Threads can share one tokenizer. Processes must start with the `spawn` or `forks
 
 ## Benchmarks
 
-The test set is 10,000 e-commerce reviews from [BanglishRev](https://huggingface.co/datasets/BanglishRev/bangla-english-and-code-mixed-ecommerce-review-dataset), written by real users in Bengali, English, Banglish and mixed script. None of this source is in the training data. Every tokenizer runs on one thread of an Apple M5 with Python 3.12. Speed is the median of five passes, in MB/s, for single calls and for batches of 64. The banglatok rows come from the current `main` branch, which includes encoder speedups made after release 0.2.3.
+The test set is 10,000 e-commerce reviews from [BanglishRev](https://huggingface.co/datasets/BanglishRev/bangla-english-and-code-mixed-ecommerce-review-dataset), written by real users in Bengali, English, Banglish and mixed script. None of this source is in the training data. Every tokenizer runs on one thread of an Apple M5 with Python 3.12 and banglatok 0.2.4. Speed is the median of five passes, in MB/s, for single calls and for batches of 64.
 
 | Tokenizer | Vocab | Tokens per word ↓ | Lossless round trip ↑ | Texts with UNK ↓ | Single MB/s ↑ | Batch MB/s ↑ |
 |---|---:|---:|---:|---:|---:|---:|
-| **banglatok `bn-bpe-58k`** | 57,925 | **1.379** | **100%** | **0** | 98.2 | **122.0** |
-| **banglatok `bn-bpe-28k`** | 27,760 | 1.587 | **100%** | **0** | **101.1** | 120.4 |
-| SentencePiece Unigram, same data and size as `bn-bpe-58k` | 57,925 | 1.410 | 100% | 0 | 42.3 | 40.9 |
-| SentencePiece BPE, same data and size as `bn-bpe-58k` | 57,925 | 1.407 | 100% | 0 | 17.3 | 16.5 |
-| SentencePiece Unigram, same data and size as `bn-bpe-28k` | 27,760 | 1.572 | 100% | 0 | 43.7 | 43.4 |
-| SentencePiece BPE, same data and size as `bn-bpe-28k` | 27,760 | 1.578 | 100% | 0 | 16.2 | 16.3 |
-| BNLP `bn_spm` (SentencePiece) | 50,000 | 1.825 | 80.1% | 1,932 | 39.4 | 38.2 |
-| tiktoken `o200k_base` (GPT-4o) | 200,019 | 1.780 | 100% | 0 | 36.6 | 11.7 |
-| BanglaBERT (csebuetnlp) | 32,000 | 1.771 | 51.1% | 1,110 | 9.0 | 9.0 |
-| MuRIL (Google) | 197,258 | 1.498 | 47.9% | 1,617 | 8.6 | 8.7 |
-| XLM-R / multilingual-E5 / BGE-M3 | 250,002 | 1.740 | 98.2% | 109 | 6.4 | 6.4 |
-| mBERT cased | 119,547 | 2.122 | 48.0% | 1,706 | 7.9 | 7.9 |
-| Qwen3 | 151,669 | 3.588 | 100% | 0 | 6.0 | 5.9 |
+| **banglatok `bn-bpe-58k`** | 57,925 | **1.379** | **100%** | **0** | 99.4 | **119.4** |
+| **banglatok `bn-bpe-28k`** | 27,760 | 1.587 | **100%** | **0** | **101.1** | 118.6 |
+| SentencePiece Unigram, same data and size as `bn-bpe-58k` | 57,925 | 1.410 | 100% | 0 | 43.0 | 40.9 |
+| SentencePiece BPE, same data and size as `bn-bpe-58k` | 57,925 | 1.407 | 100% | 0 | 17.4 | 17.1 |
+| SentencePiece Unigram, same data and size as `bn-bpe-28k` | 27,760 | 1.572 | 100% | 0 | 45.1 | 43.1 |
+| SentencePiece BPE, same data and size as `bn-bpe-28k` | 27,760 | 1.578 | 100% | 0 | 16.4 | 16.3 |
+| BNLP `bn_spm` (SentencePiece) | 50,000 | 1.825 | 80.1% | 1,932 | 39.0 | 38.0 |
+| tiktoken `o200k_base` (GPT-4o) | 200,019 | 1.780 | 100% | 0 | 36.6 | 12.4 |
+| BanglaBERT (csebuetnlp) | 32,000 | 1.771 | 51.1% | 1,110 | 8.9 | 9.0 |
+| MuRIL (Google) | 197,258 | 1.498 | 47.9% | 1,617 | 8.5 | 8.7 |
+| XLM-R / multilingual-E5 / BGE-M3 | 250,002 | 1.740 | 98.2% | 109 | 6.3 | 6.3 |
+| mBERT cased | 119,547 | 2.122 | 48.0% | 1,706 | 7.9 | 8.0 |
+| Qwen3 | 151,669 | 3.588 | 100% | 0 | 5.9 | 5.9 |
+
+Batches can also use every core. On all 10 cores of the M5, in batches of 1,024 texts, `bn-bpe-58k` encodes these reviews at 229 MB/s and the in-domain validation split at 305 MB/s. Only banglatok was measured this way. The other tokenizers stay on one thread.
 
 How to read the table:
 
 - Compression comes mostly from the training data, not from the algorithm. SentencePiece trained on the same data at the same vocabulary size is within 2% of banglatok. BanglaBERT, XLM-R and tiktoken trail mostly because they were trained on other data or at other vocabulary sizes.
-- The speed lead comes from the implementation. On this machine banglatok is 2.3–3.0× as fast as SentencePiece Unigram. The lead depends on the CPU. With release 0.2.0 it was 1.3–1.7× on the M5 and 1.1–1.4× on a Linux x86_64 VM. Linux has not been measured since.
+- The speed lead comes from the implementation, and it depends on the CPU. On the M5, banglatok is 2.2–2.9× as fast as SentencePiece Unigram. On a 4-vCPU Linux x86_64 VM (AMD EPYC 9V74), it is 1.8–2.5× as fast, at 41 MB/s for single calls and 55 MB/s for batches of 64.
 - BanglaBERT is about 3% shorter on Bengali-only text, but it reproduces only half of its inputs. Among lossless tokenizers, `bn-bpe-58k` is the most compact on Bengali, Latin and mixed script.
 - Shorter sequences cut compute and context use. They do not by themselves make a downstream model more accurate.
 
@@ -190,7 +205,7 @@ python benchmarks/build_fused_model.py --base models/toy-bpe.json --budget 512 \
 
 ## Contributing
 
-[CONTRIBUTING.md](https://github.com/iamaber/banglatok/blob/main/CONTRIBUTING.md) explains how to build, test and change the project. [SECURITY.md](https://github.com/iamaber/banglatok/blob/main/SECURITY.md) explains how to report a vulnerability, and [docs/RELEASING.md](https://github.com/iamaber/banglatok/blob/main/docs/RELEASING.md) how releases are made. Reports from new platforms, regression cases and independent benchmark runs, especially on Linux and Windows, are welcome.
+[CONTRIBUTING.md](https://github.com/iamaber/banglatok/blob/main/CONTRIBUTING.md) explains how to build, test and change the project. [SECURITY.md](https://github.com/iamaber/banglatok/blob/main/SECURITY.md) explains how to report a vulnerability, and [docs/RELEASING.md](https://github.com/iamaber/banglatok/blob/main/docs/RELEASING.md) how releases are made. Reports from new platforms, regression cases and independent benchmark runs, especially on Windows and Linux arm64, are welcome.
 
 ## Citation
 
