@@ -221,6 +221,19 @@ class TokenizerTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "return_tensors"):
                 tok("a", return_tensors=cast(Any, "pt"))
 
+    def test_call_huge_max_length(self) -> None:
+        # Limits beyond any possible row neither wrap around nor truncate.
+        with Tokenizer.from_pretrained("bn-bpe-28k") as tok:
+            for max_length in (2**31, 2**63, 2**64 + 5):
+                for padding in (False, True):
+                    self.assertEqual(
+                        tok(MIXED, max_length=max_length, padding=padding),
+                        tok(MIXED, padding=padding),
+                    )
+                with self.assertRaisesRegex(MemoryError, "encoded batch is too large"):
+                    tok(MIXED, max_length=max_length, padding="max_length")
+                self.assertEqual(tok([], max_length=max_length, padding="max_length"), tok([]))
+
     @unittest.skipUnless(importlib.util.find_spec("numpy"), "NumPy is not installed")
     def test_call_numpy(self) -> None:
         import numpy

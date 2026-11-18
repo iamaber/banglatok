@@ -14,7 +14,7 @@ const (
 	eosID = 3
 )
 
-// ErrBatchLengths reports code-point counts that do not partition the text.
+// ErrBatchLengths reports byte lengths that do not partition the text.
 var ErrBatchLengths = errors.New("batch lengths do not match the text")
 
 // ErrLayout reports a Layout that Python never sends.
@@ -40,10 +40,10 @@ type Batch struct {
 	size    int
 }
 
-// EncodeBatch splits text into len(runes) texts of runes[i] code points and
+// EncodeBatch splits text into len(lengths) texts of lengths[i] bytes and
 // encodes them with up to threads workers. text may alias caller-owned memory
 // until the Batch is written or released.
-func (r *Registry) EncodeBatch(handle uint64, text string, runes []uint32, threads int, layout Layout) (*Batch, error) {
+func (r *Registry) EncodeBatch(handle uint64, text string, lengths []uint32, threads int, layout Layout) (*Batch, error) {
 	model, err := r.model(handle)
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func (r *Registry) EncodeBatch(handle uint64, text string, runes []uint32, threa
 	if !layout.valid() {
 		return nil, ErrLayout
 	}
-	texts, ok := splitRunes(text, runes)
+	texts, ok := splitBytes(text, lengths)
 	if !ok {
 		return nil, ErrBatchLengths
 	}
@@ -162,25 +162,16 @@ func (b *Batch) Release() {
 	b.chunks = nil
 }
 
-// splitRunes cuts UTF-8 text into consecutive texts of the given code-point
-// counts; it reports false unless they cover text exactly.
-func splitRunes(text string, runes []uint32) ([]string, bool) {
-	texts := make([]string, len(runes))
+// splitBytes cuts text into consecutive texts of the given byte lengths; it
+// reports false unless they cover text exactly.
+func splitBytes(text string, lengths []uint32) ([]string, bool) {
+	texts := make([]string, len(lengths))
 	start := 0
-	for i, n := range runes {
-		end := start
-		for end < len(text) {
-			if text[end]&0xC0 != 0x80 {
-				if n == 0 {
-					break
-				}
-				n--
-			}
-			end++
-		}
-		if n != 0 {
+	for i, n := range lengths {
+		if uint64(n) > uint64(len(text)-start) {
 			return nil, false
 		}
+		end := start + int(n)
 		texts[i] = text[start:end]
 		start = end
 	}

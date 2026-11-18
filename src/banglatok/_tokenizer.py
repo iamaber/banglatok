@@ -33,36 +33,40 @@ def _text(value: str) -> str:
 
 
 def _utf8(texts: Iterable[str]) -> tuple[bytes, "array[int]"]:
-    """One UTF-8 payload for a batch, with each text's code-point count."""
+    """One UTF-8 payload for a batch, with each text's byte length."""
     items = cast(list[str], texts) if type(texts) is list else list(texts)
     try:
-        data = "".join(items).encode("utf-8")
+        encoded = list(map(str.encode, items))
     except (TypeError, UnicodeEncodeError):
-        data = None
-    if data is None:
+        encoded = None
+    if encoded is None:
         # Raise for the first invalid text, exactly as encoding one by one does.
         for text in items:
             _text(text).encode("utf-8")
         raise TypeError("texts must be strings")
+    data = b"".join(encoded)
     if 4 * len(items) + len(data) > _MAX_PAYLOAD:
         raise ValueError("encode input exceeds 2 GiB")
-    return data, array("I", map(len, items))
+    return data, array("I", map(len, encoded))
 
 
 def _padded_lists(ids: memoryview, rows: "array[int]") -> tuple[list[list[int]], list[list[int]]]:
     width = len(ids) // len(rows) if rows else 0
     if not width:
         return [[] for _ in rows], [[] for _ in rows]
-    mask = [[1] * n + [0] * (width - n) for n in rows]
+    pattern = [1] * width + [0] * width
+    mask = [pattern[width - n : 2 * width - n] for n in rows]
     return cast(list[list[int]], ids.cast("B").cast("I", (len(rows), width)).tolist()), mask
 
 
 def _id_lists(ids: memoryview, rows: "array[int]") -> list[list[int]]:
+    flat = ids.tolist()
     batch = []
-    offset = 0
+    start = 0
     for n in rows:
-        batch.append(ids[offset : offset + n].tolist())
-        offset += n
+        end = start + n
+        batch.append(flat[start:end])
+        start = end
     return batch
 
 
@@ -77,7 +81,7 @@ def _arrays(np: Any, padded: bool) -> Callable[[memoryview, "array[int]"], tuple
             raise ValueError("return_tensors='np' needs padding when sequence lengths differ")
         width = len(ids) // len(rows) if rows else 0
         values = np.frombuffer(ids, dtype=np.uint32).reshape(len(rows), width)
-        mask = np.arange(width) < lengths[:, None]
+        mask = np.arange(width, dtype=np.uint32) < lengths[:, None]
         return values.astype(np.int64), mask.astype(np.int64)
 
     return build
@@ -155,8 +159,8 @@ class Tokenizer:
         if isinstance(texts, (str, bytes)):
             raise TypeError("texts must be a sequence of strings, not a single string")
         threads = _threads(num_threads)
-        data, runes = _utf8(texts)
-        return self._native.encode_rows(data, runes, threads, _id_lists)
+        data, lengths = _utf8(texts)
+        return self._native.encode_rows(data, lengths, threads, _id_lists)
 
     def count_tokens(self, text: str) -> int:
         """Return ``len(encode(text))`` without building the ID list."""
@@ -309,10 +313,10 @@ class Tokenizer:
         if isinstance(texts, bytes):
             raise TypeError("texts must be a sequence of strings, not a single string")
         threads = _threads(num_threads)
-        data, runes = _utf8([texts] if single else texts)  # type: ignore[list-item]
+        data, lengths = _utf8([texts] if single else texts)  # type: ignore[list-item]
         input_ids, attention_mask = self._native.encode_rows(
             data,
-            runes,
+            lengths,
             threads,
             build,
             max_length=max_length or 0,

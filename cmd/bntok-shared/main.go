@@ -12,7 +12,6 @@ import "C"
 
 import (
 	"errors"
-	"math"
 	"unsafe"
 
 	"github.com/iamaber/banglatok/internal/native"
@@ -29,13 +28,16 @@ const (
 	encodeTooLarge = -4
 )
 
+// Lengths and capacities are C ints, which ctypes passes without per-argument
+// conversion; negative values are rejected.
+
 // bntok_encode_into encodes one UTF-8 text into a caller-owned uint32 buffer.
 // It returns the ID count; a count above capacity means retry with that size.
 // Input and output memory are only used during the call.
 //
 //export bntok_encode_into
-func bntok_encode_into(handle C.ulonglong, data *C.char, length C.size_t, out *C.uint32_t, capacity C.size_t) C.longlong {
-	if uint64(length) > math.MaxInt32 || uint64(capacity) > math.MaxInt32 || (data == nil && length != 0) || (out == nil && capacity != 0) {
+func bntok_encode_into(handle C.ulonglong, data *C.char, length C.int, out *C.uint32_t, capacity C.int) C.longlong {
+	if length < 0 || capacity < 0 || (data == nil && length != 0) || (out == nil && capacity != 0) {
 		return encodeInvalid
 	}
 	text := unsafe.String((*byte)(unsafe.Pointer(data)), int(length))
@@ -47,24 +49,24 @@ func bntok_encode_into(handle C.ulonglong, data *C.char, length C.size_t, out *C
 	return C.longlong(n)
 }
 
-// bntok_encode_batch encodes len(runes) consecutive texts of data, given as
-// code-point counts, with up to threads workers (every CPU when threads <= 0),
-// and shapes the rows as native.Layout describes. It overwrites runes with each
+// bntok_encode_batch encodes count consecutive texts of data, given as byte
+// lengths, with up to threads workers (every CPU when threads <= 0), and
+// shapes the rows as native.Layout describes. It overwrites lengths with each
 // row's unpadded length and returns the number of IDs written, or a negative
 // status. IDs go to out when capacity is large enough, otherwise to a malloc'd
 // *allocated that the caller frees with bntok_free. Memory is only used during
 // the call.
 //
 //export bntok_encode_batch
-func bntok_encode_batch(handle C.ulonglong, data *C.char, length C.size_t, runes *C.uint32_t, count C.size_t, threads C.int,
-	maxLength C.longlong, special C.int, width C.longlong, out *C.uint32_t, capacity C.size_t, allocated **C.uint32_t) C.longlong {
-	if uint64(length) > math.MaxInt32 || uint64(count) > math.MaxInt32 || uint64(capacity) > math.MaxInt32 || allocated == nil ||
-		(data == nil && length != 0) || (runes == nil && count != 0) || (out == nil && capacity != 0) {
+func bntok_encode_batch(handle C.ulonglong, data *C.char, length C.int, lengths *C.uint32_t, count C.int, threads C.int,
+	maxLength C.longlong, special C.int, width C.longlong, out *C.uint32_t, capacity C.int, allocated **C.uint32_t) C.longlong {
+	if length < 0 || count < 0 || capacity < 0 || allocated == nil ||
+		(data == nil && length != 0) || (lengths == nil && count != 0) || (out == nil && capacity != 0) {
 		return encodeInvalid
 	}
 	*allocated = nil
 	text := unsafe.String((*byte)(unsafe.Pointer(data)), int(length))
-	rows := unsafe.Slice((*uint32)(unsafe.Pointer(runes)), int(count))
+	rows := unsafe.Slice((*uint32)(unsafe.Pointer(lengths)), int(count))
 	layout := native.Layout{MaxLength: int(maxLength), Special: special != 0, Width: int(width)}
 	batch, err := registry.EncodeBatch(uint64(handle), text, rows, int(threads), layout)
 	switch {

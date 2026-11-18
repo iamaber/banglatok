@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"os"
 	"runtime/pprof"
-	"unicode/utf8"
 
 	"github.com/iamaber/banglatok/internal/native"
 )
@@ -50,14 +49,14 @@ func main() {
 		}
 		for i := 0; i < len(texts); i += 64 {
 			var batch []byte
-			var runes []uint32
+			var lengths []uint32
 			for _, text := range texts[i:min(i+64, len(texts))] {
 				batch = append(batch, text...)
-				runes = append(runes, uint32(utf8.RuneCountInString(text)))
+				lengths = append(lengths, uint32(len(text)))
 			}
-			encoded, err := registry.EncodeBatch(loaded.Handle, string(batch), runes, 0, native.Layout{})
+			encoded, err := registry.EncodeBatch(loaded.Handle, string(batch), lengths, 0, native.Layout{})
 			check(err)
-			encoded.Write(make([]uint32, encoded.Size()), make([]uint32, len(runes)))
+			encoded.Write(make([]uint32, encoded.Size()), make([]uint32, len(lengths)))
 		}
 	}
 	pprof.StopCPUProfile()

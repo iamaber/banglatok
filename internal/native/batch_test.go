@@ -7,17 +7,16 @@ import (
 	"strings"
 	"sync"
 	"testing"
-	"unicode/utf8"
 
 	"github.com/iamaber/banglatok/tokenizer"
 )
 
-func runeCounts(texts []string) (string, []uint32) {
-	runes := make([]uint32, len(texts))
+func byteLengths(texts []string) (string, []uint32) {
+	lengths := make([]uint32, len(texts))
 	for i, text := range texts {
-		runes[i] = uint32(utf8.RuneCountInString(text))
+		lengths[i] = uint32(len(text))
 	}
-	return strings.Join(texts, ""), runes
+	return strings.Join(texts, ""), lengths
 }
 
 // shape mirrors the Python list implementation of Tokenizer.__call__.
@@ -44,14 +43,14 @@ func shape(batch [][]int, layout Layout) (rows [][]int, width int) {
 
 func encodeLayout(t *testing.T, r *Registry, texts []string, threads int, layout Layout) ([]uint32, []uint32) {
 	t.Helper()
-	text, runes := runeCounts(texts)
-	batch, err := r.EncodeBatch(1, text, runes, threads, layout)
+	text, lengths := byteLengths(texts)
+	batch, err := r.EncodeBatch(1, text, lengths, threads, layout)
 	if err != nil {
 		t.Fatal(err)
 	}
 	out := make([]uint32, batch.Size())
-	batch.Write(out, runes)
-	return out, runes
+	batch.Write(out, lengths)
+	return out, lengths
 }
 
 func TestEncodeBatchLayouts(t *testing.T) {
@@ -114,18 +113,18 @@ func TestEncodeBatchErrors(t *testing.T) {
 	_, model := loadTestModel(t, "bpe")
 	r := &Registry{models: map[uint64]*tokenizer.Tokenizer{1: model}}
 	for _, c := range []struct {
-		text  string
-		runes []uint32
+		text    string
+		lengths []uint32
 	}{
 		{"ab", []uint32{1}},       // text left over
-		{"ab", []uint32{3}},       // too many code points
+		{"ab", []uint32{3}},       // too many bytes
 		{"ab", []uint32{1, 0, 2}}, // later text past the end
 		{"", []uint32{1}},
 		{"আ", []uint32{2}},
 		{"a", nil},
 	} {
-		if _, err := r.EncodeBatch(1, c.text, c.runes, 1, Layout{}); !errors.Is(err, ErrBatchLengths) {
-			t.Fatalf("%q %v: %v", c.text, c.runes, err)
+		if _, err := r.EncodeBatch(1, c.text, c.lengths, 1, Layout{}); !errors.Is(err, ErrBatchLengths) {
+			t.Fatalf("%q %v: %v", c.text, c.lengths, err)
 		}
 	}
 	for _, layout := range []Layout{
@@ -150,10 +149,10 @@ func TestEncodeBatchErrors(t *testing.T) {
 	batch.Write(nil, nil)
 }
 
-func TestSplitRunes(t *testing.T) {
+func TestSplitBytes(t *testing.T) {
 	texts := []string{"", "a", "আমি", "🙂x", "", "a\x00b"}
-	text, runes := runeCounts(texts)
-	got, ok := splitRunes(text, runes)
+	text, lengths := byteLengths(texts)
+	got, ok := splitBytes(text, lengths)
 	if !ok || !slices.Equal(got, texts) {
 		t.Fatalf("%q %v", got, ok)
 	}
@@ -170,14 +169,14 @@ func TestEncodeBatchConcurrent(t *testing.T) {
 		workers.Add(1)
 		go func() {
 			defer workers.Done()
-			text, runes := runeCounts(texts)
-			batch, err := r.EncodeBatch(1, text, runes, worker+1, layout)
+			text, lengths := byteLengths(texts)
+			batch, err := r.EncodeBatch(1, text, lengths, worker+1, layout)
 			if err != nil {
 				t.Error(err)
 				return
 			}
 			out := make([]uint32, batch.Size())
-			batch.Write(out, runes)
+			batch.Write(out, lengths)
 			if !slices.Equal(out, want) {
 				t.Errorf("worker %d: result differs", worker)
 			}

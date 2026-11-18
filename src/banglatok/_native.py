@@ -42,6 +42,10 @@ _MAX_KEPT_IDS = 1 << 20
 _MAX_PAYLOAD = 2**31 - 1
 # Batch worker limit; more workers than CPUs only add scheduling.
 _MAX_THREADS = 1024
+# No row exceeds _MAX_PAYLOAD IDs, so larger max_length and width values act
+# alike; clamping them here keeps c_longlong from wrapping huge ints, and a
+# width of 2**31 still fails as "too large" for any nonempty batch.
+_MAX_LAYOUT = 2**31
 
 
 def threads(value: int | None) -> int:
@@ -71,28 +75,10 @@ def library() -> ctypes.CDLL:
     lib.bntok_call.restype = ctypes.c_void_p
     lib.bntok_free.argtypes = [ctypes.c_void_p]
     lib.bntok_free.restype = None
-    lib.bntok_encode_into.argtypes = [
-        ctypes.c_ulonglong,
-        ctypes.c_char_p,
-        ctypes.c_size_t,
-        ctypes.c_void_p,
-        ctypes.c_size_t,
-    ]
+    # The encode entry points take C ints and ctypes objects without argtypes:
+    # argtypes would call from_param for every argument, doubling the cost of
+    # a short call. Callers must keep every int below 2**31.
     lib.bntok_encode_into.restype = ctypes.c_longlong
-    lib.bntok_encode_batch.argtypes = [
-        ctypes.c_ulonglong,
-        ctypes.c_char_p,
-        ctypes.c_size_t,
-        ctypes.c_void_p,
-        ctypes.c_size_t,
-        ctypes.c_int,
-        ctypes.c_longlong,
-        ctypes.c_int,
-        ctypes.c_longlong,
-        ctypes.c_void_p,
-        ctypes.c_size_t,
-        ctypes.POINTER(ctypes.c_void_p),
-    ]
     lib.bntok_encode_batch.restype = ctypes.c_longlong
     return lib
 
@@ -149,7 +135,6 @@ class _IDs:
     def __init__(self, size: int) -> None:
         self.ids = (ctypes.c_uint32 * size)()
         self.view = memoryview(self.ids).cast("B").cast("I")
-        self.address = ctypes.addressof(self.ids)
         self.size = size
 
 
@@ -182,6 +167,7 @@ class NativeHandle:
         self._lib = library()
         response = call(self._lib, {"op": "load", "path": path})
         self._handle = response["handle"]
+        self._handle_arg = ctypes.c_ulonglong(self._handle)
         self.vocab_size = response["vocabulary"]
         self.algorithm = response.get("algorithm", "")
         self._encode_into = self._lib.bntok_encode_into
@@ -205,19 +191,23 @@ class NativeHandle:
             self.check_open()
             raise TypeError("text must be a string")
         try:
-            return text.encode("utf-8")
+            data = text.encode("utf-8")
         except UnicodeEncodeError:
             self.check_open()
             raise
+        if len(data) > _MAX_PAYLOAD:
+            self.check_open()
+            raise ValueError("encode input exceeds 2 GiB")
+        return data
 
     def encode_one(self, text: str) -> list[int]:
         """Encode one text straight into a reusable per-thread buffer."""
         data = self._payload(text)
         ids = self._buffers.one
-        count: int = self._encode_into(self._handle, data, len(data), ids.address, ids.size)
+        count: int = self._encode_into(self._handle_arg, data, len(data), ids.ids, ids.size)
         if count > ids.size:
-            ids = self._buffers.one = _IDs(max(count, 2 * ids.size))
-            count = self._encode_into(self._handle, data, len(data), ids.address, ids.size)
+            ids = self._buffers.one = _IDs(max(count, min(2 * ids.size, _MAX_PAYLOAD)))
+            count = self._encode_into(self._handle_arg, data, len(data), ids.ids, ids.size)
         if count < 0:
             self.check_open()
             raise _encode_error(count)
@@ -226,7 +216,7 @@ class NativeHandle:
     def count(self, text: str) -> int:
         """Return the number of IDs without materializing them in Python."""
         data = self._payload(text)
-        count: int = self._encode_into(self._handle, data, len(data), None, 0)
+        count: int = self._encode_into(self._handle_arg, data, len(data), None, 0)
         if count < 0:
             self.check_open()
             raise _encode_error(count)
@@ -235,7 +225,7 @@ class NativeHandle:
     def encode_rows(
         self,
         data: bytes,
-        runes: "array[int]",
+        lengths: "array[int]",
         threads: int,
         build: Callable[[memoryview, "array[int]"], T],
         *,
@@ -243,30 +233,32 @@ class NativeHandle:
         special: bool = False,
         width: int = 0,
     ) -> T:
-        """Encode ``data`` cut into texts of ``runes[i]`` code points.
+        """Encode ``data`` cut into texts of ``lengths[i]`` bytes.
 
-        ``build`` receives the uint32 IDs and, in ``runes``, each row's unpadded
-        length. Rows are truncated to ``max_length`` IDs (0 keeps all), wrapped
-        in ``<s>``/``</s>`` with ``special`` and padded to ``width`` (-1: the
-        longest row, 0: unpadded).
+        ``build`` receives the uint32 IDs and, in ``lengths``, each row's
+        unpadded length. Rows are truncated to ``max_length`` IDs (0 keeps all),
+        wrapped in ``<s>``/``</s>`` with ``special`` and padded to ``width``
+        (-1: the longest row, 0: unpadded).
         """
-        if 4 * len(runes) + len(data) > _MAX_PAYLOAD:
+        if 4 * len(lengths) + len(data) > _MAX_PAYLOAD:
             raise ValueError("encode input exceeds 2 GiB")
+        max_length = min(max_length, _MAX_LAYOUT)
+        width = min(width, _MAX_LAYOUT)
         buffers = self._buffers
         # Borrow the buffer so a re-entrant call on this thread cannot overwrite it.
         out, buffers.batch = buffers.batch or _IDs(1024), None
         allocated = ctypes.c_void_p()
         size: int = self._encode_batch(
-            self._handle,
+            self._handle_arg,
             data,
             len(data),
-            runes.buffer_info()[0],
-            len(runes),
+            ctypes.c_void_p(lengths.buffer_info()[0]),
+            len(lengths),
             threads,
-            max_length,
+            ctypes.c_longlong(max_length),
             special,
-            width,
-            out.address,
+            ctypes.c_longlong(width),
+            out.ids,
             out.size,
             ctypes.byref(allocated),
         )
@@ -274,11 +266,11 @@ class NativeHandle:
         # A fixed width is exact; padding to the longest row can repeat the
         # longest row's size across every row.
         if width > 0:
-            limit = width * len(runes)
+            limit = width * len(lengths)
         elif width < 0:
-            limit = (len(data) + 2) * len(runes)
+            limit = (len(data) + 2) * len(lengths)
         else:
-            limit = len(data) + 2 * len(runes)
+            limit = len(data) + 2 * len(lengths)
         if allocated.value is not None and not 0 <= size <= limit:
             self._lib.bntok_free(allocated)
             raise ValueError("native batch returned an inconsistent ID count")
@@ -286,12 +278,12 @@ class NativeHandle:
             try:
                 if size < 0:
                     raise _batch_error(size)
-                return build(out.view[:size], runes)
+                return build(out.view[:size], lengths)
             finally:
                 buffers.batch = out
         try:
             ids = (ctypes.c_uint32 * size).from_address(allocated.value)
-            return build(memoryview(ids).cast("B").cast("I"), runes)
+            return build(memoryview(ids).cast("B").cast("I"), lengths)
         finally:
             self._lib.bntok_free(allocated)
             if size <= _MAX_KEPT_IDS:

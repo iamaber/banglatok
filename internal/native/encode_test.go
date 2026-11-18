@@ -4,22 +4,21 @@ import (
 	"errors"
 	"slices"
 	"testing"
-	"unicode/utf8"
 
 	"github.com/iamaber/banglatok/tokenizer"
 )
 
 // encodeTexts encodes texts through EncodeBatch without a layout.
 func encodeTexts(r *Registry, handle uint64, texts []string, threads int) ([][]int, error) {
-	text, runes := runeCounts(texts)
-	batch, err := r.EncodeBatch(handle, text, runes, threads, Layout{})
+	text, lengths := byteLengths(texts)
+	batch, err := r.EncodeBatch(handle, text, lengths, threads, Layout{})
 	if err != nil {
 		return nil, err
 	}
 	out := make([]uint32, batch.Size())
-	batch.Write(out, runes)
+	batch.Write(out, lengths)
 	rows := make([][]int, len(texts))
-	for i, n := range runes {
+	for i, n := range lengths {
 		rows[i] = make([]int, n)
 		for j := range rows[i] {
 			rows[i][j] = int(out[j])
@@ -39,41 +38,41 @@ func TestEncodeIntoUndersizedBuffer(t *testing.T) {
 	}
 }
 
-// Arbitrary text and code-point counts must yield either ErrBatchLengths or
+// Arbitrary text and byte lengths must yield either ErrBatchLengths or
 // exactly one ID list per text, matching direct encoding.
 func FuzzEncodeBatch(f *testing.F) {
 	f.Add("ab", []byte{1, 1})
-	f.Add("আমি 🙂", []byte{3, 0, 2})
+	f.Add("আমি 🙂", []byte{6, 0, 8})
 	f.Add("a\xffb\x00", []byte{4})
 	f.Add("", []byte{})
 	_, model := loadTestModel(f, "unigram")
 	r := &Registry{models: map[uint64]*tokenizer.Tokenizer{1: model}}
 	f.Fuzz(func(t *testing.T, text string, counts []byte) {
-		runes := make([]uint32, len(counts))
+		lengths := make([]uint32, len(counts))
 		for i, n := range counts {
-			runes[i] = uint32(n)
+			lengths[i] = uint32(n)
 		}
-		if _, err := r.EncodeBatch(2, text, slices.Clone(runes), 1, Layout{}); err == nil {
+		if _, err := r.EncodeBatch(2, text, slices.Clone(lengths), 1, Layout{}); err == nil {
 			t.Fatal("invalid handle must return an error")
 		}
-		batch, err := r.EncodeBatch(1, text, runes, 1, Layout{})
+		batch, err := r.EncodeBatch(1, text, lengths, 1, Layout{})
 		if err != nil {
 			if !errors.Is(err, ErrBatchLengths) {
 				t.Fatal(err)
 			}
 			return
 		}
-		texts, _ := splitRunes(text, runes)
+		texts, _ := splitBytes(text, lengths)
 		out := make([]uint32, batch.Size())
-		batch.Write(out, runes)
+		batch.Write(out, lengths)
 		total := 0
 		for i, piece := range texts {
-			if utf8.ValidString(text) && utf8.RuneCountInString(piece) != int(counts[i]) {
-				t.Fatalf("text %d has %d code points, want %d", i, utf8.RuneCountInString(piece), counts[i])
+			if len(piece) != int(counts[i]) {
+				t.Fatalf("text %d has %d bytes, want %d", i, len(piece), counts[i])
 			}
 			want := model.Encode(piece)
-			if int(runes[i]) != len(want) {
-				t.Fatalf("text %d: %d IDs, want %d", i, runes[i], len(want))
+			if int(lengths[i]) != len(want) {
+				t.Fatalf("text %d: %d IDs, want %d", i, lengths[i], len(want))
 			}
 			for j, id := range want {
 				if out[total+j] != uint32(id) {
