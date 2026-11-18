@@ -2,6 +2,7 @@
 package tokenizer
 
 import (
+	"bytes"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -70,6 +71,21 @@ var (
 
 func init() {
 	var maybe []rune
+	var buf [2 * utf8.UTFMax]byte
+	// One reused iterator compares NFC output segment by segment; Form.IsNormal
+	// and Form.String allocate a reorder buffer per call.
+	var it norm.Iter
+	isNormal := func(s []byte) bool {
+		it.Init(norm.NFC, s)
+		for !it.Done() {
+			segment := it.Next()
+			if !bytes.HasPrefix(s, segment) {
+				return false
+			}
+			s = s[len(segment):]
+		}
+		return len(s) == 0
+	}
 	for _, span := range fastRanges {
 		flags := nfcLow[:]
 		first := rune(0)
@@ -78,11 +94,11 @@ func init() {
 			nfcSegments = append(nfcSegments, nfcSegment{first, flags})
 		}
 		for r := span[0]; r <= span[1]; r++ {
-			text := string(r)
-			if norm.NFC.String(text) != text || (r < utf8.RuneSelf && unicode.IsSpace(r) && r != ' ') {
+			text := utf8.AppendRune(buf[:0], r)
+			if !isNormal(text) || (r < utf8.RuneSelf && unicode.IsSpace(r) && r != ' ') {
 				continue
 			}
-			p := norm.NFC.PropertiesString(text)
+			p := norm.NFC.Properties(text)
 			value := uint8(nfcListed)
 			if p.BoundaryBefore() {
 				value |= nfcBoundaryBefore
@@ -98,8 +114,12 @@ func init() {
 	}
 	for _, span := range fastRanges {
 		for a := span[0]; a <= span[1]; a++ {
+			if nfcFlags(a) == 0 {
+				continue
+			}
+			prefix := utf8.AppendRune(buf[:0], a)
 			for _, b := range maybe {
-				if pair := string([]rune{a, b}); nfcFlags(a) != 0 && norm.NFC.String(pair) != pair {
+				if !isNormal(utf8.AppendRune(prefix, b)) {
 					composingPairs = append(composingPairs, [2]rune{a, b})
 				}
 			}

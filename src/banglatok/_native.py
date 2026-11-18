@@ -9,7 +9,6 @@ import weakref
 from array import array
 from collections.abc import Callable
 from functools import lru_cache
-from pathlib import Path
 from typing import TypedDict, TypeVar, cast
 
 T = TypeVar("T")
@@ -68,8 +67,8 @@ def threads(value: int | None) -> int:
 @lru_cache(maxsize=1)
 def library() -> ctypes.CDLL:
     suffix = {"win32": ".dll", "darwin": ".dylib"}.get(sys.platform, ".so")
-    path = Path(__file__).with_name("_go" + suffix)
-    lib = ctypes.CDLL(str(path))
+    path = os.path.join(os.path.dirname(__file__), "_go" + suffix)
+    lib = ctypes.CDLL(path)
     lib.bntok_call.argtypes = [ctypes.c_char_p]
     # Preserve the allocated address until bntok_free; c_char_p would copy and lose it.
     lib.bntok_call.restype = ctypes.c_void_p

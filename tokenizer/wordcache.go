@@ -26,8 +26,9 @@ type wordSlot struct {
 }
 
 // newWordCache indexes words[i], whose IDs are ids[ends[i-1]:ends[i]].
-// A repeated word keeps its last IDs.
-func newWordCache(words []string, ids []uint32, ends []uint32, spaceFusion []int) *wordCache {
+// A repeated word keeps its last IDs. Call fuse before use if the model has
+// space fusion.
+func newWordCache(words []string, ids []uint32, ends []uint32) *wordCache {
 	bits := uint(3)
 	for 1<<bits < 2*len(words) {
 		bits++
@@ -38,9 +39,6 @@ func newWordCache(words []string, ids []uint32, ends []uint32, spaceFusion []int
 	for i, w := range words {
 		h := c.hash(w)
 		s := wordSlot{hash: uint32(h), word: offset, length: uint32(len(w)), ids: start, count: ends[i] - start}
-		if len(spaceFusion) > 0 && s.count > 0 {
-			s.fused = uint32(spaceFusion[ids[start]])
-		}
 		j := h >> c.shift
 		for c.slots[j].length != 0 && c.word(&c.slots[j]) != w {
 			j = (j + 1) & mask
@@ -49,6 +47,19 @@ func newWordCache(words []string, ids []uint32, ends []uint32, spaceFusion []int
 		offset, start = offset+s.length, ends[i]
 	}
 	return c
+}
+
+// fuse precomputes each word's space-fused first ID; spaceFusion covers
+// every cached ID.
+func (c *wordCache) fuse(spaceFusion []int) {
+	if len(spaceFusion) == 0 {
+		return
+	}
+	for i := range c.slots {
+		if s := &c.slots[i]; s.count > 0 {
+			s.fused = uint32(spaceFusion[c.ids[s.ids]])
+		}
+	}
 }
 
 func (c *wordCache) word(s *wordSlot) string { return c.words[s.word : s.word+s.length] }

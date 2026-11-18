@@ -1,10 +1,12 @@
 package tokenizer
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
+	"io"
 	"math"
 	"os"
 	"strings"
@@ -121,6 +123,17 @@ func (r *compiledReader) str() string {
 	return s
 }
 
+// u32s reads a counted array of uint32 values.
+func (r *compiledReader) u32s() []uint32 {
+	out := make([]uint32, r.count(4))
+	for i := range out {
+		v := r.data[4*i : 4*i+4]
+		out[i] = uint32(v[0]) | uint32(v[1])<<8 | uint32(v[2])<<16 | uint32(v[3])<<24
+	}
+	r.data = r.data[4*len(out):]
+	return out
+}
+
 func loadCompiled(path string, source []byte) (*Tokenizer, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
@@ -129,16 +142,55 @@ func loadCompiled(path string, source []byte) (*Tokenizer, error) {
 	return parseCompiled(b, source)
 }
 
+// loadSidecar loads the sidecar of the JSON model at path. It streams the
+// JSON into the hash, so the JSON is read whole only when falling back.
+func loadSidecar(path string) (*Tokenizer, error) {
+	b, err := os.ReadFile(CompiledPath(path))
+	if err != nil {
+		return nil, err
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	return parseCompiledFrom(b, bufio.NewReaderSize(f, 256<<10))
+}
+
 func parseCompiled(b, source []byte) (*Tokenizer, error) {
-	sourceSum := sha256.Sum256(source)
+	return parseCompiledFrom(b, bytes.NewReader(source))
+}
+
+// parseCompiledFrom accepts b only if it records the SHA-256 of everything
+// source yields; source is fully consumed before it returns.
+func parseCompiledFrom(b []byte, source io.Reader) (*Tokenizer, error) {
 	if len(b) < compiledHeader || string(b[:len(compiledMagic)]) != compiledMagic ||
 		binary.LittleEndian.Uint32(b[len(compiledMagic):]) != compiledVersion {
 		return nil, fmt.Errorf("unsupported compiled model")
 	}
 	sums, payload := b[len(compiledMagic)+4:compiledHeader], b[compiledHeader:]
-	if payloadSum := sha256.Sum256(payload); !bytes.Equal(sums[:sha256.Size], sourceSum[:]) || !bytes.Equal(sums[sha256.Size:], payloadSum[:]) {
+	// Both checksums are computed while decoding, which is safe on any bytes;
+	// the result is discarded unless both match.
+	sourceOK, payloadOK := make(chan bool, 1), make(chan bool, 1)
+	go func() {
+		h := sha256.New()
+		_, err := io.Copy(h, source)
+		sourceOK <- err == nil && bytes.Equal(sums[:sha256.Size], h.Sum(nil))
+	}()
+	go func() {
+		sum := sha256.Sum256(payload)
+		payloadOK <- bytes.Equal(sums[sha256.Size:], sum[:])
+	}()
+	t, err := decodeCompiled(payload)
+	// Receive sourceOK first: the caller may close source once this returns.
+	if !<-sourceOK || !<-payloadOK {
 		return nil, fmt.Errorf("stale or corrupt compiled model")
 	}
+	return t, err
+}
+
+// decodeCompiled builds a Tokenizer from a payload.
+func decodeCompiled(payload []byte) (*Tokenizer, error) {
 	r := &compiledReader{data: string(payload)}
 	m := Model{Version: int(r.u32()), Algorithm: r.str(), Normalization: r.str()}
 	m.Pieces = make([]Piece, r.count(12))
@@ -157,18 +209,15 @@ func parseCompiled(b, source []byte) (*Tokenizer, error) {
 	for i := range m.CacheWords {
 		m.CacheWords[i] = r.str()
 	}
-	ids := make([]uint32, r.count(4))
-	for i := range ids {
-		ids[i] = r.u32()
-	}
-	ends := make([]uint32, r.count(4))
-	for i := range ends {
-		ends[i] = r.u32()
-	}
+	ids := r.u32s()
+	ends := r.u32s()
 	if r.bad || len(r.data) != 0 {
 		return nil, fmt.Errorf("malformed compiled model")
 	}
 	// JSON omits empty lists; keep the model identical to a JSON load.
+	if len(m.Pieces) == 0 {
+		m.Pieces = nil
+	}
 	if len(m.Merges) == 0 {
 		m.Merges = nil
 	}
@@ -178,33 +227,29 @@ func parseCompiled(b, source []byte) (*Tokenizer, error) {
 	if len(m.CacheWords) == 0 {
 		m.CacheWords = nil
 	}
-	t, err := New(m)
+	// The cache needs only the payload, so it is checked and indexed while
+	// newOwned validates the model; it is used only if both succeed.
+	var words []string
+	var cache *wordCache
+	cacheErr := make(chan error, 1)
+	go func() {
+		words = cacheWords(m)
+		err := checkCompiledCache(words, ids, ends, uint32(PieceOffset+len(m.Pieces)))
+		if err == nil {
+			cache = newWordCache(words, ids, ends)
+		}
+		cacheErr <- err
+	}()
+	t, err := newOwned(m)
+	if e := <-cacheErr; err == nil {
+		err = e
+	}
 	if err != nil {
 		return nil, err
 	}
-	words := cacheWords(m)
-	if len(ends) != len(words) {
-		return nil, fmt.Errorf("malformed compiled cache")
-	}
-	start := uint32(0)
-	for _, end := range ends {
-		if end <= start || end > uint32(len(ids)) {
-			return nil, fmt.Errorf("malformed compiled cache")
-		}
-		start = end
-	}
-	if start != uint32(len(ids)) {
-		return nil, fmt.Errorf("malformed compiled cache")
-	}
-	limit := uint32(PieceOffset + len(m.Pieces))
-	for _, id := range ids {
-		if id < ByteOffset || id >= limit {
-			return nil, fmt.Errorf("malformed compiled cache")
-		}
-	}
 	// The checksums rule out corruption; also re-encode a spread of words in
 	// case the payload came from a build whose segmentation differs.
-	start = 0
+	start := uint32(0)
 	step := max(1, len(words)/256)
 	for i := range words {
 		if i%step == 0 {
@@ -221,6 +266,31 @@ func parseCompiled(b, source []byte) (*Tokenizer, error) {
 		}
 		start = ends[i]
 	}
-	t.cache = newWordCache(words, ids, ends, t.spaceFusion)
+	cache.fuse(t.spaceFusion)
+	t.cache = cache
 	return t, nil
+}
+
+// checkCompiledCache checks that ends splits ids into one non-empty run per
+// word and that every ID is below limit.
+func checkCompiledCache(words []string, ids, ends []uint32, limit uint32) error {
+	if len(ends) != len(words) {
+		return fmt.Errorf("malformed compiled cache")
+	}
+	start := uint32(0)
+	for _, end := range ends {
+		if end <= start || end > uint32(len(ids)) {
+			return fmt.Errorf("malformed compiled cache")
+		}
+		start = end
+	}
+	if start != uint32(len(ids)) {
+		return fmt.Errorf("malformed compiled cache")
+	}
+	for _, id := range ids {
+		if id < ByteOffset || id >= limit {
+			return fmt.Errorf("malformed compiled cache")
+		}
+	}
+	return nil
 }

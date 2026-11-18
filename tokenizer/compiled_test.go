@@ -107,6 +107,30 @@ func TestCompiledRejectsDamage(t *testing.T) {
 	check("forged", forged, source)
 }
 
+// Load hashes the JSON as a stream; it must accept a current sidecar and
+// reject one whose JSON changed.
+func TestLoadSidecarHashesJSON(t *testing.T) {
+	m := smallBPE(t)
+	m.CacheWords = []string{"abab", "aaaa"}
+	path := writeCompiledModel(t, m)
+	if _, err := loadSidecar(path); err != nil {
+		t.Fatal(err)
+	}
+	source, _ := os.ReadFile(path)
+	if err := os.WriteFile(path, append(source, ' '), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := loadSidecar(path); err == nil {
+		t.Fatal("stale sidecar accepted")
+	}
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := loadSidecar(path); err == nil {
+		t.Fatal("sidecar accepted without its JSON")
+	}
+}
+
 // The shipped sidecars must be exactly what this code compiles.
 func TestBundledCompiledCurrent(t *testing.T) {
 	for _, path := range bundledModels {

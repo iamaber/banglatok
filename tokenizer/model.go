@@ -46,6 +46,15 @@ type Tokenizer struct {
 }
 
 func New(m Model) (*Tokenizer, error) {
+	m.Pieces = append([]Piece(nil), m.Pieces...)
+	m.Merges = append([]Merge(nil), m.Merges...)
+	m.CacheWords = append([]string(nil), m.CacheWords...)
+	m.SpaceFusion = append([]int(nil), m.SpaceFusion...)
+	return newOwned(m)
+}
+
+// newOwned is New for a model whose slices no caller retains or modifies.
+func newOwned(m Model) (*Tokenizer, error) {
 	if uint64(len(m.Pieces))+uint64(len(m.SpaceFusion)) > math.MaxUint32-PieceOffset {
 		return nil, fmt.Errorf("vocabulary exceeds 32-bit token IDs")
 	}
@@ -61,9 +70,6 @@ func New(m Model) (*Tokenizer, error) {
 		}
 	}
 	t := &Tokenizer{model: m, trie: []node{{id: -1}}}
-	t.model.Pieces = append([]Piece(nil), m.Pieces...)
-	t.model.CacheWords = append([]string(nil), m.CacheWords...)
-	t.model.SpaceFusion = append([]int(nil), m.SpaceFusion...)
 	if len(m.SpaceFusion) > 0 {
 		base := PieceOffset + len(m.Pieces)
 		t.spaceFusion = make([]int, base)
@@ -119,12 +125,12 @@ func New(m Model) (*Tokenizer, error) {
 // Load reads a JSON model. A compiled sidecar (see CompiledPath) replaces
 // parsing and cache segmentation when it matches the JSON bytes exactly.
 func Load(path string) (*Tokenizer, error) {
+	if t, err := loadSidecar(path); err == nil {
+		return t, nil
+	}
 	source, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
-	}
-	if t, err := loadCompiled(CompiledPath(path), source); err == nil {
-		return t, nil
 	}
 	t, _, _, err := loadJSON(source)
 	return t, err
@@ -136,7 +142,7 @@ func loadJSON(source []byte) (*Tokenizer, []uint32, []uint32, error) {
 	if err := json.Unmarshal(source, &m); err != nil {
 		return nil, nil, nil, err
 	}
-	t, err := New(m)
+	t, err := newOwned(m)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -150,7 +156,8 @@ func loadJSON(source []byte) (*Tokenizer, []uint32, []uint32, error) {
 		}
 		ends[i] = uint32(len(ids))
 	}
-	t.cache = newWordCache(words, ids, ends, t.spaceFusion)
+	t.cache = newWordCache(words, ids, ends)
+	t.cache.fuse(t.spaceFusion)
 	return t, ids, ends, nil
 }
 

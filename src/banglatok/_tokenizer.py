@@ -4,8 +4,6 @@ import importlib
 import os
 from array import array
 from collections.abc import Callable, Iterable, Sequence
-from importlib.resources import as_file, files
-from pathlib import Path
 from typing import Any, Literal, cast, overload
 
 from ._hf import tokenizer_config, tokenizer_json
@@ -24,6 +22,8 @@ _PIECE_OFFSET = 260
 _SPACE_ID = _BYTE_OFFSET + 0x20
 
 DEFAULT_MODEL = "bn-bpe-58k"
+# A real directory: the native library beside it cannot load from a zip either.
+_PRETRAINED = os.path.join(os.path.dirname(__file__), "pretrained")
 
 
 def _text(value: str) -> str:
@@ -94,11 +94,8 @@ def normalize(text: str) -> str:
 
 def available_models() -> list[str]:
     """Names accepted by :meth:`Tokenizer.from_pretrained`, bundled in the wheel."""
-    directory = files("banglatok").joinpath("pretrained")
     return sorted(
-        entry.name.removesuffix(".json")
-        for entry in directory.iterdir()
-        if entry.name.endswith(".json")
+        name.removesuffix(".json") for name in os.listdir(_PRETRAINED) if name.endswith(".json")
     )
 
 
@@ -123,11 +120,7 @@ class Tokenizer:
         names = available_models()
         if name not in names:
             raise ValueError(f"unknown model {name!r}; available: {', '.join(names)}")
-        resource = files("banglatok").joinpath(f"pretrained/{name}.json")
-        # The Go loader reads the file during construction, so a temporary
-        # extraction (for zipped installs) may be removed afterwards.
-        with as_file(resource) as path:
-            return cls(path)
+        return cls(os.path.join(_PRETRAINED, f"{name}.json"))
 
     @property
     def vocab_size(self) -> int:
@@ -217,6 +210,8 @@ class Tokenizer:
         ``encode_special_tokens = True`` so literal ``<s>`` text is not a control
         token; ``transformers`` does this from the saved configuration.
         """
+        from pathlib import Path  # Deferred: importing pathlib slows `import banglatok`.
+
         if self.algorithm != "bpe":
             raise ValueError("Hugging Face export supports BPE models only")
         _, fusion = self._native.vocabulary()

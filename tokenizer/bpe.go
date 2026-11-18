@@ -21,7 +21,6 @@ type Merge struct {
 const denseRunes = 0x2100
 
 func (t *Tokenizer) initBPE() error {
-	t.model.Merges = append([]Merge(nil), t.model.Merges...)
 	t.mergeRanks = newMergeTable(len(t.model.Merges))
 	t.characters = map[rune]int{}
 	t.denseCharacters = make([]int32, denseRunes)
@@ -30,8 +29,8 @@ func (t *Tokenizer) initBPE() error {
 	}
 	available, reachable := make([]bool, len(t.model.Pieces)), 0
 	for i, p := range t.model.Pieces {
-		if utf8.RuneCountInString(p.Text) == 1 {
-			r, _ := utf8.DecodeRuneInString(p.Text)
+		// New has checked that p.Text is valid UTF-8 and not empty.
+		if r, size := utf8.DecodeRuneInString(p.Text); size == len(p.Text) {
 			if r < denseRunes {
 				t.denseCharacters[r] = int32(i)
 			} else {
