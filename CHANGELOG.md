@@ -10,6 +10,10 @@
 - Loading is faster with unchanged token IDs and the same sidecar checks. Both sidecar checksums are computed while the payload is decoded, the word cache is built while the model is validated, the JSON is hashed as a stream instead of read whole, and validation no longer copies the decoded model. `tokenizer.Load` of `bn-bpe-58k` takes 6.1 ms instead of 12.5 ms and allocates 24.6 MB instead of 30.8 MB (`bn-bpe-28k`: 4.5 ms instead of 9.4 ms; Apple M5, median of 7). The Go package initializer builds its normalization tables without allocating.
 - `import banglatok` no longer imports `importlib.metadata`, `importlib.resources` or `pathlib`; `__version__` is looked up on first access. A fresh `python -c "import banglatok; banglatok.Tokenizer.from_pretrained()"` takes 27 ms instead of 48 ms (median of 20).
 
+### Documentation
+
+- Reran the popular-tokenizer comparison on the Apple M5 with the current encoder. On the unseen BanglishRev reviews, `bn-bpe-58k` now encodes 98.2 MB/s in single calls and 122.0 MB/s in batches of 64, up from 58.5 and 71.6 MB/s with 0.2.0. Token counts and losslessness are unchanged. The README and `benchmarks/POPULAR_COMPARISON.md` show the new numbers, and the README is reorganized around a short feature list.
+
 ## 0.2.3, 2026-11-14
 
 ### Performance

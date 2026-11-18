@@ -1,10 +1,10 @@
 {
- "created_utc": "2026-11-13T10:06:24.562173+00:00",
+ "created_utc": "2026-11-18T15:17:26.529668+00:00",
  "python": "3.12.13",
- "platform": "macOS-27.0.1-arm64-arm-64bit",
+ "platform": "macOS-27.2.1-arm64-arm-64bit",
  "cpu_model": "Apple M5",
  "packages": {
-  "banglatok": "0.2.0",
+  "banglatok": "0.2.3",
   "sentencepiece": "0.2.3",
   "tiktoken": "0.14.0",
   "tokenizers": "0.23.3",
@@ -13,19 +13,20 @@
  "repeats": 5,
  "batch_size": 64,
  "seed": 20261110,
- "harness_sha256": "c7854d75f6ad3b305b092759ce10439c221bc3fc65a77303f9fec1099cdc3925",
+ "review_offset": 0,
+ "harness_sha256": "92a4eb1b6f4aa45aacecd3d813f68b10b3fc5b01a52c5d91f9a8af6295f5bfef",
  "candidates": {
   "banglatok bn-bpe-58k": {
    "source": "bundled",
    "vocab_size": 57925,
-   "note": "this package",
+   "note": "banglatok bundled model",
    "stress_round_trips": 16,
    "stress_cases": 16
   },
   "banglatok bn-bpe-28k": {
    "source": "bundled",
    "vocab_size": 27760,
-   "note": "this package",
+   "note": "banglatok bundled model",
    "stress_round_trips": 16,
    "stress_cases": 16
   },
@@ -34,20 +35,6 @@
    "vocab_size": 50000,
    "note": "sentencepiece 0.2.3",
    "stress_round_trips": 8,
-   "stress_cases": 16
-  },
-  "SentencePiece Unigram 27,760, same training data": {
-   "source": "sentencepiece-unigram-27760.model sha256 b34c0d9a3c9e5fca680f9ee4bc19390180ddc3dc473bab070dab37d43bbabc0c",
-   "vocab_size": 27760,
-   "note": "sentencepiece 0.2.3",
-   "stress_round_trips": 15,
-   "stress_cases": 16
-  },
-  "SentencePiece BPE 27,760, same training data": {
-   "source": "sentencepiece-bpe-27760.model sha256 7d6b38bbd37057fe16a2997375d3c62e53a4e6f96adfb4b369cf450c185b5ba6",
-   "vocab_size": 27760,
-   "note": "sentencepiece 0.2.3",
-   "stress_round_trips": 15,
    "stress_cases": 16
   },
   "SentencePiece Unigram 57,925, same training data": {
@@ -60,6 +47,20 @@
   "SentencePiece BPE 57,925, same training data": {
    "source": "sentencepiece-bpe-57925.model sha256 d79d9f97e51cde565dee51aea46dedf387acf9e8172de15ad276dd724c750357",
    "vocab_size": 57925,
+   "note": "sentencepiece 0.2.3",
+   "stress_round_trips": 15,
+   "stress_cases": 16
+  },
+  "SentencePiece Unigram 27,760, same training data": {
+   "source": "sentencepiece-unigram-27760.model sha256 b34c0d9a3c9e5fca680f9ee4bc19390180ddc3dc473bab070dab37d43bbabc0c",
+   "vocab_size": 27760,
+   "note": "sentencepiece 0.2.3",
+   "stress_round_trips": 15,
+   "stress_cases": 16
+  },
+  "SentencePiece BPE 27,760, same training data": {
+   "source": "sentencepiece-bpe-27760.model sha256 7d6b38bbd37057fe16a2997375d3c62e53a4e6f96adfb4b369cf450c185b5ba6",
+   "vocab_size": 27760,
    "note": "sentencepiece 0.2.3",
    "stress_round_trips": 15,
    "stress_cases": 16
@@ -131,21 +132,21 @@
    "candidates": {
     "banglatok bn-bpe-58k": {
      "speed": {
-      "single_MB_per_second": 77.54376609730785,
-      "batch_MB_per_second": 88.16106378708001,
+      "single_MB_per_second": 134.7728480963877,
+      "batch_MB_per_second": 154.2787584,
       "single_seconds": [
-       0.039860333999968134,
-       0.03902008300065063,
-       0.03866287499840837,
-       0.038858790998347104,
-       0.03885154098679777
+       0.025990833004470915,
+       0.022727624978870153,
+       0.02233745899866335,
+       0.022302249999484047,
+       0.022358042013365775
       ],
       "batch_seconds": [
-       0.034478040994144976,
-       0.035904457996366546,
-       0.03417900000931695,
-       0.03402937500504777,
-       0.03415575000690296
+       0.019752416003029794,
+       0.01959087498835288,
+       0.01942429202608764,
+       0.01953125,
+       0.019337000005180016
       ]
      },
      "quality": {
@@ -158,6 +159,8 @@
        "exact_round_trips": 14779,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": 191,
+       "byte_fallback_token_percent": 0.05784793564644311,
        "over_510_token_percent": 0.0,
        "sequence_p95": 83
       },
@@ -170,6 +173,8 @@
        "exact_round_trips": 4925,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": 89,
+       "byte_fallback_token_percent": 0.04516895218181265,
        "over_510_token_percent": 0.0,
        "sequence_p95": 138
       },
@@ -182,6 +187,8 @@
        "exact_round_trips": 6160,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": 97,
+       "byte_fallback_token_percent": 0.09201901093792986,
        "over_510_token_percent": 0.0,
        "sequence_p95": 47
       },
@@ -194,6 +201,8 @@
        "exact_round_trips": 156,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": 3,
+       "byte_fallback_token_percent": 0.10611956137247966,
        "over_510_token_percent": 0.0,
        "sequence_p95": 55
       },
@@ -206,6 +215,8 @@
        "exact_round_trips": 3538,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": 2,
+       "byte_fallback_token_percent": 0.0080327737167644,
        "over_510_token_percent": 0.0,
        "sequence_p95": 13
       }
@@ -213,21 +224,21 @@
     },
     "banglatok bn-bpe-28k": {
      "speed": {
-      "single_MB_per_second": 78.89983370531888,
-      "batch_MB_per_second": 90.81569106076331,
+      "single_MB_per_second": 133.40251258897652,
+      "batch_MB_per_second": 150.98369044752124,
       "single_seconds": [
-       0.03825712500838563,
-       0.038096167001640424,
-       0.03820199999609031,
-       0.036329499998828396,
-       0.03819091699551791
+       0.02258770799380727,
+       0.0225419589842204,
+       0.022958042012760416,
+       0.021285333001287654,
+       0.0230354169907514
       ],
       "batch_seconds": [
-       0.03431987499061506,
-       0.03408037500048522,
-       0.03317991599033121,
-       0.03315495800052304,
-       0.032805708004161716
+       0.02199387500877492,
+       0.02081058401381597,
+       0.019931374990846962,
+       0.019957499986048788,
+       0.01940470901899971
       ]
      },
      "quality": {
@@ -240,6 +251,8 @@
        "exact_round_trips": 14779,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": 166,
+       "byte_fallback_token_percent": 0.04416796598534475,
        "over_510_token_percent": 0.006766357669666418,
        "sequence_p95": 95
       },
@@ -252,6 +265,8 @@
        "exact_round_trips": 4925,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": 78,
+       "byte_fallback_token_percent": 0.03441004420367217,
        "over_510_token_percent": 0.02030456852791878,
        "sequence_p95": 159
       },
@@ -264,6 +279,8 @@
        "exact_round_trips": 6160,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": 83,
+       "byte_fallback_token_percent": 0.0699725168186953,
        "over_510_token_percent": 0.0,
        "sequence_p95": 52
       },
@@ -276,6 +293,8 @@
        "exact_round_trips": 156,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": 3,
+       "byte_fallback_token_percent": 0.09351620947630923,
        "over_510_token_percent": 0.0,
        "sequence_p95": 63
       },
@@ -288,6 +307,8 @@
        "exact_round_trips": 3538,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": 2,
+       "byte_fallback_token_percent": 0.007316894709885125,
        "over_510_token_percent": 0.0,
        "sequence_p95": 14
       }
@@ -295,21 +316,21 @@
     },
     "BNLP bn_spm (SentencePiece)": {
      "speed": {
-      "single_MB_per_second": 42.62751049767827,
-      "batch_MB_per_second": 42.160456117501255,
+      "single_MB_per_second": 42.21923245830665,
+      "batch_MB_per_second": 41.432795193577554,
       "single_seconds": [
-       0.07166045800840948,
-       0.0700462919921847,
-       0.07042070799798239,
-       0.07068808299663942,
-       0.07071991699922364
+       0.07180979099939577,
+       0.071011541003827,
+       0.0710579169972334,
+       0.07147724999231286,
+       0.0713716669997666
       ],
       "batch_seconds": [
-       0.0712157920061145,
-       0.07168275000003632,
-       0.07101562499883585,
-       0.0714711670007091,
-       0.07150749998982064
+       0.07272637498681433,
+       0.07358349999412894,
+       0.07246550000854768,
+       0.07230445800814778,
+       0.07314283298910595
       ]
      },
      "quality": {
@@ -322,6 +343,8 @@
        "exact_round_trips": 12998,
        "round_trip_percent": 87.94911699032411,
        "texts_with_unknowns": 647,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.006766357669666418,
        "sequence_p95": 96
       },
@@ -334,6 +357,8 @@
        "exact_round_trips": 4557,
        "round_trip_percent": 92.52791878172589,
        "texts_with_unknowns": 202,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 128
       },
@@ -346,6 +371,8 @@
        "exact_round_trips": 4785,
        "round_trip_percent": 77.67857142857143,
        "texts_with_unknowns": 423,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.016233766233766232,
        "sequence_p95": 92
       },
@@ -358,6 +385,8 @@
        "exact_round_trips": 121,
        "round_trip_percent": 77.56410256410257,
        "texts_with_unknowns": 19,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 77
       },
@@ -370,192 +399,30 @@
        "exact_round_trips": 3535,
        "round_trip_percent": 99.9152063312606,
        "texts_with_unknowns": 3,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 19
       }
      }
     },
-    "SentencePiece Unigram 27,760, same training data": {
-     "speed": {
-      "single_MB_per_second": 49.118012395677354,
-      "batch_MB_per_second": 47.86759322407009,
-      "single_seconds": [
-       0.061347291004494764,
-       0.06061549999867566,
-       0.06202579100499861,
-       0.06050158300786279,
-       0.06165449999389239
-      ],
-      "batch_seconds": [
-       0.06294983300904278,
-       0.061716041003819555,
-       0.06310624998877756,
-       0.06464270800643135,
-       0.06292108399793506
-      ]
-     },
-     "quality": {
-      "all": {
-       "texts": 14779,
-       "tokens": 359653,
-       "whitespace_words": 240495,
-       "tokens_per_word": 1.4954697602860767,
-       "characters_per_token": 4.146329934687046,
-       "exact_round_trips": 14779,
-       "round_trip_percent": 100.0,
-       "texts_with_unknowns": 0,
-       "over_510_token_percent": 0.0,
-       "sequence_p95": 89
-      },
-      "bangla": {
-       "texts": 4925,
-       "tokens": 210692,
-       "whitespace_words": 138501,
-       "tokens_per_word": 1.5212308936397572,
-       "characters_per_token": 4.360559489681621,
-       "exact_round_trips": 4925,
-       "round_trip_percent": 100.0,
-       "texts_with_unknowns": 0,
-       "over_510_token_percent": 0.0,
-       "sequence_p95": 145
-      },
-      "banglish": {
-       "texts": 6160,
-       "tokens": 113932,
-       "whitespace_words": 77760,
-       "tokens_per_word": 1.4651748971193415,
-       "characters_per_token": 3.9454148088333394,
-       "exact_round_trips": 6160,
-       "round_trip_percent": 100.0,
-       "texts_with_unknowns": 0,
-       "over_510_token_percent": 0.0,
-       "sequence_p95": 49
-      },
-      "code-mixed": {
-       "texts": 156,
-       "tokens": 3292,
-       "whitespace_words": 2023,
-       "tokens_per_word": 1.6272862086010875,
-       "characters_per_token": 3.4513973268529767,
-       "exact_round_trips": 156,
-       "round_trip_percent": 100.0,
-       "texts_with_unknowns": 0,
-       "over_510_token_percent": 0.0,
-       "sequence_p95": 60
-      },
-      "english": {
-       "texts": 3538,
-       "tokens": 31737,
-       "whitespace_words": 22211,
-       "tokens_per_word": 1.428886587726802,
-       "characters_per_token": 3.5174717207045405,
-       "exact_round_trips": 3538,
-       "round_trip_percent": 100.0,
-       "texts_with_unknowns": 0,
-       "over_510_token_percent": 0.0,
-       "sequence_p95": 15
-      }
-     }
-    },
-    "SentencePiece BPE 27,760, same training data": {
-     "speed": {
-      "single_MB_per_second": 18.337402554220684,
-      "batch_MB_per_second": 18.163005625216275,
-      "single_seconds": [
-       0.16517058400495443,
-       0.1642119579919381,
-       0.16427795799972955,
-       0.16432300000451505,
-       0.16504279199580196
-      ],
-      "batch_seconds": [
-       0.1659007909911452,
-       0.1655154590116581,
-       0.16557329200441018,
-       0.1659847080009058,
-       0.16668258300342131
-      ]
-     },
-     "quality": {
-      "all": {
-       "texts": 14779,
-       "tokens": 363601,
-       "whitespace_words": 240495,
-       "tokens_per_word": 1.5118859019938045,
-       "characters_per_token": 4.101308852285885,
-       "exact_round_trips": 14779,
-       "round_trip_percent": 100.0,
-       "texts_with_unknowns": 0,
-       "over_510_token_percent": 0.0,
-       "sequence_p95": 88
-      },
-      "bangla": {
-       "texts": 4925,
-       "tokens": 212447,
-       "whitespace_words": 138501,
-       "tokens_per_word": 1.5339022822939907,
-       "characters_per_token": 4.324537414037383,
-       "exact_round_trips": 4925,
-       "round_trip_percent": 100.0,
-       "texts_with_unknowns": 0,
-       "over_510_token_percent": 0.0,
-       "sequence_p95": 147
-      },
-      "banglish": {
-       "texts": 6160,
-       "tokens": 115662,
-       "whitespace_words": 77760,
-       "tokens_per_word": 1.4874228395061728,
-       "characters_per_token": 3.8864017568432154,
-       "exact_round_trips": 6160,
-       "round_trip_percent": 100.0,
-       "texts_with_unknowns": 0,
-       "over_510_token_percent": 0.0,
-       "sequence_p95": 50
-      },
-      "code-mixed": {
-       "texts": 156,
-       "tokens": 3325,
-       "whitespace_words": 2023,
-       "tokens_per_word": 1.643598615916955,
-       "characters_per_token": 3.4171428571428573,
-       "exact_round_trips": 156,
-       "round_trip_percent": 100.0,
-       "texts_with_unknowns": 0,
-       "over_510_token_percent": 0.0,
-       "sequence_p95": 64
-      },
-      "english": {
-       "texts": 3538,
-       "tokens": 32167,
-       "whitespace_words": 22211,
-       "tokens_per_word": 1.448246364414029,
-       "characters_per_token": 3.470451083408462,
-       "exact_round_trips": 3538,
-       "round_trip_percent": 100.0,
-       "texts_with_unknowns": 0,
-       "over_510_token_percent": 0.0,
-       "sequence_p95": 15
-      }
-     }
-    },
     "SentencePiece Unigram 57,925, same training data": {
      "speed": {
-      "single_MB_per_second": 45.48678612666846,
-      "batch_MB_per_second": 44.58233721822724,
+      "single_MB_per_second": 44.834879846317605,
+      "batch_MB_per_second": 43.46647182711654,
       "single_seconds": [
-       0.06698408299416769,
-       0.0660291660024086,
-       0.06655654199130367,
-       0.06624466700304765,
-       0.06561133300419897
+       0.07091195799876004,
+       0.07215787499444559,
+       0.06707287498284131,
+       0.06532208301359788,
+       0.06720787499216385
       ],
       "batch_seconds": [
-       0.06573550000030082,
-       0.06874612499086652,
-       0.0676452089974191,
-       0.06738020799821243,
-       0.06758858301327564
+       0.07171449999441393,
+       0.07350566700915806,
+       0.06864679101272486,
+       0.06932370798313059,
+       0.06890020798891783
       ]
      },
      "quality": {
@@ -568,6 +435,8 @@
        "exact_round_trips": 14779,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 82
       },
@@ -580,6 +449,8 @@
        "exact_round_trips": 4925,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 135
       },
@@ -592,6 +463,8 @@
        "exact_round_trips": 6160,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 45
       },
@@ -604,6 +477,8 @@
        "exact_round_trips": 156,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 60
       },
@@ -616,6 +491,8 @@
        "exact_round_trips": 3538,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 14
       }
@@ -623,21 +500,21 @@
     },
     "SentencePiece BPE 57,925, same training data": {
      "speed": {
-      "single_MB_per_second": 19.459319739458184,
-      "batch_MB_per_second": 19.16418195986435,
+      "single_MB_per_second": 19.007147877952672,
+      "batch_MB_per_second": 18.894736511991425,
       "single_seconds": [
-       0.15541866699641105,
-       0.15445783399627544,
-       0.15484904099139385,
-       0.15581508399918675,
-       0.1547511250100797
+       0.1708411249855999,
+       0.16133987499051727,
+       0.1585328329820186,
+       0.1576469999854453,
+       0.15845666598761454
       ],
       "batch_seconds": [
-       0.15706949999730568,
-       0.15723379199334886,
-       0.15708570800779853,
-       0.16049716700217687,
-       0.1575316670059692
+       0.1589625829947181,
+       0.1647125000017695,
+       0.159916415985208,
+       0.1594196250080131,
+       0.1594760000007227
       ]
      },
      "quality": {
@@ -650,6 +527,8 @@
        "exact_round_trips": 14779,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 81
       },
@@ -662,6 +541,8 @@
        "exact_round_trips": 4925,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 134
       },
@@ -674,6 +555,8 @@
        "exact_round_trips": 6160,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 45
       },
@@ -686,6 +569,8 @@
        "exact_round_trips": 156,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 60
       },
@@ -698,28 +583,214 @@
        "exact_round_trips": 3538,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 14
       }
      }
     },
-    "tiktoken o200k_base": {
+    "SentencePiece Unigram 27,760, same training data": {
      "speed": {
-      "single_MB_per_second": 32.96458484064051,
-      "batch_MB_per_second": 14.903320321551274,
+      "single_MB_per_second": 47.940957931071914,
+      "batch_MB_per_second": 47.00380070730923,
       "single_seconds": [
-       0.09140891701099463,
-       0.09140504199604038,
-       0.09184074999939185,
-       0.09202570799971,
-       0.09135466700536199
+       0.06295879199751653,
+       0.06235637501231395,
+       0.06261924997670576,
+       0.062853500014171,
+       0.06365945801371709
       ],
       "batch_seconds": [
-       0.19588841700169723,
-       0.20619175001047552,
-       0.2026160829991568,
-       0.2017111669993028,
-       0.20218695800576825
+       0.06244954199064523,
+       0.06482312499429099,
+       0.06510749997687526,
+       0.06410666700685397,
+       0.06346995799685828
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 359653,
+       "whitespace_words": 240495,
+       "tokens_per_word": 1.4954697602860767,
+       "characters_per_token": 4.146329934687046,
+       "exact_round_trips": 14779,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 89
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 210692,
+       "whitespace_words": 138501,
+       "tokens_per_word": 1.5212308936397572,
+       "characters_per_token": 4.360559489681621,
+       "exact_round_trips": 4925,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 145
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 113932,
+       "whitespace_words": 77760,
+       "tokens_per_word": 1.4651748971193415,
+       "characters_per_token": 3.9454148088333394,
+       "exact_round_trips": 6160,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 49
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 3292,
+       "whitespace_words": 2023,
+       "tokens_per_word": 1.6272862086010875,
+       "characters_per_token": 3.4513973268529767,
+       "exact_round_trips": 156,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 60
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 31737,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.428886587726802,
+       "characters_per_token": 3.5174717207045405,
+       "exact_round_trips": 3538,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 15
+      }
+     }
+    },
+    "SentencePiece BPE 27,760, same training data": {
+     "speed": {
+      "single_MB_per_second": 17.954070052287,
+      "batch_MB_per_second": 17.85774872576024,
+      "single_seconds": [
+       0.16913412499707192,
+       0.1687656669819262,
+       0.1673668340081349,
+       0.16783141600899398,
+       0.16692141702515073
+      ],
+      "batch_seconds": [
+       0.1975732910213992,
+       0.16861166700255126,
+       0.16873666699393652,
+       0.17060941699310206,
+       0.16806637498666532
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 14779,
+       "tokens": 363601,
+       "whitespace_words": 240495,
+       "tokens_per_word": 1.5118859019938045,
+       "characters_per_token": 4.101308852285885,
+       "exact_round_trips": 14779,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 88
+      },
+      "bangla": {
+       "texts": 4925,
+       "tokens": 212447,
+       "whitespace_words": 138501,
+       "tokens_per_word": 1.5339022822939907,
+       "characters_per_token": 4.324537414037383,
+       "exact_round_trips": 4925,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 147
+      },
+      "banglish": {
+       "texts": 6160,
+       "tokens": 115662,
+       "whitespace_words": 77760,
+       "tokens_per_word": 1.4874228395061728,
+       "characters_per_token": 3.8864017568432154,
+       "exact_round_trips": 6160,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 50
+      },
+      "code-mixed": {
+       "texts": 156,
+       "tokens": 3325,
+       "whitespace_words": 2023,
+       "tokens_per_word": 1.643598615916955,
+       "characters_per_token": 3.4171428571428573,
+       "exact_round_trips": 156,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 64
+      },
+      "english": {
+       "texts": 3538,
+       "tokens": 32167,
+       "whitespace_words": 22211,
+       "tokens_per_word": 1.448246364414029,
+       "characters_per_token": 3.470451083408462,
+       "exact_round_trips": 3538,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 15
+      }
+     }
+    },
+    "tiktoken o200k_base": {
+     "speed": {
+      "single_MB_per_second": 32.41504875287748,
+      "batch_MB_per_second": 14.738945258519617,
+      "single_seconds": [
+       0.10048491699853912,
+       0.09382241699495353,
+       0.09259774998645298,
+       0.09251883300021291,
+       0.09295858300174586
+      ],
+      "batch_seconds": [
+       0.22249262500554323,
+       0.21674887498375028,
+       0.19685425001080148,
+       0.2039511670009233,
+       0.20444183400832117
       ]
      },
      "quality": {
@@ -732,6 +803,8 @@
        "exact_round_trips": 14779,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.07442993436633061,
        "sequence_p95": 145
       },
@@ -744,6 +817,8 @@
        "exact_round_trips": 4925,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.20304568527918782,
        "sequence_p95": 239
       },
@@ -756,6 +831,8 @@
        "exact_round_trips": 6160,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.016233766233766232,
        "sequence_p95": 64
       },
@@ -768,6 +845,8 @@
        "exact_round_trips": 156,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 82
       },
@@ -780,6 +859,8 @@
        "exact_round_trips": 3538,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 12
       }
@@ -787,21 +868,21 @@
     },
     "tiktoken cl100k_base": {
      "speed": {
-      "single_MB_per_second": 24.293178383045277,
-      "batch_MB_per_second": 12.029730406697906,
+      "single_MB_per_second": 23.86261740750581,
+      "batch_MB_per_second": 11.608358228979542,
       "single_seconds": [
-       0.12414720800006762,
-       0.12391558299714234,
-       0.12403716600965708,
-       0.12389083400194068,
-       0.1241546249948442
+       0.13291987500269897,
+       0.12797970799147151,
+       0.12627520898240618,
+       0.12621595899690874,
+       0.12594716702005826
       ],
       "batch_seconds": [
-       0.24709733400959522,
-       0.24689487500290852,
-       0.25327983300667256,
-       0.2523424170067301,
-       0.2504841669870075
+       0.26476483402075246,
+       0.27826370898401365,
+       0.25957650001510046,
+       0.2557165409962181,
+       0.2539155000122264
       ]
      },
      "quality": {
@@ -814,6 +895,8 @@
        "exact_round_trips": 14779,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 4.34400162392584,
        "sequence_p95": 466
       },
@@ -826,6 +909,8 @@
        "exact_round_trips": 4925,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 13.01522842639594,
        "sequence_p95": 791
       },
@@ -838,6 +923,8 @@
        "exact_round_trips": 6160,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.016233766233766232,
        "sequence_p95": 71
       },
@@ -850,6 +937,8 @@
        "exact_round_trips": 156,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 161
       },
@@ -862,6 +951,8 @@
        "exact_round_trips": 3538,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 13
       }
@@ -869,21 +960,21 @@
     },
     "BanglaBERT (csebuetnlp)": {
      "speed": {
-      "single_MB_per_second": 10.617301643906526,
-      "batch_MB_per_second": 10.586573991849304,
+      "single_MB_per_second": 10.27759121897385,
+      "batch_MB_per_second": 10.194151645354326,
       "single_seconds": [
-       0.2822324159933487,
-       0.28449616699072067,
-       0.28474995800934266,
-       0.28344291700341273,
-       0.2838062910013832
+       0.29318708399659954,
+       0.32359079099842347,
+       0.29438070801552385,
+       0.29044350000913255,
+       0.28999012502026744
       ],
       "batch_seconds": [
-       0.28544258400506806,
-       0.2846300420060288,
-       0.284913208000944,
-       0.2839284170040628,
-       0.28461216599680483
+       0.2989849579753354,
+       0.29558683300274424,
+       0.29005762498127297,
+       0.2912097079970408,
+       0.2958035000192467
       ]
      },
      "quality": {
@@ -896,6 +987,8 @@
        "exact_round_trips": 7441,
        "round_trip_percent": 50.34846741998782,
        "texts_with_unknowns": 1579,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.013532715339332837,
        "sequence_p95": 95
       },
@@ -908,6 +1001,8 @@
        "exact_round_trips": 1410,
        "round_trip_percent": 28.629441624365484,
        "texts_with_unknowns": 361,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.02030456852791878,
        "sequence_p95": 138
       },
@@ -920,6 +1015,8 @@
        "exact_round_trips": 3671,
        "round_trip_percent": 59.59415584415584,
        "texts_with_unknowns": 1176,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.016233766233766232,
        "sequence_p95": 80
       },
@@ -932,6 +1029,8 @@
        "exact_round_trips": 52,
        "round_trip_percent": 33.333333333333336,
        "texts_with_unknowns": 40,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 72
       },
@@ -944,6 +1043,8 @@
        "exact_round_trips": 2308,
        "round_trip_percent": 65.23459581684567,
        "texts_with_unknowns": 2,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 18
       }
@@ -951,21 +1052,21 @@
     },
     "Bangla-BERT (sagorsarker)": {
      "speed": {
-      "single_MB_per_second": 7.857881740965955,
-      "batch_MB_per_second": 7.78183872365213,
+      "single_MB_per_second": 7.754798047468434,
+      "batch_MB_per_second": 7.715399524918543,
       "single_seconds": [
-       0.3856764999945881,
-       0.38226154098811094,
-       0.3834693749959115,
-       0.3972802079952089,
-       0.38135841699840967
+       0.38805704200058244,
+       0.397002292011166,
+       0.388566792011261,
+       0.38922695801011287,
+       0.3851272079918999
       ],
       "batch_seconds": [
-       0.38801179199072067,
-       0.38721658299618866,
-       0.38650729099754244,
-       0.38545812500524335,
-       0.39569979200314265
+       0.3906142500054557,
+       0.3902004169940483,
+       0.39092895900830626,
+       0.3905510000186041,
+       0.3894526250078343
       ]
      },
      "quality": {
@@ -978,6 +1079,8 @@
        "exact_round_trips": 94,
        "round_trip_percent": 0.6360376209486434,
        "texts_with_unknowns": 11971,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.006766357669666418,
        "sequence_p95": 117
       },
@@ -990,6 +1093,8 @@
        "exact_round_trips": 93,
        "round_trip_percent": 1.8883248730964468,
        "texts_with_unknowns": 2123,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.02030456852791878,
        "sequence_p95": 197
       },
@@ -1002,6 +1107,8 @@
        "exact_round_trips": 1,
        "round_trip_percent": 0.016233766233766232,
        "texts_with_unknowns": 6156,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 40
       },
@@ -1014,6 +1121,8 @@
        "exact_round_trips": 0,
        "round_trip_percent": 0.0,
        "texts_with_unknowns": 154,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 53
       },
@@ -1026,6 +1135,8 @@
        "exact_round_trips": 0,
        "round_trip_percent": 0.0,
        "texts_with_unknowns": 3538,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 13
       }
@@ -1033,21 +1144,21 @@
     },
     "MuRIL (Google)": {
      "speed": {
-      "single_MB_per_second": 10.058542970855031,
-      "batch_MB_per_second": 10.026876925719632,
+      "single_MB_per_second": 9.851352500447616,
+      "batch_MB_per_second": 9.802820062803738,
       "single_seconds": [
-       0.29861720799817704,
-       0.29957191699941177,
-       0.30138291700859554,
-       0.30174595800053794,
-       0.2995341659989208
+       0.3068373340065591,
+       0.3044837500201538,
+       0.30587241699686274,
+       0.30548175002331845,
+       0.3173861659888644
       ],
       "batch_seconds": [
-       0.30126379200373776,
-       0.30118350000702776,
-       0.3005180000036489,
-       0.2997560830117436,
-       0.300200625002617
+       0.3289414999890141,
+       0.31072554099955596,
+       0.3073867500061169,
+       0.30617429202538915,
+       0.30485337498248555
       ]
      },
      "quality": {
@@ -1060,6 +1171,8 @@
        "exact_round_trips": 7418,
        "round_trip_percent": 50.192841193585494,
        "texts_with_unknowns": 352,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.006766357669666418,
        "sequence_p95": 90
       },
@@ -1072,6 +1185,8 @@
        "exact_round_trips": 1427,
        "round_trip_percent": 28.9746192893401,
        "texts_with_unknowns": 75,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 139
       },
@@ -1084,6 +1199,8 @@
        "exact_round_trips": 3620,
        "round_trip_percent": 58.76623376623377,
        "texts_with_unknowns": 270,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.016233766233766232,
        "sequence_p95": 65
       },
@@ -1096,6 +1213,8 @@
        "exact_round_trips": 63,
        "round_trip_percent": 40.38461538461539,
        "texts_with_unknowns": 7,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 70
       },
@@ -1108,6 +1227,8 @@
        "exact_round_trips": 2308,
        "round_trip_percent": 65.23459581684567,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 13
       }
@@ -1115,21 +1236,21 @@
     },
     "mBERT cased": {
      "speed": {
-      "single_MB_per_second": 8.890518084718225,
-      "batch_MB_per_second": 8.827031792659412,
+      "single_MB_per_second": 8.719644519874983,
+      "batch_MB_per_second": 8.67787123626137,
       "single_seconds": [
-       0.34200725000118837,
-       0.33892929200374056,
-       0.33811283399700187,
-       0.3379068750073202,
-       0.3393585419980809
+       0.36320599997998215,
+       0.3532700829964597,
+       0.34557108298758976,
+       0.34311066698865034,
+       0.3449623330088798
       ],
       "batch_seconds": [
-       0.33993229099723976,
-       0.3420657079986995,
-       0.3413669589936035,
-       0.34677929199824575,
-       0.33952237499761395
+       0.37119679199531674,
+       0.3468144590151496,
+       0.34723458299413323,
+       0.3471905420010444,
+       0.35258816700661555
       ]
      },
      "quality": {
@@ -1142,6 +1263,8 @@
        "exact_round_trips": 7373,
        "round_trip_percent": 49.8883550984505,
        "texts_with_unknowns": 1641,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.16915894174166046,
        "sequence_p95": 164
       },
@@ -1154,6 +1277,8 @@
        "exact_round_trips": 1404,
        "round_trip_percent": 28.507614213197968,
        "texts_with_unknowns": 327,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.4873096446700508,
        "sequence_p95": 278
       },
@@ -1166,6 +1291,8 @@
        "exact_round_trips": 3598,
        "round_trip_percent": 58.40909090909091,
        "texts_with_unknowns": 1286,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.016233766233766232,
        "sequence_p95": 70
       },
@@ -1178,6 +1305,8 @@
        "exact_round_trips": 63,
        "round_trip_percent": 40.38461538461539,
        "texts_with_unknowns": 26,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 97
       },
@@ -1190,6 +1319,8 @@
        "exact_round_trips": 2308,
        "round_trip_percent": 65.23459581684567,
        "texts_with_unknowns": 2,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 14
       }
@@ -1197,21 +1328,21 @@
     },
     "XLM-R / mE5 / BGE-M3": {
      "speed": {
-      "single_MB_per_second": 7.539272871141336,
-      "batch_MB_per_second": 7.598480714798869,
+      "single_MB_per_second": 7.463508728593643,
+      "batch_MB_per_second": 7.208453481593786,
       "single_seconds": [
-       0.4157717920024879,
-       0.3926667909981916,
-       0.39251649999641813,
-       0.40985362499486655,
-       0.39967475000594277
+       0.45190537499729544,
+       0.4261949999781791,
+       0.4023883749905508,
+       0.40373195899883285,
+       0.4006432500027586
       ],
       "batch_seconds": [
-       0.3992587079992518,
-       0.3961517090065172,
-       0.3956298330012942,
-       0.3965604590048315,
-       0.39683362501091324
+       0.4502847080002539,
+       0.4211122920096386,
+       0.4180171249900013,
+       0.40587849999428727,
+       0.40244716600864194
       ]
      },
      "quality": {
@@ -1224,6 +1355,8 @@
        "exact_round_trips": 13538,
        "round_trip_percent": 91.60295013194397,
        "texts_with_unknowns": 20,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.04736450368766493,
        "sequence_p95": 130
       },
@@ -1236,6 +1369,8 @@
        "exact_round_trips": 4738,
        "round_trip_percent": 96.20304568527919,
        "texts_with_unknowns": 4,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.1218274111675127,
        "sequence_p95": 219
       },
@@ -1248,6 +1383,8 @@
        "exact_round_trips": 5126,
        "round_trip_percent": 83.21428571428571,
        "texts_with_unknowns": 16,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.016233766233766232,
        "sequence_p95": 64
       },
@@ -1260,6 +1397,8 @@
        "exact_round_trips": 136,
        "round_trip_percent": 87.17948717948718,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 78
       },
@@ -1272,6 +1411,8 @@
        "exact_round_trips": 3538,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 14
       }
@@ -1279,21 +1420,21 @@
     },
     "Qwen3": {
      "speed": {
-      "single_MB_per_second": 6.589186613335435,
-      "batch_MB_per_second": 6.482844092663724,
+      "single_MB_per_second": 6.380966032604061,
+      "batch_MB_per_second": 6.302681757939551,
       "single_seconds": [
-       0.45847133299685083,
-       0.45471258299949113,
-       0.45764245800091885,
-       0.45548683300148696,
-       0.4573033329943428
+       0.4927638749941252,
+       0.47478545797639526,
+       0.46601850001025014,
+       0.4722258329857141,
+       0.46621449998929165
       ],
       "batch_seconds": [
-       0.47464374999981374,
-       0.4605491669935873,
-       0.4648047919909004,
-       0.4590290409978479,
-       0.46765249999589287
+       0.47809124999912456,
+       0.4787754579738248,
+       0.4793815829907544,
+       0.47353633400052786,
+       0.4702417090011295
       ]
      },
      "quality": {
@@ -1306,6 +1447,8 @@
        "exact_round_trips": 14779,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 3.3696461194938765,
        "sequence_p95": 408
       },
@@ -1318,6 +1461,8 @@
        "exact_round_trips": 4925,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 10.091370558375635,
        "sequence_p95": 696
       },
@@ -1330,6 +1475,8 @@
        "exact_round_trips": 6160,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.016233766233766232,
        "sequence_p95": 71
       },
@@ -1342,6 +1489,8 @@
        "exact_round_trips": 156,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 145
       },
@@ -1354,6 +1503,8 @@
        "exact_round_trips": 3538,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 13
       }
@@ -1370,21 +1521,21 @@
    "candidates": {
     "banglatok bn-bpe-58k": {
      "speed": {
-      "single_MB_per_second": 58.491745866366244,
-      "batch_MB_per_second": 71.58344582122452,
+      "single_MB_per_second": 98.22564885518331,
+      "batch_MB_per_second": 122.0021855582828,
       "single_seconds": [
-       0.022244416002649814,
-       0.021859250002307817,
-       0.023687125009018928,
-       0.021898499995586462,
-       0.02219058400078211
+       0.013656333001563326,
+       0.012820958014344797,
+       0.012875666987383738,
+       0.013243791996501386,
+       0.013214124977821484
       ],
       "batch_seconds": [
-       0.01813220899202861,
-       0.01831241699983366,
-       0.01816508299089037,
-       0.017975374998059124,
-       0.018003333010710776
+       0.010299290996044874,
+       0.01102583299507387,
+       0.010783999983686954,
+       0.010574207990430295,
+       0.01063887498457916
       ]
      },
      "quality": {
@@ -1397,6 +1548,8 @@
        "exact_round_trips": 10000,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": 659,
+       "byte_fallback_token_percent": 0.3733837977494986,
        "over_510_token_percent": 0.0,
        "sequence_p95": 50
       },
@@ -1409,6 +1562,8 @@
        "exact_round_trips": 3401,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": 117,
+       "byte_fallback_token_percent": 0.1791785353303317,
        "over_510_token_percent": 0.0,
        "sequence_p95": 53
       },
@@ -1421,6 +1576,8 @@
        "exact_round_trips": 6189,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": 377,
+       "byte_fallback_token_percent": 0.3922874415991176,
        "over_510_token_percent": 0.0,
        "sequence_p95": 44
       },
@@ -1433,6 +1590,8 @@
        "exact_round_trips": 410,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": 165,
+       "byte_fallback_token_percent": 1.0932220234545815,
        "over_510_token_percent": 0.0,
        "sequence_p95": 110
       }
@@ -1440,21 +1599,21 @@
     },
     "banglatok bn-bpe-28k": {
      "speed": {
-      "single_MB_per_second": 61.5716368017258,
-      "batch_MB_per_second": 72.8669044358345,
+      "single_MB_per_second": 101.10705002571396,
+      "batch_MB_per_second": 120.38220595648272,
       "single_seconds": [
-       0.0214040420105448,
-       0.020820334000745788,
-       0.021166666003409773,
-       0.01951325000845827,
-       0.021080582999275066
+       0.012691000010818243,
+       0.012876291992142797,
+       0.012837541988119483,
+       0.011344209022354335,
+       0.013013332994887605
       ],
       "batch_seconds": [
-       0.017838291998486966,
-       0.017411249995348044,
-       0.018014665998634882,
-       0.017812833000789396,
-       0.01751712500117719
+       0.011065500002587214,
+       0.010782041994389147,
+       0.011220457992749289,
+       0.010650457988958806,
+       0.010469125001691282
       ]
      },
      "quality": {
@@ -1467,6 +1626,8 @@
        "exact_round_trips": 10000,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": 640,
+       "byte_fallback_token_percent": 0.3151157065484983,
        "over_510_token_percent": 0.0,
        "sequence_p95": 58
       },
@@ -1479,6 +1640,8 @@
        "exact_round_trips": 3401,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": 113,
+       "byte_fallback_token_percent": 0.1490784838850117,
        "over_510_token_percent": 0.0,
        "sequence_p95": 61
       },
@@ -1491,6 +1654,8 @@
        "exact_round_trips": 6189,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": 364,
+       "byte_fallback_token_percent": 0.3311228156355466,
        "over_510_token_percent": 0.0,
        "sequence_p95": 50
       },
@@ -1503,6 +1668,8 @@
        "exact_round_trips": 410,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": 163,
+       "byte_fallback_token_percent": 0.9382915035689615,
        "over_510_token_percent": 0.0,
        "sequence_p95": 128
       }
@@ -1510,21 +1677,21 @@
     },
     "BNLP bn_spm (SentencePiece)": {
      "speed": {
-      "single_MB_per_second": 40.0931098870576,
-      "batch_MB_per_second": 39.22744924531148,
+      "single_MB_per_second": 39.41720888789675,
+      "batch_MB_per_second": 38.22015444238398,
       "single_seconds": [
-       0.03208404099859763,
-       0.03216858400264755,
-       0.03260600000794511,
-       0.03237379199708812,
-       0.032633584007271565
+       0.032928917004028335,
+       0.03259887499734759,
+       0.03355804202146828,
+       0.032385375001467764,
+       0.03296133398544043
       ],
       "batch_seconds": [
-       0.03352175001055002,
-       0.03303495800355449,
-       0.03362570899480488,
-       0.03308820800157264,
-       0.03301679099968169
+       0.03396025000256486,
+       0.034039041987853125,
+       0.03398670902242884,
+       0.03370029100915417,
+       0.03347795800073072
       ]
      },
      "quality": {
@@ -1537,6 +1704,8 @@
        "exact_round_trips": 8014,
        "round_trip_percent": 80.14,
        "texts_with_unknowns": 1932,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 66
       },
@@ -1549,6 +1718,8 @@
        "exact_round_trips": 2897,
        "round_trip_percent": 85.1808291678918,
        "texts_with_unknowns": 473,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 53
       },
@@ -1561,6 +1732,8 @@
        "exact_round_trips": 4847,
        "round_trip_percent": 78.31636774923251,
        "texts_with_unknowns": 1322,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 69
       },
@@ -1573,168 +1746,30 @@
        "exact_round_trips": 270,
        "round_trip_percent": 65.85365853658537,
        "texts_with_unknowns": 137,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 114
       }
      }
     },
-    "SentencePiece Unigram 27,760, same training data": {
-     "speed": {
-      "single_MB_per_second": 46.401224456056944,
-      "batch_MB_per_second": 43.16559348396008,
-      "single_seconds": [
-       0.028532667012768798,
-       0.027606334013398737,
-       0.027972666997811757,
-       0.027652083997963928,
-       0.02836729199043475
-      ],
-      "batch_seconds": [
-       0.03010458299831953,
-       0.03060941700823605,
-       0.029557834001025185,
-       0.030069457992794923,
-       0.029173834001994692
-      ]
-     },
-     "quality": {
-      "all": {
-       "texts": 10000,
-       "tokens": 201076,
-       "whitespace_words": 127947,
-       "tokens_per_word": 1.5715569728090537,
-       "characters_per_token": 3.682682169925799,
-       "exact_round_trips": 10000,
-       "round_trip_percent": 100.0,
-       "texts_with_unknowns": 0,
-       "over_510_token_percent": 0.0,
-       "sequence_p95": 57
-      },
-      "bengali script": {
-       "texts": 3401,
-       "tokens": 74290,
-       "whitespace_words": 47288,
-       "tokens_per_word": 1.571011673151751,
-       "characters_per_token": 3.7671422802530623,
-       "exact_round_trips": 3401,
-       "round_trip_percent": 100.0,
-       "texts_with_unknowns": 0,
-       "over_510_token_percent": 0.0,
-       "sequence_p95": 59
-      },
-      "latin script": {
-       "texts": 6189,
-       "tokens": 109612,
-       "whitespace_words": 70018,
-       "tokens_per_word": 1.5654831614727642,
-       "characters_per_token": 3.6427763383571143,
-       "exact_round_trips": 6189,
-       "round_trip_percent": 100.0,
-       "texts_with_unknowns": 0,
-       "over_510_token_percent": 0.0,
-       "sequence_p95": 50
-      },
-      "mixed script": {
-       "texts": 410,
-       "tokens": 17174,
-       "whitespace_words": 10641,
-       "tokens_per_word": 1.6139460577013438,
-       "characters_per_token": 3.5720274834051473,
-       "exact_round_trips": 410,
-       "round_trip_percent": 100.0,
-       "texts_with_unknowns": 0,
-       "over_510_token_percent": 0.0,
-       "sequence_p95": 121
-      }
-     }
-    },
-    "SentencePiece BPE 27,760, same training data": {
-     "speed": {
-      "single_MB_per_second": 16.566694429713756,
-      "batch_MB_per_second": 16.418362990589777,
-      "single_seconds": [
-       0.07834791699133348,
-       0.07798591699975077,
-       0.07944770899484865,
-       0.0778511249955045,
-       0.07856429199455306
-      ],
-      "batch_seconds": [
-       0.07905575000040699,
-       0.07874129200354218,
-       0.07936283299932256,
-       0.07947787499870174,
-       0.07893187500303611
-      ]
-     },
-     "quality": {
-      "all": {
-       "texts": 10000,
-       "tokens": 201958,
-       "whitespace_words": 127947,
-       "tokens_per_word": 1.5784504521403393,
-       "characters_per_token": 3.6665989958308165,
-       "exact_round_trips": 10000,
-       "round_trip_percent": 100.0,
-       "texts_with_unknowns": 0,
-       "over_510_token_percent": 0.0,
-       "sequence_p95": 57
-      },
-      "bengali script": {
-       "texts": 3401,
-       "tokens": 74215,
-       "whitespace_words": 47288,
-       "tokens_per_word": 1.5694256470986296,
-       "characters_per_token": 3.7709492690156976,
-       "exact_round_trips": 3401,
-       "round_trip_percent": 100.0,
-       "texts_with_unknowns": 0,
-       "over_510_token_percent": 0.0,
-       "sequence_p95": 59
-      },
-      "latin script": {
-       "texts": 6189,
-       "tokens": 110615,
-       "whitespace_words": 70018,
-       "tokens_per_word": 1.5798080493587363,
-       "characters_per_token": 3.6097455137187544,
-       "exact_round_trips": 6189,
-       "round_trip_percent": 100.0,
-       "texts_with_unknowns": 0,
-       "over_510_token_percent": 0.0,
-       "sequence_p95": 50
-      },
-      "mixed script": {
-       "texts": 410,
-       "tokens": 17128,
-       "whitespace_words": 10641,
-       "tokens_per_word": 1.6096231557184475,
-       "characters_per_token": 3.58162073797291,
-       "exact_round_trips": 410,
-       "round_trip_percent": 100.0,
-       "texts_with_unknowns": 0,
-       "over_510_token_percent": 0.0,
-       "sequence_p95": 121
-      }
-     }
-    },
     "SentencePiece Unigram 57,925, same training data": {
      "speed": {
-      "single_MB_per_second": 42.421060124553215,
-      "batch_MB_per_second": 41.73244602610532,
+      "single_MB_per_second": 42.25975126290051,
+      "batch_MB_per_second": 40.898744787706526,
       "single_seconds": [
-       0.030414666995056905,
-       0.03100724999967497,
-       0.032322541999747045,
-       0.030597207995015197,
-       0.029875667009036988
+       0.030713999993167818,
+       0.029885166994063184,
+       0.031486583000514656,
+       0.029521415999624878,
+       0.033823000005213544
       ],
       "batch_seconds": [
-       0.030347834006533958,
-       0.030887667002389207,
-       0.03165245799755212,
-       0.031651666009565815,
-       0.031102082997676916
+       0.03202591699664481,
+       0.03170329099521041,
+       0.03173608399811201,
+       0.03218412498245016,
+       0.0316227080184035
       ]
      },
      "quality": {
@@ -1747,6 +1782,8 @@
        "exact_round_trips": 10000,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 51
       },
@@ -1759,6 +1796,8 @@
        "exact_round_trips": 3401,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 53
       },
@@ -1771,6 +1810,8 @@
        "exact_round_trips": 6189,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 45
       },
@@ -1783,6 +1824,8 @@
        "exact_round_trips": 410,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 109
       }
@@ -1790,21 +1833,21 @@
     },
     "SentencePiece BPE 57,925, same training data": {
      "speed": {
-      "single_MB_per_second": 17.67326730374642,
-      "batch_MB_per_second": 17.38057321943559,
+      "single_MB_per_second": 17.26665358499758,
+      "batch_MB_per_second": 16.493679692341342,
       "single_seconds": [
-       0.07413829199504107,
-       0.07341037500009406,
-       0.07705829200858716,
-       0.0733406249928521,
-       0.07344233398907818
+       0.07489824999356642,
+       0.07517183301388286,
+       0.07442729201284237,
+       0.07571229198947549,
+       0.07613254201714881
       ],
       "batch_seconds": [
-       0.07469199999468401,
-       0.0746484999981476,
-       0.07458608300657943,
-       0.07467912499851082,
-       0.07529791700653732
+       0.07585966601618566,
+       0.07573500002035871,
+       0.07924541700049303,
+       0.07869475000188686,
+       0.09401279198937118
       ]
      },
      "quality": {
@@ -1817,6 +1860,8 @@
        "exact_round_trips": 10000,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 51
       },
@@ -1829,6 +1874,8 @@
        "exact_round_trips": 3401,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 53
       },
@@ -1841,6 +1888,8 @@
        "exact_round_trips": 6189,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 45
       },
@@ -1853,28 +1902,186 @@
        "exact_round_trips": 410,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 106
       }
      }
     },
-    "tiktoken o200k_base": {
+    "SentencePiece Unigram 27,760, same training data": {
      "speed": {
-      "single_MB_per_second": 37.349389955808746,
-      "batch_MB_per_second": 12.106042569685222,
+      "single_MB_per_second": 43.69054473743063,
+      "batch_MB_per_second": 43.425241239177176,
       "single_seconds": [
-       0.03428833399084397,
-       0.034855124991736375,
-       0.03466512500017416,
-       0.034752000006847084,
-       0.03542420799203683
+       0.02940775000024587,
+       0.028890957997646183,
+       0.031264916993677616,
+       0.02970816701417789,
+       0.031863040989264846
       ],
       "batch_seconds": [
-       0.10194766700442415,
-       0.10895370799698867,
-       0.10721637500682846,
-       0.1083702500036452,
-       0.10252279200358316
+       0.0291204170207493,
+       0.02992866700515151,
+       0.029889666999224573,
+       0.029935041995486245,
+       0.02967279200674966
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 10000,
+       "tokens": 201076,
+       "whitespace_words": 127947,
+       "tokens_per_word": 1.5715569728090537,
+       "characters_per_token": 3.682682169925799,
+       "exact_round_trips": 10000,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 57
+      },
+      "bengali script": {
+       "texts": 3401,
+       "tokens": 74290,
+       "whitespace_words": 47288,
+       "tokens_per_word": 1.571011673151751,
+       "characters_per_token": 3.7671422802530623,
+       "exact_round_trips": 3401,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 59
+      },
+      "latin script": {
+       "texts": 6189,
+       "tokens": 109612,
+       "whitespace_words": 70018,
+       "tokens_per_word": 1.5654831614727642,
+       "characters_per_token": 3.6427763383571143,
+       "exact_round_trips": 6189,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 50
+      },
+      "mixed script": {
+       "texts": 410,
+       "tokens": 17174,
+       "whitespace_words": 10641,
+       "tokens_per_word": 1.6139460577013438,
+       "characters_per_token": 3.5720274834051473,
+       "exact_round_trips": 410,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 121
+      }
+     }
+    },
+    "SentencePiece BPE 27,760, same training data": {
+     "speed": {
+      "single_MB_per_second": 16.238039179415754,
+      "batch_MB_per_second": 16.259193465744307,
+      "single_seconds": [
+       0.0800967090181075,
+       0.07993366598384455,
+       0.07948774998658337,
+       0.07992804201785475,
+       0.0819351660029497
+      ],
+      "batch_seconds": [
+       0.08058308300678618,
+       0.07950299998628907,
+       0.08043545798864216,
+       0.07982966699637473,
+       0.07948687497992069
+      ]
+     },
+     "quality": {
+      "all": {
+       "texts": 10000,
+       "tokens": 201958,
+       "whitespace_words": 127947,
+       "tokens_per_word": 1.5784504521403393,
+       "characters_per_token": 3.6665989958308165,
+       "exact_round_trips": 10000,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 57
+      },
+      "bengali script": {
+       "texts": 3401,
+       "tokens": 74215,
+       "whitespace_words": 47288,
+       "tokens_per_word": 1.5694256470986296,
+       "characters_per_token": 3.7709492690156976,
+       "exact_round_trips": 3401,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 59
+      },
+      "latin script": {
+       "texts": 6189,
+       "tokens": 110615,
+       "whitespace_words": 70018,
+       "tokens_per_word": 1.5798080493587363,
+       "characters_per_token": 3.6097455137187544,
+       "exact_round_trips": 6189,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 50
+      },
+      "mixed script": {
+       "texts": 410,
+       "tokens": 17128,
+       "whitespace_words": 10641,
+       "tokens_per_word": 1.6096231557184475,
+       "characters_per_token": 3.58162073797291,
+       "exact_round_trips": 410,
+       "round_trip_percent": 100.0,
+       "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
+       "over_510_token_percent": 0.0,
+       "sequence_p95": 121
+      }
+     }
+    },
+    "tiktoken o200k_base": {
+     "speed": {
+      "single_MB_per_second": 36.594937400694796,
+      "batch_MB_per_second": 11.709210645301079,
+      "single_seconds": [
+       0.03486483299639076,
+       0.0356883330096025,
+       0.03671600000234321,
+       0.03546845799428411,
+       0.03541441701236181
+      ],
+      "batch_seconds": [
+       0.11044899999978952,
+       0.11084999999729916,
+       0.12872683399473317,
+       0.11112491702078842,
+       0.10971008302294649
       ]
      },
      "quality": {
@@ -1887,6 +2094,8 @@
        "exact_round_trips": 10000,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 67
       },
@@ -1899,6 +2108,8 @@
        "exact_round_trips": 3401,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 83
       },
@@ -1911,6 +2122,8 @@
        "exact_round_trips": 6189,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 47
       },
@@ -1923,6 +2136,8 @@
        "exact_round_trips": 410,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 153
       }
@@ -1930,21 +2145,21 @@
     },
     "tiktoken cl100k_base": {
      "speed": {
-      "single_MB_per_second": 24.481590624024545,
-      "batch_MB_per_second": 9.71848167992609,
+      "single_MB_per_second": 24.073167127976383,
+      "batch_MB_per_second": 9.792539391047624,
       "single_seconds": [
-       0.05258604099799413,
-       0.05275375000201166,
-       0.05541691700636875,
-       0.05359304099692963,
-       0.05301804200280458
+       0.05398716600029729,
+       0.054478167003253475,
+       0.05338112500612624,
+       0.053917542012641206,
+       0.05377587498514913
       ],
       "batch_seconds": [
-       0.13451545899442863,
-       0.13355645899719093,
-       0.1375255000020843,
-       0.12721454199345317,
-       0.13347687499481253
+       0.1359242080070544,
+       0.12844037500326522,
+       0.12886066699866205,
+       0.13324120797915384,
+       0.1325464160181582
       ]
      },
      "quality": {
@@ -1957,6 +2172,8 @@
        "exact_round_trips": 10000,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.39,
        "sequence_p95": 194
       },
@@ -1969,6 +2186,8 @@
        "exact_round_trips": 3401,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.5880623346074684,
        "sequence_p95": 271
       },
@@ -1981,6 +2200,8 @@
        "exact_round_trips": 6189,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 50
       },
@@ -1993,6 +2214,8 @@
        "exact_round_trips": 410,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 4.634146341463414,
        "sequence_p95": 481
       }
@@ -2000,21 +2223,21 @@
     },
     "BanglaBERT (csebuetnlp)": {
      "speed": {
-      "single_MB_per_second": 9.122080422585418,
-      "batch_MB_per_second": 9.166005797206735,
+      "single_MB_per_second": 8.957685346063146,
+      "batch_MB_per_second": 9.009262826324866,
       "single_seconds": [
-       0.14104249999218155,
-       0.14228837500559166,
-       0.1441190839977935,
-       0.13960491699981503,
-       0.14234429098723922
+       0.14504850000957958,
+       0.14540191600099206,
+       0.14357754198135808,
+       0.14435112502542324,
+       0.14489970900467597
       ],
       "batch_seconds": [
-       0.14158558299823198,
-       0.14276854100171477,
-       0.14304883300792426,
-       0.14160650000849273,
-       0.1412315000052331
+       0.1439937500108499,
+       0.14500866699381731,
+       0.14325062499847263,
+       0.14407016700715758,
+       0.144339000020409
       ]
      },
      "quality": {
@@ -2027,6 +2250,8 @@
        "exact_round_trips": 5110,
        "round_trip_percent": 51.1,
        "texts_with_unknowns": 1110,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 64
       },
@@ -2039,6 +2264,8 @@
        "exact_round_trips": 1150,
        "round_trip_percent": 33.81358423992943,
        "texts_with_unknowns": 301,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 51
       },
@@ -2051,6 +2278,8 @@
        "exact_round_trips": 3888,
        "round_trip_percent": 62.82113427047988,
        "texts_with_unknowns": 744,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 67
       },
@@ -2063,6 +2292,8 @@
        "exact_round_trips": 72,
        "round_trip_percent": 17.5609756097561,
        "texts_with_unknowns": 65,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 113
       }
@@ -2070,21 +2301,21 @@
     },
     "Bangla-BERT (sagorsarker)": {
      "speed": {
-      "single_MB_per_second": 6.895055295759889,
-      "batch_MB_per_second": 6.857274191660022,
+      "single_MB_per_second": 6.7879215755082445,
+      "batch_MB_per_second": 6.774569385281813,
       "single_seconds": [
-       0.1882459159969585,
-       0.19046524999430403,
-       0.18797470899880864,
-       0.18796883299364708,
-       0.1895480000093812
+       0.19237816697568633,
+       0.19107645799522288,
+       0.1919118329824414,
+       0.19049854201148264,
+       0.19121700001414865
       ],
       "batch_seconds": [
-       0.18857408298936207,
-       0.19008216699876357,
-       0.1889735419972567,
-       0.18928308300382923,
-       0.19167737499810755
+       0.190895207982976,
+       0.1968295419937931,
+       0.19149266701424494,
+       0.1925727089983411,
+       0.19159387500258163
       ]
      },
      "quality": {
@@ -2097,6 +2328,8 @@
        "exact_round_trips": 32,
        "round_trip_percent": 0.32,
        "texts_with_unknowns": 7410,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 57
       },
@@ -2109,6 +2342,8 @@
        "exact_round_trips": 32,
        "round_trip_percent": 0.9408997353719494,
        "texts_with_unknowns": 817,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 68
       },
@@ -2121,6 +2356,8 @@
        "exact_round_trips": 0,
        "round_trip_percent": 0.0,
        "texts_with_unknowns": 6189,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 40
       },
@@ -2133,6 +2370,8 @@
        "exact_round_trips": 0,
        "round_trip_percent": 0.0,
        "texts_with_unknowns": 404,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 138
       }
@@ -2140,21 +2379,21 @@
     },
     "MuRIL (Google)": {
      "speed": {
-      "single_MB_per_second": 8.803153960591999,
-      "batch_MB_per_second": 8.860788787930673,
+      "single_MB_per_second": 8.63979418501749,
+      "batch_MB_per_second": 8.692510337338692,
       "single_seconds": [
-       0.14522937500441913,
-       0.14744329200766515,
-       0.14701187500031665,
-       0.14756825000222307,
-       0.14756475000467617
+       0.1500200419977773,
+       0.15032591699855402,
+       0.1493055830069352,
+       0.15054766600951552,
+       0.15023112497874536
       ],
       "batch_seconds": [
-       0.1464842499990482,
-       0.1463940410030773,
-       0.1506294589926256,
-       0.1454825830005575,
-       0.14690566698845942
+       0.14920899999560788,
+       0.14992412499850616,
+       0.15389029099605978,
+       0.14890770899364725,
+       0.14932004100410268
       ]
      },
      "quality": {
@@ -2167,6 +2406,8 @@
        "exact_round_trips": 4794,
        "round_trip_percent": 47.94,
        "texts_with_unknowns": 1617,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 54
       },
@@ -2179,6 +2420,8 @@
        "exact_round_trips": 1082,
        "round_trip_percent": 31.81417230226404,
        "texts_with_unknowns": 462,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 57
       },
@@ -2191,6 +2434,8 @@
        "exact_round_trips": 3653,
        "round_trip_percent": 59.024074971724026,
        "texts_with_unknowns": 1042,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 49
       },
@@ -2203,6 +2448,8 @@
        "exact_round_trips": 59,
        "round_trip_percent": 14.390243902439025,
        "texts_with_unknowns": 113,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 114
       }
@@ -2210,21 +2457,21 @@
     },
     "mBERT cased": {
      "speed": {
-      "single_MB_per_second": 8.068770753764127,
-      "batch_MB_per_second": 8.063732891466579,
+      "single_MB_per_second": 7.92783928321087,
+      "batch_MB_per_second": 7.9450787974369925,
       "single_seconds": [
-       0.1593827920005424,
-       0.16134379200229887,
-       0.1608629169932101,
-       0.15891716700571124,
-       0.16184291699028108
+       0.16372254199814051,
+       0.167909707990475,
+       0.161706500017317,
+       0.16212591700605117,
+       0.16405879199737683
       ],
       "batch_seconds": [
-       0.15856404100486543,
-       0.16111733399156947,
-       0.16175333299906924,
-       0.16096341700176708,
-       0.16024124999239575
+       0.16352679100236855,
+       0.16281275000073947,
+       0.16336729101021774,
+       0.16674883299856447,
+       0.16260687497560866
       ]
      },
      "quality": {
@@ -2237,6 +2484,8 @@
        "exact_round_trips": 4797,
        "round_trip_percent": 47.97,
        "texts_with_unknowns": 1706,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 82
       },
@@ -2249,6 +2498,8 @@
        "exact_round_trips": 1085,
        "round_trip_percent": 31.902381652455162,
        "texts_with_unknowns": 460,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 105
       },
@@ -2261,6 +2512,8 @@
        "exact_round_trips": 3653,
        "round_trip_percent": 59.024074971724026,
        "texts_with_unknowns": 1133,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 53
       },
@@ -2273,6 +2526,8 @@
        "exact_round_trips": 59,
        "round_trip_percent": 14.390243902439025,
        "texts_with_unknowns": 113,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 196
       }
@@ -2280,21 +2535,21 @@
     },
     "XLM-R / mE5 / BGE-M3": {
      "speed": {
-      "single_MB_per_second": 6.464821935310502,
-      "batch_MB_per_second": 6.436765562494928,
+      "single_MB_per_second": 6.367525749664307,
+      "batch_MB_per_second": 6.383022093447268,
       "single_seconds": [
-       0.20528516700142063,
-       0.19965374999446794,
-       0.2007736660016235,
-       0.1992040420009289,
-       0.201326833004714
+       0.20384149998426437,
+       0.20868341700406745,
+       0.20315366698196158,
+       0.20383558399043977,
+       0.20694933302002028
       ],
       "batch_seconds": [
-       0.20164879199001007,
-       0.199986749998061,
-       0.20393920900824014,
-       0.2065990410046652,
-       0.1999610000057146
+       0.20334662499953993,
+       0.20545337500516325,
+       0.2019922079925891,
+       0.2047501669730991,
+       0.2021425410057418
       ]
      },
      "quality": {
@@ -2307,6 +2562,8 @@
        "exact_round_trips": 9816,
        "round_trip_percent": 98.16,
        "texts_with_unknowns": 109,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 64
       },
@@ -2319,6 +2576,8 @@
        "exact_round_trips": 3338,
        "round_trip_percent": 98.14760364598648,
        "texts_with_unknowns": 25,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 77
       },
@@ -2331,6 +2590,8 @@
        "exact_round_trips": 6086,
        "round_trip_percent": 98.33575698820488,
        "texts_with_unknowns": 75,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 48
       },
@@ -2343,6 +2604,8 @@
        "exact_round_trips": 392,
        "round_trip_percent": 95.60975609756098,
        "texts_with_unknowns": 9,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 150
       }
@@ -2350,21 +2613,21 @@
     },
     "Qwen3": {
      "speed": {
-      "single_MB_per_second": 6.01796977620889,
-      "batch_MB_per_second": 5.987060378050252,
+      "single_MB_per_second": 5.962050645857319,
+      "batch_MB_per_second": 5.914336708480661,
       "single_seconds": [
-       0.21495829099148978,
-       0.2156817079958273,
-       0.22366012500424404,
-       0.21507004198792856,
-       0.2160145410016412
+       0.2185944159864448,
+       0.2174117089889478,
+       0.2177046249853447,
+       0.21704137499909848,
+       0.21797204200993292
       ],
       "batch_seconds": [
-       0.21430787500867154,
-       0.21679520800535101,
-       0.21457120799459517,
-       0.2186983749998035,
-       0.21746745800192002
+       0.2183301670011133,
+       0.21946095800376497,
+       0.22087733398075216,
+       0.2229174159874674,
+       0.219264084007591
       ]
      },
      "quality": {
@@ -2377,6 +2640,8 @@
        "exact_round_trips": 10000,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.23,
        "sequence_p95": 167
       },
@@ -2389,6 +2654,8 @@
        "exact_round_trips": 3401,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.3234342840341076,
        "sequence_p95": 234
       },
@@ -2401,6 +2668,8 @@
        "exact_round_trips": 6189,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 0.0,
        "sequence_p95": 50
       },
@@ -2413,6 +2682,8 @@
        "exact_round_trips": 410,
        "round_trip_percent": 100.0,
        "texts_with_unknowns": 0,
+       "byte_fallback_tokens": null,
+       "byte_fallback_token_percent": null,
        "over_510_token_percent": 2.926829268292683,
        "sequence_p95": 420
       }
