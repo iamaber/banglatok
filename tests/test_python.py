@@ -5,6 +5,7 @@ import importlib.util
 import json
 import multiprocessing
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -264,6 +265,23 @@ class TokenizerTests(unittest.TestCase):
                 del sys.modules["numpy"]
             else:
                 sys.modules["numpy"] = saved
+
+    def test_import_and_load_skip_slow_stdlib_modules(self) -> None:
+        script = (
+            "import sys\n"
+            "import banglatok\n"
+            "with banglatok.Tokenizer.from_pretrained() as tok:\n"
+            "    tok.encode('আমি ভালো আছি')\n"
+            "slow = ('importlib.metadata', 'importlib.resources', 'pathlib')\n"
+            "print(sorted(name for name in slow if name in sys.modules))\n"
+            "print(banglatok.__version__)\n"
+        )
+        result = subprocess.run(
+            [sys.executable, "-I", "-c", script], capture_output=True, text=True, check=True
+        )
+        loaded, version = result.stdout.splitlines()
+        self.assertEqual(loaded, "[]")
+        self.assertTrue(version)
 
     @unittest.skipUnless(hasattr(os, "fork"), "fork is not available")
     def test_forked_child_hot_paths_fail_fast(self) -> None:
