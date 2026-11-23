@@ -7,10 +7,9 @@ import (
 	"strings"
 
 	"github.com/iamaber/banglatok/corpus"
-	"github.com/iamaber/banglatok/tokenizer"
 )
 
-var commands = []string{"audit", "fetch", "prepare", "prepare-records", "train", "encode", "evaluate"}
+var commands = []string{"audit", "fetch", "prepare", "prepare-records", "train", "evaluate"}
 
 func main() {
 	if err := run(os.Args[1:]); err != nil {
@@ -94,22 +93,6 @@ func run(args []string) error {
 		return writeJSON(os.Stdout, s)
 	case "train":
 		return train(f, args[1:])
-	case "encode":
-		path := f.String("model", "models/unigram-32000.json", "model file")
-		text := f.String("text", "আমি আজ ভালো আছি। ami aj bhalo achi", "text to encode")
-		if err := f.Parse(args[1:]); err != nil {
-			return err
-		}
-		t, err := tokenizer.Load(*path)
-		if err != nil {
-			return err
-		}
-		ids := t.Encode(*text)
-		decoded, err := t.Decode(ids)
-		if err != nil {
-			return err
-		}
-		return writeJSON(os.Stdout, map[string]any{"ids": ids, "decoded": decoded, "tokens": len(ids)})
 	case "evaluate":
 		return evaluate(f, args[1:])
 	default:

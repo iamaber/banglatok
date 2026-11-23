@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Removed
+
+- The Go `bntok encode` subcommand. Use `banglatok -m <model.json>` to tokenize with a trained model.
+
 ## 0.2.4, 2026-11-18
 
 ### Performance

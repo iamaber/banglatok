@@ -9,8 +9,7 @@ The eight records in [examples/training-records.jsonl](../examples/training-reco
 ```sh
 go run ./cmd/bntok train -algorithm bpe -vocab 384 \
   -input examples/training-records.jsonl -out models/toy-bpe.json
-go run ./cmd/bntok encode -model models/toy-bpe.json \
-  -text 'আমি বাংলা বলি। ami bangla boli. meetingটা কখন?'
+banglatok -m models/toy-bpe.json --json 'আমি বাংলা বলি। ami bangla boli. meetingটা কখন?'
 ```
 
 For your own corpus, use one JSON object per line with `text`, `bucket`, `group`, `source` and `split`. Buckets are `bangla`, `english`, `banglish`, and `code-mixed`; training rows use `split: "train"`. Attribution should be retained for external content. The default mixture gives sentence-weight contributions of 40/25/25/10; `-balanced` uses 25/25/25/25. Preserve related forms and duplicates within one group, and keep development/test groups out of training.

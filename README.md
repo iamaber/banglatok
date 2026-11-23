@@ -185,7 +185,7 @@ The Go `bntok` command trains Unigram or BPE models on a JSONL corpus, and `Toke
 ```sh
 go run ./cmd/bntok train -algorithm bpe -vocab 384 \
   -input examples/training-records.jsonl -out models/toy-bpe.json
-go run ./cmd/bntok encode -model models/toy-bpe.json -text 'আমি বাংলা বলি। ami bangla boli'
+banglatok -m models/toy-bpe.json --json 'আমি বাংলা বলি। ami bangla boli'
 python benchmarks/build_fused_model.py --base models/toy-bpe.json --budget 512 \
   --training examples/training-records.jsonl --output models/toy-fused.json
 ```
