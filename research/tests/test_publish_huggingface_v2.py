@@ -85,7 +85,13 @@ class VersionedModelPublishingTests(unittest.TestCase):
         with Tokenizer(folder / self.model.name) as tokenizer:
             self.assertEqual(tokenizer.decode(tokenizer.encode("আমি বাংলা বলি")), "আমি বাংলা বলি")
 
-    def benchmark(self, source_hash: str | None = None) -> Path:
+    def benchmark(
+        self,
+        source_hash: str | None = None,
+        *,
+        source: str | None = None,
+        vocab_size: int = 260,
+    ) -> Path:
         digest = source_hash or hashlib.sha256(self.model.read_bytes()).hexdigest()
         name = f"banglatok {self.model.stem}"
         report = {
@@ -98,8 +104,8 @@ class VersionedModelPublishingTests(unittest.TestCase):
             "batch_size": 64,
             "candidates": {
                 name: {
-                    "source": f"{self.model.name} sha256 {digest}",
-                    "vocab_size": 260,
+                    "source": source or f"{self.model.name} sha256 {digest}",
+                    "vocab_size": vocab_size,
                     "stress_round_trips": 16,
                     "stress_cases": 16,
                 }
@@ -142,6 +148,26 @@ class VersionedModelPublishingTests(unittest.TestCase):
         self.assertNotIn("No published comparison", card)
         self.assertNotIn("22% fewer", card)
         self.assertEqual((folder / "benchmark-1.json").read_bytes(), report.read_bytes())
+
+    def test_bundled_report_requires_the_exact_bundled_model(self) -> None:
+        report = self.benchmark(source="bundled")
+        mismatch = self.run_publisher(*self.custom_arguments(), "--benchmark", str(report))
+        self.assertNotEqual(mismatch.returncode, 0)
+        self.assertIn("does not match", mismatch.stderr)
+
+        bundled = ROOT / "src" / "banglatok" / "pretrained" / "bn-bpe-28k-v2.json"
+        self.model.write_bytes(bundled.read_bytes())
+        report = self.benchmark(source="bundled", vocab_size=27760)
+        result = self.run_publisher(*self.custom_arguments(), "--benchmark", str(report))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        card = (self.output / self.model.stem / "README.md").read_text(encoding="utf-8")
+        self.assertIn("2.125", card)
+        self.assertIn("12.5", card)
+
+    def test_update_existing_requires_a_custom_model(self) -> None:
+        result = self.run_publisher("--update-existing", "--dry-run", str(self.output))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("--update-existing requires --model", result.stderr)
 
     def test_public_training_card_uses_checksum_bound_source_summary(self) -> None:
         summary = {

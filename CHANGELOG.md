@@ -6,6 +6,10 @@
 
 - Updated the model guide, Hugging Face links and comparison report with
   `bn-bpe-28k-v2` results from the released 0.3.0 package.
+- `tools/publish_huggingface.py --update-existing` updates a versioned model
+  repository, and accepts benchmark reports that measured the bundled model
+  when its file hash matches. The `bn-bpe-28k-v2` model card and the
+  playground Space now show the released 0.3.0 benchmark.
 
 ## 0.3.0, 2026-11-25
 

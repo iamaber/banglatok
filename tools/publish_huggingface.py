@@ -201,14 +201,14 @@ tags:
 
 # banglatok `{name}`
 
-`{name}` is a native BPE tokenizer for Bangla, English and Banglish
-(romanized Bengali), with **{vocab:,} token IDs**. It is not a language model.
+`{name}` is a native BPE tokenizer for Bangla, English and Banglish, or
+romanized Bengali. It has **{vocab:,} token IDs**. It is not a language model.
 This versioned artifact is separate from the immutable v1 models; its token IDs
 are not interchangeable with theirs.
 
 ## Usage
 
-Install with `uv pip install transformers` (recommended), or `pip install transformers`:
+Install with `uv pip install transformers` or `pip install transformers`:
 
 ```python
 from transformers import AutoTokenizer
@@ -248,6 +248,7 @@ loading the downloaded JSON path works independently of that bundle.
 ## Evaluation and limitations
 
 {benchmarks}
+
 The preregistered
 [corpus-v2 protocol](https://github.com/iamaber/banglatok/blob/main/research/reports/CORPUS_V2_PROTOCOL.md)
 defines the promotion gates, held-out selection and vocabulary budgets used here.
@@ -381,7 +382,7 @@ remains under the licenses above and can be reacquired from the linked sources.
 {summary["preparation"]}
 
 Vocabulary learning, space fusion and caches used training text only.
-BanglishRev and the measured YouTube surface remained evaluation-only.
+BanglishRev and the measured YouTube corpus remained evaluation-only.
 Automated quality and PII filters do not guarantee complete removal, and
 language buckets are source labels or script proxies rather than independent
 human annotations. No synthetic transliteration was used."""
@@ -506,12 +507,22 @@ def benchmark_card(
     sections = []
     for index, (path, report) in enumerate(reports, 1):
         metadata = report["candidates"].get(candidate)
+        if metadata is None or metadata["vocab_size"] != vocab_size:
+            raise ValueError(
+                f"{path}: benchmark candidate does not match {model.name} hash/vocabulary"
+            )
         expected_source = f"{model.name} sha256 {model_hash}"
-        if (
-            metadata is None
-            or metadata["source"] != expected_source
-            or metadata["vocab_size"] != vocab_size
-        ):
+        source_matches = metadata["source"] == expected_source
+        if metadata["source"] == "bundled":
+            bundled = (
+                Path(__file__).resolve().parents[1]
+                / "src"
+                / "banglatok"
+                / "pretrained"
+                / model.name
+            )
+            source_matches = bundled.is_file() and sha256(bundled) == model_hash
+        if not source_matches:
             raise ValueError(
                 f"{path}: benchmark candidate does not match {model.name} hash/vocabulary"
             )
@@ -595,9 +606,16 @@ def main() -> None:
         help="measured compare_popular.py JSON report for custom models; repeatable",
     )
     parser.add_argument("--dry-run", type=Path, help="write folders here instead of uploading")
+    parser.add_argument(
+        "--update-existing",
+        action="store_true",
+        help="allow a versioned custom model repository to be updated",
+    )
     args = parser.parse_args()
     if args.benchmark and not args.model:
         parser.error("--benchmark requires --model; bundled v1 cards remain unchanged")
+    if args.update_existing and not args.model:
+        parser.error("--update-existing requires --model")
     if args.restricted_summary and not args.model:
         parser.error("--restricted-summary requires --model")
     if args.public_summary and not args.model:
@@ -742,7 +760,7 @@ def main() -> None:
             from huggingface_hub import HfApi
 
             api = HfApi()
-            api.create_repo(repo, repo_type="model", exist_ok=model is None)
+            api.create_repo(repo, repo_type="model", exist_ok=model is None or args.update_existing)
             api.upload_folder(
                 repo_id=repo,
                 folder_path=folder,
