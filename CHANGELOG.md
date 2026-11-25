@@ -8,6 +8,9 @@
   corpus plus licensed Global Voices Bengali and Storybooks Bangladesh text. It
   passes every 28k promotion gate and leaves `bn-bpe-28k` and the default
   `bn-bpe-58k` unchanged.
+- Versioned Hugging Face publishing accepts checksum-bound public-corpus
+  summaries and includes source licenses, promotion results and machine-readable
+  provenance without exposing local paths or training rows.
 
 ### Removed
 

@@ -143,6 +143,52 @@ class VersionedModelPublishingTests(unittest.TestCase):
         self.assertNotIn("22% fewer", card)
         self.assertEqual((folder / "benchmark-1.json").read_bytes(), report.read_bytes())
 
+    def test_public_training_card_uses_checksum_bound_source_summary(self) -> None:
+        summary = {
+            "schema_version": 1,
+            "classification": "public-training-data",
+            "raw_redistribution_allowed": True,
+            "training_sha256": hashlib.sha256(self.training.read_bytes()).hexdigest(),
+            "data_version": "public-sources-v1",
+            "records": 1,
+            "normalized_characters": 15,
+            "preparation": "Normalized and deduplicated against every held-out split.",
+            "promotion": {
+                "passed": True,
+                "selected": True,
+                "baseline": "banglatok bn-bpe-28k",
+                "failed_gates": [],
+            },
+            "sources": [
+                {
+                    "description": "Example Bengali source",
+                    "license": "CC BY 3.0",
+                    "url": "https://example.com/bn",
+                    "records": 1,
+                    "buckets": {"bangla": 1},
+                }
+            ],
+        }
+        path = self.root / "public-summary.json"
+        path.write_text(json.dumps(summary), encoding="utf-8")
+        result = self.run_publisher(*self.custom_arguments(), "--public-summary", str(path))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.output / self.model.stem
+        card = (folder / "README.md").read_text(encoding="utf-8")
+        self.assertIn("Example Bengali source", card)
+        self.assertIn("CC BY 3.0", card)
+        self.assertIn("public-sources-v1", card)
+        self.assertIn("passed every promotion gate", card)
+        self.assertNotIn("configuration `v2`", card)
+        self.assertEqual(json.loads((folder / "training_data_summary.json").read_text()), summary)
+        provenance = json.loads((folder / "model_provenance.json").read_text())
+        self.assertEqual(provenance["public_training_summary"], summary)
+        self.assertNotIn("dataset_config", provenance)
+        self.assertEqual(
+            (folder / "MODEL_LICENSE.md").read_bytes(),
+            (ROOT / "MODEL_LICENSE.md").read_bytes(),
+        )
+
     def test_stale_benchmark_model_hash_is_rejected(self) -> None:
         report = self.benchmark("0" * 64)
         result = self.run_publisher(*self.custom_arguments(), "--benchmark", str(report))

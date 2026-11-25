@@ -196,7 +196,7 @@ tags:
 - banglish
 - code-mixed
 - bpe
-- corpus-v2
+- {data_tag}
 ---
 
 # banglatok `{name}`
@@ -237,8 +237,9 @@ Both exports use the same IDs. Input is normalized to NFC with collapsed,
 trimmed whitespace; unseen characters use UTF-8 byte tokens. Transformers adds
 `<s>` and `</s>` by default; native `encode()` does not. Changing a tokenizer
 requires training or adapting an existing language model's embeddings.
-The copied [usage guide](USAGE.md) covers the broader API; examples naming the
-bundled v1 IDs there still refer to v1, not this local model.
+The copied [usage guide](USAGE.md) covers the broader API. Availability as a
+bundled pretrained name depends on the installed banglatok package version;
+loading the downloaded JSON path works independently of that bundle.
 
 ## Training data and provenance
 
@@ -247,19 +248,17 @@ bundled v1 IDs there still refer to v1, not this local model.
 ## Evaluation and limitations
 
 {benchmarks}
+The preregistered
+[corpus-v2 protocol](https://github.com/iamaber/banglatok/blob/main/research/reports/CORPUS_V2_PROTOCOL.md)
+defines the promotion gates, held-out selection and vocabulary budgets used here.
 
-The preregistered [corpus-v2 protocol](https://github.com/iamaber/banglatok/blob/main/research/reports/CORPUS_V2_PROTOCOL.md)
-defines growth/audit gates, validation-only selection, vocabulary budgets and
-held-out testing. Publishing a candidate does not assert that it passed promotion
-gates or improved over v1. Comparisons depend on the actual vocabulary, training
-mixture, corpus and machine; tokenizer metrics do not establish downstream
-accuracy. Read the measured reports and selection record before choosing a model.
+{selection}
 
 ## License
 
 Tokenizer files are licensed under CC BY-SA 4.0; see
-[MODEL_LICENSE.md](https://github.com/iamaber/banglatok/blob/main/MODEL_LICENSE.md).
-This does not relicense source data or remove its attribution requirements.
+[MODEL_LICENSE.md](MODEL_LICENSE.md). This does not relicense source data or
+remove its attribution requirements.
 """
 
 PUBLIC_TRAINING_DATA = """Dataset: [iamaber/banglatok-training-corpus, configuration `v2`](https://huggingface.co/datasets/iamaber/banglatok-training-corpus/tree/main/v2).
@@ -293,6 +292,123 @@ are source labels or script proxies, not independently verified annotations.
 No synthetic transliteration is generated, and BanglishRev evaluation sources
 are excluded from acquisition. Larger size alone is not evidence of better
 linguistic quality."""
+
+
+def load_public_summary(path: Path, training_hash: str) -> dict:
+    summary = json.loads(path.read_text(encoding="utf-8"))
+    if (
+        not isinstance(summary, dict)
+        or summary.get("schema_version") != 1
+        or summary.get("classification") != "public-training-data"
+        or summary.get("raw_redistribution_allowed") is not True
+        or summary.get("training_sha256") != training_hash
+        or not isinstance(summary.get("data_version"), str)
+        or not summary["data_version"].strip()
+        or not isinstance(summary.get("records"), int)
+        or summary["records"] <= 0
+        or not isinstance(summary.get("normalized_characters"), int)
+        or summary["normalized_characters"] <= 0
+        or not isinstance(summary.get("preparation"), str)
+        or not summary["preparation"].strip()
+    ):
+        raise ValueError("public summary does not match the training corpus")
+    promotion = summary.get("promotion")
+    if promotion is not None and (
+        not isinstance(promotion, dict)
+        or not isinstance(promotion.get("passed"), bool)
+        or not isinstance(promotion.get("selected"), bool)
+        or not isinstance(promotion.get("baseline"), str)
+        or not promotion["baseline"].strip()
+        or not isinstance(promotion.get("failed_gates"), list)
+        or any(not isinstance(gate, str) for gate in promotion["failed_gates"])
+    ):
+        raise ValueError("public summary has an invalid promotion result")
+    sources = summary.get("sources")
+    if not isinstance(sources, list) or not sources:
+        raise ValueError("public summary requires source descriptions")
+    for source in sources:
+        if (
+            not isinstance(source, dict)
+            or not isinstance(source.get("description"), str)
+            or not source["description"].strip()
+            or not isinstance(source.get("license"), str)
+            or not source["license"].strip()
+            or not isinstance(source.get("url"), str)
+            or not source["url"].startswith("https://")
+            or not isinstance(source.get("records"), int)
+            or source["records"] < 0
+            or not isinstance(source.get("buckets"), dict)
+            or any(
+                not isinstance(bucket, str) or not isinstance(count, int) or count < 0
+                for bucket, count in source["buckets"].items()
+            )
+        ):
+            raise ValueError("public summary has an invalid source")
+    return summary
+
+
+def public_training_data(summary: dict) -> str:
+    def buckets(source: dict) -> str:
+        return ", ".join(
+            f"`{name}`: {count:,}" for name, count in sorted(source["buckets"].items())
+        )
+
+    rows = "\n".join(
+        f"| [{source['description']}]({source['url']}) | {source['license']} | "
+        f"{source['records']:,} | {buckets(source)} |"
+        for source in summary["sources"]
+    )
+    return f"""Training used only public, redistributable sources under their
+source-specific terms:
+
+| Source | License | Accepted training records | Buckets |
+|---|---|---:|---|
+{rows}
+
+- Data version: `{summary["data_version"]}`.
+- Native model file: [`{{name}}.json`]({{name}}.json).
+- Native model SHA-256: `{{model_sha256}}`.
+- Exact training JSONL SHA-256: `{{training_sha256}}`.
+- Accepted training records: {summary["records"]:,}.
+- Normalized training characters: {summary["normalized_characters"]:,}.
+- Actual vocabulary size: {{vocab:,}}, including special and byte token IDs.
+- Exported with banglatok {{package_version}}.
+- Machine-readable source summary: [training_data_summary.json](training_data_summary.json).
+- Machine-readable export provenance: [model_provenance.json](model_provenance.json).
+
+The exact training JSONL is not bundled with this model repository. Source text
+remains under the licenses above and can be reacquired from the linked sources.
+{summary["preparation"]}
+
+Vocabulary learning, space fusion and caches used training text only.
+BanglishRev and the measured YouTube surface remained evaluation-only.
+Automated quality and PII filters do not guarantee complete removal, and
+language buckets are source labels or script proxies rather than independent
+human annotations. No synthetic transliteration was used."""
+
+
+def selection_statement(public_summary: dict | None) -> str:
+    if public_summary and (promotion := public_summary.get("promotion")):
+        if promotion["passed"]:
+            selected = " and was selected for its vocabulary tier" if promotion["selected"] else ""
+            return (
+                f"This candidate passed every promotion gate against "
+                f"`{promotion['baseline']}`{selected}. The measured tables above are the "
+                "evidence used for selection. Tokenizer metrics do not establish downstream "
+                "model accuracy."
+            )
+        failed = ", ".join(f"`{gate}`" for gate in promotion["failed_gates"])
+        return (
+            f"This candidate failed promotion against `{promotion['baseline']}` "
+            f"({failed or 'unspecified gates'}). It is published for research comparison, "
+            "not as a recommended replacement."
+        )
+    return (
+        "Publishing a candidate does not assert that it passed promotion gates or improved "
+        "over v1. Comparisons depend on the actual vocabulary, training mixture, corpus and "
+        "machine; tokenizer metrics do not establish downstream accuracy. Read the measured "
+        "reports and selection record before choosing a model."
+    )
 
 
 def load_restricted_summary(path: Path, training_hash: str, marker: Path | None) -> dict:
@@ -467,6 +583,11 @@ def main() -> None:
         help="checksum-bound aggregate summary for training-only restricted data",
     )
     parser.add_argument(
+        "--public-summary",
+        type=Path,
+        help="checksum-bound source summary for a custom public training corpus",
+    )
+    parser.add_argument(
         "--benchmark",
         type=Path,
         action="append",
@@ -479,6 +600,10 @@ def main() -> None:
         parser.error("--benchmark requires --model; bundled v1 cards remain unchanged")
     if args.restricted_summary and not args.model:
         parser.error("--restricted-summary requires --model")
+    if args.public_summary and not args.model:
+        parser.error("--public-summary requires --model")
+    if args.public_summary and args.restricted_summary:
+        parser.error("--public-summary and --restricted-summary are mutually exclusive")
     names = set()
     for model in args.model:
         if model.stem in V1_MODELS:
@@ -494,10 +619,18 @@ def main() -> None:
     if args.model and not args.training.is_file():
         parser.error(f"exact custom training file does not exist: {args.training}")
     training_hash = sha256(args.training) if args.model else None
+    public_summary = None
     restricted_summary = None
     if args.model:
         assert training_hash is not None
         marker = args.training.parent / ".restricted-corpus.json"
+        if marker.is_file() and args.public_summary:
+            parser.error("restricted training data cannot use --public-summary")
+        if args.public_summary:
+            try:
+                public_summary = load_public_summary(args.public_summary, training_hash)
+            except (OSError, ValueError, TypeError) as error:
+                parser.error(f"invalid public training summary: {error}")
         summary_path = args.restricted_summary
         if marker.is_file() and summary_path is None:
             summary_path = args.training.parent / "restricted-summary.json"
@@ -512,9 +645,12 @@ def main() -> None:
                 )
             except (OSError, ValueError, TypeError) as error:
                 parser.error(f"invalid restricted training summary: {error}")
-    training_data = (
-        restricted_training_data(restricted_summary) if restricted_summary else PUBLIC_TRAINING_DATA
-    )
+    if public_summary:
+        training_data = public_training_data(public_summary)
+    elif restricted_summary:
+        training_data = restricted_training_data(restricted_summary)
+    else:
+        training_data = PUBLIC_TRAINING_DATA
     reports = [(path, json.loads(path.read_text(encoding="utf-8"))) for path in args.benchmark]
     guide = (Path(__file__).resolve().parents[1] / "docs" / "USAGE.md").read_text(encoding="utf-8")
     models = [(path.stem, path) for path in args.model]
@@ -533,12 +669,20 @@ def main() -> None:
                         "model_sha256": model_hash,
                         "training_sha256": training_hash,
                         "vocab_size": tok.vocab_size,
-                        "dataset": "iamaber/banglatok-training-corpus",
-                        "dataset_config": ("v2-plus-restricted" if restricted_summary else "v2"),
-                        "data_version": ("v2-plus-restricted-v1" if restricted_summary else "v2"),
                         "repository": repo,
                         "banglatok_version": __version__,
                     }
+                    if public_summary:
+                        provenance["data_version"] = public_summary["data_version"]
+                        provenance["public_training_summary"] = public_summary
+                    else:
+                        provenance["dataset"] = "iamaber/banglatok-training-corpus"
+                        provenance["dataset_config"] = (
+                            "v2-plus-restricted" if restricted_summary else "v2"
+                        )
+                        provenance["data_version"] = (
+                            "v2-plus-restricted-v1" if restricted_summary else "v2"
+                        )
                     if restricted_summary:
                         provenance["restricted_training_summary"] = restricted_summary
                     sidecar = model.with_suffix(".provenance.json")
@@ -551,6 +695,8 @@ def main() -> None:
                         benchmarks = benchmark_card(reports, model, model_hash, tok.vocab_size)
                     except (KeyError, TypeError, ValueError) as error:
                         parser.error(f"invalid benchmark: {error}")
+                    selection = selection_statement(public_summary)
+                    data_tag = "public-custom-corpus" if public_summary else "corpus-v2"
                     card = CUSTOM_CARD.format(
                         name=name,
                         vocab=tok.vocab_size,
@@ -558,6 +704,8 @@ def main() -> None:
                         model_sha256=model_hash,
                         training_sha256=training_hash,
                         package_version=__version__,
+                        selection=selection,
+                        data_tag=data_tag,
                         benchmarks=benchmarks,
                         training_data=training_data.format(
                             name=name,
@@ -575,8 +723,17 @@ def main() -> None:
                 (folder / "model_provenance.json").write_text(
                     json.dumps(provenance, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
                 )
+                if public_summary:
+                    (folder / "training_data_summary.json").write_text(
+                        json.dumps(public_summary, ensure_ascii=False, indent=2) + "\n",
+                        encoding="utf-8",
+                    )
                 for index, (path, _) in enumerate(reports, 1):
                     shutil.copyfile(path, folder / f"benchmark-{index}.json")
+                shutil.copyfile(
+                    Path(__file__).resolve().parents[1] / "MODEL_LICENSE.md",
+                    folder / "MODEL_LICENSE.md",
+                )
             (folder / "README.md").write_text(card, encoding="utf-8")
             (folder / "USAGE.md").write_text(guide, encoding="utf-8")
             if args.dry_run:
