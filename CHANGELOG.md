@@ -11,6 +11,14 @@
   when its file hash matches. The `bn-bpe-28k-v2` model card and the
   playground Space now show the released 0.3.0 benchmark.
 
+### Fixed
+
+- `tools/publish_huggingface.py` no longer crashes when a `--public-summary` or
+  restricted summary contains `{` or `}` in a source description, license, URL
+  or preparation note. The text appears in the model card verbatim.
+- The comparison report now gives 2.6–3.7%, not 2.7–3.7%, for how much shorter
+  the 28k SentencePiece baselines are than `bn-bpe-28k-v2` on frozen validation.
+
 ## 0.3.0, 2026-11-25
 
 ### Added

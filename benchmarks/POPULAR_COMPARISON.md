@@ -86,7 +86,7 @@ These are the 14,779 validation records from [data/CORPUS.md](../data/CORPUS.md)
 | Qwen3 | 151,669 | 4.852 | 100.00% | 0 | 6.6 / 6.5 | 3.4 / 3.3 |
 
 In-domain, `bn-bpe-58k` is 0.6–0.8% shorter than same-size SentencePiece.
-The original-data 28k SentencePiece baselines are 2.7–3.7% shorter than
+The original-data 28k SentencePiece baselines are 2.6–3.7% shorter than
 `bn-bpe-28k-v2`, while the new model is 0.6% shorter than `bn-bpe-28k`.
 
 On 16 authored stress cases (emoji, ZWJ/ZWNJ, NUL, combining marks, other scripts, literal `<unk>`/`▁` text, URLs and an empty string), all three bundled models, both tiktoken encodings and Qwen3 reproduce all 16. The SentencePiece models trained on our data reproduce 15, XLM-R 11, BNLP 8, mBERT 6, BanglaBERT and MuRIL 5, and sagorsarker's Bangla-BERT 1.
