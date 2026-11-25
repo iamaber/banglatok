@@ -178,7 +178,7 @@ class VersionedModelPublishingTests(unittest.TestCase):
             "data_version": "public-sources-v1",
             "records": 1,
             "normalized_characters": 15,
-            "preparation": "Normalized and deduplicated against every held-out split.",
+            "preparation": "Dropped rows matching {url} and {}.",
             "promotion": {
                 "passed": True,
                 "selected": True,
@@ -187,7 +187,7 @@ class VersionedModelPublishingTests(unittest.TestCase):
             },
             "sources": [
                 {
-                    "description": "Example Bengali source",
+                    "description": "Example Bengali source {v2}",
                     "license": "CC BY 3.0",
                     "url": "https://example.com/bn",
                     "records": 1,
@@ -201,7 +201,8 @@ class VersionedModelPublishingTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.output / self.model.stem
         card = (folder / "README.md").read_text(encoding="utf-8")
-        self.assertIn("Example Bengali source", card)
+        self.assertIn("Example Bengali source {v2}", card)
+        self.assertIn("Dropped rows matching {url} and {}.", card)
         self.assertIn("CC BY 3.0", card)
         self.assertIn("public-sources-v1", card)
         self.assertIn("passed every promotion gate", card)
@@ -258,7 +259,7 @@ class VersionedModelPublishingTests(unittest.TestCase):
             "public_baseline_training_sha256": "b" * 64,
             "sources": [
                 {
-                    "description": "Consented customer-support Banglish",
+                    "description": "Consented customer-support Banglish {2025}",
                     "rights_basis": "written-contract",
                     "records": 123,
                     "buckets": {"banglish": 100, "code-mixed": 23},
@@ -273,7 +274,7 @@ class VersionedModelPublishingTests(unittest.TestCase):
         folder = self.output / self.model.stem
         card = (folder / "README.md").read_text(encoding="utf-8")
         self.assertIn("private, training-only natural text", card)
-        self.assertIn("Consented customer-support Banglish", card)
+        self.assertIn("Consented customer-support Banglish {2025}", card)
         self.assertIn("123", card)
         self.assertNotIn("partner-natural-banglish", card)
         provenance = json.loads((folder / "model_provenance.json").read_text())
