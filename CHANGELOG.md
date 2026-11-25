@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.0, 2026-11-25
+
 ### Added
 
 - Bundled `bn-bpe-28k-v2` as an opt-in 27,760-ID model trained on the frozen v1
