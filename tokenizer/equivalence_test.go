@@ -12,7 +12,11 @@ import (
 	"unicode/utf8"
 )
 
-var bundledModels = []string{"../src/banglatok/pretrained/bn-bpe-58k.json", "../src/banglatok/pretrained/bn-bpe-28k.json"}
+var bundledModels = []string{
+	"../src/banglatok/pretrained/bn-bpe-58k.json",
+	"../src/banglatok/pretrained/bn-bpe-28k.json",
+	"../src/banglatok/pretrained/bn-bpe-28k-v2.json",
+}
 
 func readModel(t testing.TB, path string) Model {
 	t.Helper()

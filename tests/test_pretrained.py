@@ -65,10 +65,11 @@ class PretrainedTests(unittest.TestCase):
             tokenizer.close()
 
     def test_bundled_models(self) -> None:
-        self.assertEqual(available_models(), ["bn-bpe-28k", "bn-bpe-58k"])
+        self.assertEqual(available_models(), ["bn-bpe-28k", "bn-bpe-28k-v2", "bn-bpe-58k"])
         self.assertEqual(Tokenizer.from_pretrained().vocab_size, 57925)
         self.assertEqual(DEFAULT_MODEL, "bn-bpe-58k")
         self.assertEqual(self.models["bn-bpe-28k"].vocab_size, 27760)
+        self.assertEqual(self.models["bn-bpe-28k-v2"].vocab_size, 27760)
         with self.assertRaisesRegex(ValueError, "unknown model 'missing'.*bn-bpe-58k"):
             Tokenizer.from_pretrained("missing")
 
@@ -197,7 +198,7 @@ class CommandLineTests(unittest.TestCase):
         self.assertEqual(self.run_cli("--ids", "আমি বাংলা বলি"), " ".join(map(str, ids)) + "\n")
         record = json.loads(self.run_cli("--json", "-m", "bn-bpe-28k", "ami"))
         self.assertEqual("".join(record["tokens"]), "ami")
-        self.assertEqual(self.run_cli("--list-models"), "bn-bpe-28k\nbn-bpe-58k\n")
+        self.assertEqual(self.run_cli("--list-models"), "bn-bpe-28k\nbn-bpe-28k-v2\nbn-bpe-58k\n")
 
 
 if __name__ == "__main__":

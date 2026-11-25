@@ -22,7 +22,7 @@ banglatok splits real Bangla text, as people type it, into short and reversible 
 - **Fewer tokens.** On product reviews from a source it never trained on, the default model `bn-bpe-58k` emits 22% fewer tokens than BanglaBERT and GPT-4o's `o200k_base`, 21% fewer than XLM-R, mE5 and BGE-M3, 8% fewer than MuRIL, and 62% fewer than Qwen3.
 - **Nothing lost.** `decode(encode(text))` returns the normalized text exactly, for every input. There is no `[UNK]` token and no lowercasing. Bengali combining marks, ZWJ and ZWNJ, emoji and mixed scripts all survive the round trip.
 - **Fast on one core.** On one Apple M5 thread it encodes 99–119 MB/s of those reviews. That is 2.2–2.9× the speed of SentencePiece Unigram, 2.7–10× tiktoken `o200k_base`, and 11–20× Hugging Face `tokenizers`. Batches of 1,024 texts reach 229 MB/s on all 10 cores.
-- **No dependencies.** A Go engine runs behind `ctypes`, so the wheel needs no other Python package and no compiler. The API is typed and thread-safe. Both models ship in the wheel and on the Hugging Face Hub with identical IDs.
+- **No dependencies.** A Go engine runs behind `ctypes`, so the wheel needs no other Python package and no compiler. The API is typed and thread-safe. All bundled models ship in the wheel with identical native and JSON behavior.
 
 <img src="https://raw.githubusercontent.com/iamaber/banglatok/main/assets/benchmark.svg" alt="Tokens per word and single-thread MB/s for banglatok, same-data SentencePiece Unigram, tiktoken o200k_base, MuRIL, BanglaBERT, XLM-R and Qwen3 on 10,000 unseen BanglishRev reviews" width="100%">
 
@@ -60,7 +60,7 @@ Prebuilt wheels cover CPython 3.10–3.15 on Linux (x86_64, aarch64), macOS (x86
 ```python
 from banglatok import Tokenizer
 
-tok = Tokenizer.from_pretrained()                    # "bn-bpe-58k"; or from_pretrained("bn-bpe-28k")
+tok = Tokenizer.from_pretrained()                    # default "bn-bpe-58k"; try "bn-bpe-28k-v2"
 ids = tok.encode("আমি বাংলায় গান গাই। ami banglay gaan gai")
 tok.decode(ids)                                      # 'আমি বাংলায় গান গাই। ami banglay gaan gai'
 tok.encode_batch(["আমি ভালো আছি", "kemon acho?"])     # many texts, one native call
@@ -89,7 +89,7 @@ Each recipe links to a complete, tested version in the user guide.
 
 ### Load it in Transformers
 
-Both models are on the Hub, and `transformers` alone can load them.
+The original models are on the Hub, and `transformers` alone can load them.
 
 ```python
 from transformers import AutoTokenizer
@@ -166,15 +166,28 @@ The [full report](https://github.com/iamaber/banglatok/blob/main/benchmarks/POPU
 | Name | Vocab | Choose it for |
 |---|---:|---|
 | `bn-bpe-58k` (default) | 57,925 | The shortest sequences |
-| `bn-bpe-28k` | 27,760 | Smaller embedding tables at the same speed |
+| `bn-bpe-28k-v2` | 27,760 | The best current smaller model |
+| `bn-bpe-28k` | 27,760 | Compatibility with original 28k token IDs |
 
-Both models are BPE vocabularies with *space fusion*. A space and the token after it can share one ID, which removes most standalone space tokens without reserving a marker character such as `▁`. Both were learned from 563k records of Bengali Wikipedia, Tatoeba and BanglaTLit. On the Hub they are [`iamaber/banglatok-bn-bpe-58k`](https://huggingface.co/iamaber/banglatok-bn-bpe-58k) and [`iamaber/banglatok-bn-bpe-28k`](https://huggingface.co/iamaber/banglatok-bn-bpe-28k).
+All models are BPE vocabularies with *space fusion*. A space and the token after
+it can share one ID, which removes most standalone space tokens without
+reserving a marker character such as `▁`. `bn-bpe-28k-v2` adds licensed Global
+Voices Bengali and Storybooks Bangladesh training text; it uses no YouTube,
+viewer-comment or synthetic text. The original models are on the Hub at
+[`iamaber/banglatok-bn-bpe-58k`](https://huggingface.co/iamaber/banglatok-bn-bpe-58k)
+and
+[`iamaber/banglatok-bn-bpe-28k`](https://huggingface.co/iamaber/banglatok-bn-bpe-28k).
 
-Their IDs differ from those of pretrained encoders such as BanglaBERT or XLM-R. To pair one with such an encoder, you must adapt the encoder's embeddings. In our experiments, swapping a banglatok vocabulary into multilingual-E5 did not beat the unchanged model. Treat these vocabularies as a starting point for training a model, not as a drop-in accuracy gain for an existing encoder. [docs/MODELS.md](https://github.com/iamaber/banglatok/blob/main/docs/MODELS.md) lists the build commands, checksums, behavior and limitations.
+Their IDs differ from those of pretrained encoders such as BanglaBERT or XLM-R,
+and the two 28k versions also differ from each other. To pair one with an
+existing encoder, you must adapt the encoder's embeddings. In our experiments,
+swapping a banglatok vocabulary into multilingual-E5 did not beat the unchanged
+model. Treat these vocabularies as a starting point for training a model, not as
+a drop-in accuracy gain for an existing encoder.
 
 ## Training data
 
-The corpus behind both models is the Hugging Face dataset [`iamaber/banglatok-training-corpus`](https://huggingface.co/datasets/iamaber/banglatok-training-corpus). It holds 563,476 training records, 14,779 validation records and 16,712 test records from Bengali Wikipedia, Tatoeba and BanglaTLit. Only the training split was used to learn the vocabularies, merges and word caches.
+The original models use the Hugging Face dataset [`iamaber/banglatok-training-corpus`](https://huggingface.co/datasets/iamaber/banglatok-training-corpus), with 563,476 training records, 14,779 validation records and 16,712 test records from Bengali Wikipedia, Tatoeba and BanglaTLit. `bn-bpe-28k-v2` adds licensed Global Voices Bengali and Storybooks Bangladesh text after leakage-aware deduplication. Only training splits were used to learn vocabularies, merges and word caches.
 
 Each record keeps its source and attribution. The dataset card explains the source-specific licenses, the filtering and the privacy limitations. The MIT license of the software does not cover the corpus text.
 
@@ -214,7 +227,7 @@ If you use banglatok or its models, cite it with the metadata in [CITATION.cff](
 ## License
 
 - Code, documentation and the demo vocabulary: [MIT](https://github.com/iamaber/banglatok/blob/main/LICENSE).
-- Bundled model files (`bn-bpe-58k`, `bn-bpe-28k`): [CC BY-SA 4.0](https://github.com/iamaber/banglatok/blob/main/MODEL_LICENSE.md), because they are learned from Wikipedia and Tatoeba text.
+- Bundled model files (`bn-bpe-58k`, `bn-bpe-28k`, `bn-bpe-28k-v2`): [CC BY-SA 4.0](https://github.com/iamaber/banglatok/blob/main/MODEL_LICENSE.md), because they are learned from attributed third-party text.
 - Native wheels include BSD-3-Clause Go components ([notices](https://github.com/iamaber/banglatok/blob/main/THIRD_PARTY_NOTICES.md)).
 
 The SPDX expression is `MIT AND BSD-3-Clause AND CC-BY-SA-4.0`. Corpus text keeps its source-specific terms. It is published separately on Hugging Face and is not part of the Python package.

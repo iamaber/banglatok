@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added
+
+- Bundled `bn-bpe-28k-v2` as an opt-in 27,760-ID model trained on the frozen v1
+  corpus plus licensed Global Voices Bengali and Storybooks Bangladesh text. It
+  passes every 28k promotion gate and leaves `bn-bpe-28k` and the default
+  `bn-bpe-58k` unchanged.
+
 ### Removed
 
 - The Go `bntok encode` subcommand. Use `banglatok -m <model.json>` to tokenize with a trained model.

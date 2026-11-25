@@ -20,8 +20,10 @@ PACKAGE_DATA = {
     "data/demo-unigram.json",
     "pretrained/bn-bpe-58k.json",
     "pretrained/bn-bpe-28k.json",
+    "pretrained/bn-bpe-28k-v2.json",
     "pretrained/bn-bpe-58k.bntok",
     "pretrained/bn-bpe-28k.bntok",
+    "pretrained/bn-bpe-28k-v2.bntok",
 }
 
 

@@ -71,23 +71,29 @@ Load a tokenizer once and reuse it; loading takes a fraction of a second, and bu
 
 ## Choosing a model
 
-Two models ship inside the package and load offline:
+Three models ship inside the package and load offline:
 
-`banglatok` is the package, import and command name. `bn-bpe-58k` and `bn-bpe-28k` are model identifiers, not separate packages. On Hugging Face they live at `iamaber/banglatok-bn-bpe-58k` and `iamaber/banglatok-bn-bpe-28k`.
+`banglatok` is the package, import and command name. The `bn-bpe-*` identifiers
+select bundled models, not separate packages. The original two models are also
+available on Hugging Face.
 
 | Name | Vocabulary | Use it when |
 |---|---:|---|
 | `bn-bpe-58k` (default) | 57,925 | You want the shortest sequences |
-| `bn-bpe-28k` | 27,760 | You want a smaller embedding table; about 14–15% more tokens, same speed |
+| `bn-bpe-28k-v2` | 27,760 | You want the best current smaller model |
+| `bn-bpe-28k` | 27,760 | You need compatibility with original 28k token IDs |
 
 ```python
 from banglatok import Tokenizer, available_models
 
-available_models()                           # ['bn-bpe-28k', 'bn-bpe-58k']
-small = Tokenizer.from_pretrained("bn-bpe-28k")
+available_models()  # ['bn-bpe-28k', 'bn-bpe-28k-v2', 'bn-bpe-58k']
+small = Tokenizer.from_pretrained("bn-bpe-28k-v2")
 ```
 
-Both learned from Bengali Wikipedia, Tatoeba and BanglaTLit. [MODELS.md](https://github.com/iamaber/banglatok/blob/main/docs/MODELS.md) has the build steps, checksums and limitations.
+The two 28k models have the same vocabulary size but different IDs and are not
+embedding-compatible. `bn-bpe-28k-v2` adds licensed Global Voices Bengali and
+Storybooks Bangladesh training text. [MODELS.md](https://github.com/iamaber/banglatok/blob/main/docs/MODELS.md)
+has the build steps, checksums, measurements and limitations.
 
 ## Encoding and decoding
 

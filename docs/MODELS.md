@@ -1,42 +1,65 @@
 # Bundled models
 
-banglatok bundles two models, `bn-bpe-58k` and `bn-bpe-28k`, which load offline with `Tokenizer.from_pretrained(name)`. The package, Python import and command are all named `banglatok`; the `bn-bpe-*` names select its models. See the [user guide](USAGE.md#choosing-a-model) for examples.
+banglatok bundles three models which load offline with
+`Tokenizer.from_pretrained(name)`. The package, Python import and command are
+all named `banglatok`; the `bn-bpe-*` names select its models. See the
+[user guide](USAGE.md#choosing-a-model) for examples.
 
 | Name | Vocabulary | Base BPE | Fused IDs | Use it when |
 |---|---:|---:|---:|---|
 | `bn-bpe-58k` (default) | 57,925 | 32,000 | 25,925 | You want the shortest sequences |
-| `bn-bpe-28k` | 27,760 | 16,000 | 11,760 | You want a smaller embedding table |
+| `bn-bpe-28k-v2` | 27,760 | 16,000 | 11,760 | You want the best current 28k model |
+| `bn-bpe-28k` | 27,760 | 16,000 | 11,760 | You need the original 28k token IDs |
 
 The vocabulary counts include 4 control IDs and 256 byte-fallback IDs.
+`bn-bpe-28k-v2` deliberately has different IDs from `bn-bpe-28k`; model
+embeddings trained with one are not compatible with the other.
 
-The exact training, validation and test splits are published in
+The original `bn-bpe-58k` and `bn-bpe-28k` use the published
 [`iamaber/banglatok-training-corpus`](https://huggingface.co/datasets/iamaber/banglatok-training-corpus).
-Only the 563,476-record training split was used for model learning. Dataset text
-keeps its source-specific terms, separate from the tokenizer files' CC BY-SA 4.0 license.
+Only its 563,476-record training split was used for model learning.
+
+`bn-bpe-28k-v2` uses that frozen training split plus licensed Global Voices
+Bengali and Storybooks Bangladesh text. Leakage-aware canonical, group and
+SimHash deduplication produced 613,096 training records and 79,133,165
+normalized characters, including 61,351 Global Voices records and 40
+Storybooks records. No YouTube text, viewer comments, BanglishRev records or
+synthetic transliterations were used. Dataset text keeps its source-specific
+terms, separate from the tokenizer files' CC BY-SA 4.0 license.
 
 ## How they were built
 
-1. `bntok train -algorithm bpe` learned the base vocabulary from the training split described in [data/CORPUS.md](../data/CORPUS.md). That split has 563,476 records: Bengali Wikipedia, Tatoeba sentence pairs, and BanglaTLit romanized and Bengali text. Its buckets are Bangla, English, Banglish and code-mixed.
-2. `benchmarks/build_fused_model.py` added the space-fusion IDs. Each one represents a space followed by one base ID. Candidates are the base IDs that most often start a word in the training split, with a minimum count of 2.
-3. The same script stored the 64,000 most frequent training words that are not already pieces as `cache_words`. Their segmentation is computed once when the model loads. This only makes encoding faster and never changes IDs.
-4. `go run ./tools/compile_model src/banglatok/pretrained/*.json` wrote each `.bntok` sidecar: the same model in binary form with the cached segmentations precomputed, so loading skips JSON parsing and re-encoding. It records the SHA-256 of the exact JSON bytes and of its own contents; a missing, stale or damaged sidecar is ignored and the JSON is loaded instead. `go test ./tokenizer` fails if a shipped sidecar differs from what the current code compiles.
+1. `tools/prepare_corpus_v2.py` deduplicated the added sources against the
+   frozen training, validation, test and BanglishRev exclusion sets.
+2. `tools/train_corpus_v2.py --skip-sentencepiece` learned each base BPE model
+   and called `benchmarks/build_fused_model.py`. Fusion adds IDs for a space
+   followed by a frequent word-initial base ID; the 64,000 most frequent
+   non-piece training words become load-time cache entries without changing
+   token IDs.
+3. `go run ./tools/compile_model src/banglatok/pretrained/*.json` wrote each
+   `.bntok` sidecar. It records the SHA-256 of the exact JSON and compiled
+   payload; `go test ./tokenizer` rejects stale sidecars.
 
 ```sh
-python benchmarks/build_fused_model.py --base models/bpe-32000.json --budget 64000 \
-  --output models/release/fused-32000-64k.json   # produces bn-bpe-58k
-python benchmarks/build_fused_model.py --base models/bpe-16000.json --budget 32000 \
-  --output models/release/fused-16000-32k.json   # produces bn-bpe-28k
+python tools/train_corpus_v2.py --training <prepared-public-train.jsonl> \
+  --output <output> --skip-sentencepiece
+go run ./tools/compile_model src/banglatok/pretrained/*.json
 ```
 
 | Artifact | SHA-256 |
 |---|---|
 | `bn-bpe-58k.json` | `f045ed2c69e8c10d718272ae40291d51ca7453cc6abd26ef58eedddcaaaa13b9` |
 | `bn-bpe-28k.json` | `b5b97c3a9472798e22da0d32182c5bc4e9a4b89a74f0a6af7bc301c1a0985cbf` |
-| Base `bpe-32000.json` | `b3fcc85abb34e27648fc297dfc8052cf871f7c86482a4d4e91626a72513a0bc3` |
-| Base `bpe-16000.json` | `77ac7594a514f76eb78b22c95b173c96fb83b08f0e75338af60261bebfa28306` |
-| Training split | `bda48c8388fcd1cd706b4578619367a609ccf75a7f3aa659fede8c88aa198b39` |
+| `bn-bpe-28k-v2.json` | `6fcb410a3799d0f59d81db8776cc0312e9322b8d509c8fb45377dcff418e6b0d` |
+| `bn-bpe-28k-v2.bntok` | `7d5c2c05709e7673d7ac21d79aac87bf823a28e6090daec193654bda5ed6a4ac` |
+| v2 base `bpe-16000-v2.json` | `8f890eb3bea552ad1454b336a4c290d91ae92ed04e6ecc470d27c80671da7d23` |
+| v2 training split | `0695ca6c02c04d2ec074d9498ea807dfeee2201adfbd5c76b6e032dec3fa929b` |
+| Original base `bpe-32000.json` | `b3fcc85abb34e27648fc297dfc8052cf871f7c86482a4d4e91626a72513a0bc3` |
+| Original base `bpe-16000.json` | `77ac7594a514f76eb78b22c95b173c96fb83b08f0e7538af60261bebfa28306` |
+| Frozen v1 training split | `bda48c8388fcd1cd706b4578619367a609ccf75a7f3aa659fede8c88aa198b39` |
 
-The `bn-bpe-*` hashes identify the JSON files shipped in the package. The base `bpe-*.json` files are not distributed; their hashes identify locally rebuilt training artifacts and are not checked by the package tests.
+The base `bpe-*.json` files and training splits are not distributed in the
+Python package. Their hashes identify the exact local training inputs.
 
 ## Behavior
 
@@ -52,12 +75,35 @@ The `bn-bpe-*` hashes identify the JSON files shipped in the package. The base `
 - The code-mixed bucket is small: 4,709 training records and 156 validation records.
 - Better compression and speed do not by themselves mean better downstream accuracy. See [research/reports/ROUND2_ORIGINAL_COMPARISON.md](../research/reports/ROUND2_ORIGINAL_COMPARISON.md) for the encoder experiments.
 
+### `bn-bpe-28k-v2` evaluation
+
+On 10,000 evaluation-only BanglishRev reviews, tokens per whitespace word fell
+from 1.5874 for `bn-bpe-28k` to 1.5699. Frozen v1 validation fell from 1.5628
+to 1.5532, a new-source public holdout fell from 1.6202 to 1.5136, and a
+16-video YouTube ASR holdout fell from 1.5224 to 1.5053 despite no YouTube
+training text. All round trips were exact and no unknown token was emitted.
+
+The candidate passed every 28k promotion gate. The source-matched public
+holdout overstates general-domain confidence; BanglishRev improved by only
+1.1%, and the 156-text frozen code-mixed bucket regressed by 0.75%, within the
+2% gate. Agent-generated synthetic Banglish was tested separately and rejected
+because it worsened BanglishRev; it is not in this model.
+
 ## License of the model files
 
-The software is MIT-licensed. The vocabularies and cached word lists are statistics learned from text, including Wikipedia (CC BY-SA 3.0 / GFDL) and Tatoeba (CC BY 2.0). To respect those terms conservatively, the two model JSON files are distributed under **CC BY-SA 4.0**, with attribution to:
+The software is MIT-licensed. The vocabularies and cached word lists are
+statistics learned from attributed text. To respect the source terms
+conservatively, all bundled model files are distributed under **CC BY-SA
+4.0**, with attribution to:
 
 - Wikipedia contributors, Bengali Wikipedia dump `20231101.bn` (via `wikimedia/wikipedia`).
 - Tatoeba contributors, via ManyThings.org Anki exports (CC BY 2.0).
 - The BanglaTLit authors (MIT), https://github.com/farhanishmam/BanglaTLit.
+- Global Voices Bengali authors and translators (CC BY 3.0),
+  https://bn.globalvoices.org/ and its
+  [attribution policy](https://globalvoices.org/about/global-voices-attribution-policy/).
+- Storybooks Bangladesh writers and translators for the included CC BY 3.0 or
+  CC BY 4.0 stories,
+  https://global-asp.github.io/storybooks-bangladesh/stories/bn/.
 
 See [MODEL_LICENSE.md](../MODEL_LICENSE.md).
