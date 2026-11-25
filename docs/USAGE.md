@@ -74,7 +74,7 @@ Load a tokenizer once and reuse it; loading takes a fraction of a second, and bu
 Three models ship inside the package and load offline:
 
 `banglatok` is the package, import and command name. The `bn-bpe-*` identifiers
-select bundled models, not separate packages. The original two models are also
+select bundled models, not separate packages. All three models are also
 available on Hugging Face.
 
 | Name | Vocabulary | Use it when |
@@ -92,8 +92,12 @@ small = Tokenizer.from_pretrained("bn-bpe-28k-v2")
 
 The two 28k models have the same vocabulary size but different IDs and are not
 embedding-compatible. `bn-bpe-28k-v2` adds licensed Global Voices Bengali and
-Storybooks Bangladesh training text. [MODELS.md](https://github.com/iamaber/banglatok/blob/main/docs/MODELS.md)
-has the build steps, checksums, measurements and limitations.
+Storybooks Bangladesh training text. It uses 1.1% fewer tokens than the original
+28k model on 10,000 unseen-source BanglishRev reviews. Download its standard
+Hugging Face tokenizer files from
+[`iamaber/banglatok-bn-bpe-28k-v2`](https://huggingface.co/iamaber/banglatok-bn-bpe-28k-v2).
+[MODELS.md](https://github.com/iamaber/banglatok/blob/main/docs/MODELS.md) has
+the build steps, checksums, full measurements and limitations.
 
 ## Encoding and decoding
 

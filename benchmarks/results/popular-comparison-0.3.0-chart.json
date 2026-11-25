@@ -1,0 +1,95 @@
+{
+  "created_utc": "2026-11-25T11:34:13.200783+00:00",
+  "python": "3.12.13",
+  "cpu_model": "Apple M5",
+  "packages": {
+    "banglatok": "0.3.0"
+  },
+  "corpora": {
+    "Unseen-source BanglishRev reviews": {
+      "records": 10000,
+      "candidates": {
+        "banglatok bn-bpe-58k": {
+          "quality": {
+            "all": {
+              "tokens_per_word": 1.3794305454602296
+            }
+          },
+          "speed": {
+            "single_MB_per_second": 102.92569542556595
+          }
+        },
+        "banglatok bn-bpe-28k-v2": {
+          "quality": {
+            "all": {
+              "tokens_per_word": 1.5698765895253504
+            }
+          },
+          "speed": {
+            "single_MB_per_second": 102.51112997916715
+          }
+        },
+        "SentencePiece Unigram 57,925, same training data": {
+          "quality": {
+            "all": {
+              "tokens_per_word": 1.4098103120823466
+            }
+          },
+          "speed": {
+            "single_MB_per_second": 43.60095697673535
+          }
+        },
+        "tiktoken o200k_base": {
+          "quality": {
+            "all": {
+              "tokens_per_word": 1.7804794172587086
+            }
+          },
+          "speed": {
+            "single_MB_per_second": 36.939622876511635
+          }
+        },
+        "MuRIL (Google)": {
+          "quality": {
+            "all": {
+              "tokens_per_word": 1.4979171063018282
+            }
+          },
+          "speed": {
+            "single_MB_per_second": 8.69925622328352
+          }
+        },
+        "BanglaBERT (csebuetnlp)": {
+          "quality": {
+            "all": {
+              "tokens_per_word": 1.771053639397563
+            }
+          },
+          "speed": {
+            "single_MB_per_second": 8.983442832541083
+          }
+        },
+        "XLM-R / mE5 / BGE-M3": {
+          "quality": {
+            "all": {
+              "tokens_per_word": 1.7397359844310534
+            }
+          },
+          "speed": {
+            "single_MB_per_second": 6.520820200165944
+          }
+        },
+        "Qwen3": {
+          "quality": {
+            "all": {
+              "tokens_per_word": 3.5878215198480623
+            }
+          },
+          "speed": {
+            "single_MB_per_second": 6.019579208936496
+          }
+        }
+      }
+    }
+  }
+}

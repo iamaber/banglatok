@@ -3,7 +3,7 @@
 Writes a standalone SVG with no plotting dependency:
 
     python benchmarks/plot_comparison.py \
-        benchmarks/results/popular-comparison.json assets/benchmark.svg
+        benchmarks/results/popular-comparison-0.3.0-chart.json assets/benchmark.svg
 """
 
 import argparse
@@ -14,6 +14,7 @@ from pathlib import Path
 CORPUS = "Unseen-source BanglishRev reviews"
 ROWS = [
     ("banglatok bn-bpe-58k", "banglatok bn-bpe-58k"),
+    ("banglatok bn-bpe-28k-v2", "banglatok bn-bpe-28k-v2"),
     ("SentencePiece Unigram 57,925, same training data", "SentencePiece Unigram, same data"),
     ("tiktoken o200k_base", "tiktoken o200k_base (GPT-4o)"),
     ("MuRIL (Google)", "MuRIL"),
@@ -35,7 +36,7 @@ def panel(x: float, title: str, values: list[float], digits: int) -> list[str]:
     for i, value in enumerate(values):
         y = TOP + i * ROW
         width = PANEL_WIDTH * value / largest
-        kind = "ours" if i == 0 else "other"
+        kind = "ours" if i < 2 else "other"
         parts.append(
             f'<rect class="{kind}" x="{x}" y="{y}" width="{width:.1f}" height="{BAR}" rx="3"/>'
         )
@@ -68,7 +69,7 @@ def chart(result: dict) -> str:
     ]
     for i, (_, label) in enumerate(ROWS):
         y = TOP + i * ROW + BAR - 4
-        weight = ' font-weight="600"' if i == 0 else ""
+        weight = ' font-weight="600"' if i < 2 else ""
         parts.append(
             f'<text x="{left - 12}" y="{y}" text-anchor="end"{weight}>{escape(label)}</text>'
         )

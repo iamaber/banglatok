@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Documentation
+
+- Updated the model guide, Hugging Face links and comparison report with
+  `bn-bpe-28k-v2` results from the released 0.3.0 package.
+
 ## 0.3.0, 2026-11-25
 
 ### Added

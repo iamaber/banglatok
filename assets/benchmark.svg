@@ -1,46 +1,51 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="940" height="310" viewBox="0 0 940 310" role="img" aria-label="Tokens per word and single-thread speed of banglatok and other tokenizers">
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="340" viewBox="0 0 940 340" role="img" aria-label="Tokens per word and single-thread speed of banglatok and other tokenizers">
 <style>
 text { font: 13px -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; fill: #1f2328; }
 .title { font-weight: 600; } .note { font-size: 11px; fill: #59636e; }
 .ours { fill: #0969da; } .other { fill: #afb8c1; }
 </style>
-<rect width="940" height="310" rx="8" fill="#ffffff" stroke="#d1d9e0"/>
+<rect width="940" height="340" rx="8" fill="#ffffff" stroke="#d1d9e0"/>
 <text x="238" y="78" text-anchor="end" font-weight="600">banglatok bn-bpe-58k</text>
-<text x="238" y="108" text-anchor="end">SentencePiece Unigram, same data</text>
-<text x="238" y="138" text-anchor="end">tiktoken o200k_base (GPT-4o)</text>
-<text x="238" y="168" text-anchor="end">MuRIL</text>
-<text x="238" y="198" text-anchor="end">BanglaBERT</text>
-<text x="238" y="228" text-anchor="end">XLM-R / mE5 / BGE-M3</text>
-<text x="238" y="258" text-anchor="end">Qwen3</text>
+<text x="238" y="108" text-anchor="end" font-weight="600">banglatok bn-bpe-28k-v2</text>
+<text x="238" y="138" text-anchor="end">SentencePiece Unigram, same data</text>
+<text x="238" y="168" text-anchor="end">tiktoken o200k_base (GPT-4o)</text>
+<text x="238" y="198" text-anchor="end">MuRIL</text>
+<text x="238" y="228" text-anchor="end">BanglaBERT</text>
+<text x="238" y="258" text-anchor="end">XLM-R / mE5 / BGE-M3</text>
+<text x="238" y="288" text-anchor="end">Qwen3</text>
 <text class="title" x="250" y="40">Tokens per word (lower is better)</text>
 <rect class="ours" x="250" y="64" width="103.8" height="18" rx="3"/>
 <text class="value" x="359.8" y="78">1.38</text>
-<rect class="other" x="250" y="94" width="106.1" height="18" rx="3"/>
-<text class="value" x="362.1" y="108">1.41</text>
-<rect class="other" x="250" y="124" width="134.0" height="18" rx="3"/>
-<text class="value" x="390.0" y="138">1.78</text>
-<rect class="other" x="250" y="154" width="112.7" height="18" rx="3"/>
-<text class="value" x="368.7" y="168">1.50</text>
-<rect class="other" x="250" y="184" width="133.3" height="18" rx="3"/>
-<text class="value" x="389.3" y="198">1.77</text>
-<rect class="other" x="250" y="214" width="130.9" height="18" rx="3"/>
-<text class="value" x="386.9" y="228">1.74</text>
-<rect class="other" x="250" y="244" width="270.0" height="18" rx="3"/>
-<text class="value" x="526.0" y="258">3.59</text>
+<rect class="ours" x="250" y="94" width="118.1" height="18" rx="3"/>
+<text class="value" x="374.1" y="108">1.57</text>
+<rect class="other" x="250" y="124" width="106.1" height="18" rx="3"/>
+<text class="value" x="362.1" y="138">1.41</text>
+<rect class="other" x="250" y="154" width="134.0" height="18" rx="3"/>
+<text class="value" x="390.0" y="168">1.78</text>
+<rect class="other" x="250" y="184" width="112.7" height="18" rx="3"/>
+<text class="value" x="368.7" y="198">1.50</text>
+<rect class="other" x="250" y="214" width="133.3" height="18" rx="3"/>
+<text class="value" x="389.3" y="228">1.77</text>
+<rect class="other" x="250" y="244" width="130.9" height="18" rx="3"/>
+<text class="value" x="386.9" y="258">1.74</text>
+<rect class="other" x="250" y="274" width="270.0" height="18" rx="3"/>
+<text class="value" x="526.0" y="288">3.59</text>
 <text class="title" x="610" y="40">MB/s on one thread (higher is better)</text>
 <rect class="ours" x="610" y="64" width="270.0" height="18" rx="3"/>
-<text class="value" x="886.0" y="78">99.4</text>
-<rect class="other" x="610" y="94" width="116.8" height="18" rx="3"/>
-<text class="value" x="732.8" y="108">43.0</text>
-<rect class="other" x="610" y="124" width="99.5" height="18" rx="3"/>
-<text class="value" x="715.5" y="138">36.6</text>
-<rect class="other" x="610" y="154" width="23.2" height="18" rx="3"/>
-<text class="value" x="639.2" y="168">8.5</text>
-<rect class="other" x="610" y="184" width="24.1" height="18" rx="3"/>
-<text class="value" x="640.1" y="198">8.9</text>
-<rect class="other" x="610" y="214" width="17.2" height="18" rx="3"/>
-<text class="value" x="633.2" y="228">6.3</text>
-<rect class="other" x="610" y="244" width="16.0" height="18" rx="3"/>
-<text class="value" x="632.0" y="258">5.9</text>
-<text class="note" x="250" y="298">10,000 unseen BanglishRev reviews, Apple M5, Python 3.12.13. Source: benchmarks/POPULAR_COMPARISON.md</text>
+<text class="value" x="886.0" y="78">102.9</text>
+<rect class="ours" x="610" y="94" width="268.9" height="18" rx="3"/>
+<text class="value" x="884.9" y="108">102.5</text>
+<rect class="other" x="610" y="124" width="114.4" height="18" rx="3"/>
+<text class="value" x="730.4" y="138">43.6</text>
+<rect class="other" x="610" y="154" width="96.9" height="18" rx="3"/>
+<text class="value" x="712.9" y="168">36.9</text>
+<rect class="other" x="610" y="184" width="22.8" height="18" rx="3"/>
+<text class="value" x="638.8" y="198">8.7</text>
+<rect class="other" x="610" y="214" width="23.6" height="18" rx="3"/>
+<text class="value" x="639.6" y="228">9.0</text>
+<rect class="other" x="610" y="244" width="17.1" height="18" rx="3"/>
+<text class="value" x="633.1" y="258">6.5</text>
+<rect class="other" x="610" y="274" width="15.8" height="18" rx="3"/>
+<text class="value" x="631.8" y="288">6.0</text>
+<text class="note" x="250" y="328">10,000 unseen BanglishRev reviews, Apple M5, Python 3.12.13. Source: benchmarks/POPULAR_COMPARISON.md</text>
 </svg>

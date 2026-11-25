@@ -77,11 +77,23 @@ Python package. Their hashes identify the exact local training inputs.
 
 ### `bn-bpe-28k-v2` evaluation
 
-On 10,000 evaluation-only BanglishRev reviews, tokens per whitespace word fell
-from 1.5874 for `bn-bpe-28k` to 1.5699. Frozen v1 validation fell from 1.5628
-to 1.5532, a new-source public holdout fell from 1.6202 to 1.5136, and a
-16-video YouTube ASR holdout fell from 1.5224 to 1.5053 despite no YouTube
-training text. All round trips were exact and no unknown token was emitted.
+We compared the released 0.3.0 model with the unchanged original 28k model.
+Lower tokens per whitespace word is better.
+
+| Evaluation corpus | `bn-bpe-28k` | `bn-bpe-28k-v2` | Change |
+|---|---:|---:|---:|
+| Unseen-source BanglishRev reviews, 10,000 texts | 1.5874 | 1.5699 | -1.10% |
+| Frozen v1 validation, 14,779 texts | 1.5628 | 1.5532 | -0.61% |
+| New-source public holdout | 1.6202 | 1.5136 | -6.58% |
+| YouTube ASR holdout, 16 videos | 1.5224 | 1.5053 | -1.12% |
+
+On the BanglishRev reviews, `bn-bpe-28k-v2` measured 102.5 MB/s for individual
+calls, 123.5 MB/s for batches of 64 on one Apple M5 thread, and 192.8 MB/s for
+batches of 1,024 on all 10 cores. All round trips were exact and no unknown
+token was emitted. The full same-machine comparison is in
+[POPULAR_COMPARISON.md](../benchmarks/POPULAR_COMPARISON.md). Download the
+standard Hugging Face files from
+[`iamaber/banglatok-bn-bpe-28k-v2`](https://huggingface.co/iamaber/banglatok-bn-bpe-28k-v2).
 
 The candidate passed every 28k promotion gate. The source-matched public
 holdout overstates general-domain confidence; BanglishRev improved by only
