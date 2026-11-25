@@ -348,7 +348,7 @@ def load_public_summary(path: Path, training_hash: str) -> dict:
     return summary
 
 
-def public_training_data(summary: dict) -> str:
+def public_training_data(summary: dict, card: dict) -> str:
     def buckets(source: dict) -> str:
         return ", ".join(
             f"`{name}`: {count:,}" for name, count in sorted(source["buckets"].items())
@@ -367,13 +367,13 @@ source-specific terms:
 {rows}
 
 - Data version: `{summary["data_version"]}`.
-- Native model file: [`{{name}}.json`]({{name}}.json).
-- Native model SHA-256: `{{model_sha256}}`.
-- Exact training JSONL SHA-256: `{{training_sha256}}`.
+- Native model file: [`{card["name"]}.json`]({card["name"]}.json).
+- Native model SHA-256: `{card["model_sha256"]}`.
+- Exact training JSONL SHA-256: `{card["training_sha256"]}`.
 - Accepted training records: {summary["records"]:,}.
 - Normalized training characters: {summary["normalized_characters"]:,}.
-- Actual vocabulary size: {{vocab:,}}, including special and byte token IDs.
-- Exported with banglatok {{package_version}}.
+- Actual vocabulary size: {card["vocab"]:,}, including special and byte token IDs.
+- Exported with banglatok {card["package_version"]}.
 - Machine-readable source summary: [training_data_summary.json](training_data_summary.json).
 - Machine-readable export provenance: [model_provenance.json](model_provenance.json).
 
@@ -449,7 +449,7 @@ def load_restricted_summary(path: Path, training_hash: str, marker: Path | None)
     return summary
 
 
-def restricted_training_data(summary: dict) -> str:
+def restricted_training_data(summary: dict, card: dict) -> str:
     def buckets(source: dict) -> str:
         return ", ".join(
             f"`{name}`: {count:,}" for name, count in sorted(source["buckets"].items())
@@ -472,12 +472,12 @@ and private manifests are therefore not included in this repository.
 {rows}
 
 - Data version: `v2-plus-restricted-v1`.
-- Native model file: [`{{name}}.json`]({{name}}.json).
-- Native model SHA-256: `{{model_sha256}}`.
-- Exact combined training JSONL SHA-256: `{{training_sha256}}`.
+- Native model file: [`{card["name"]}.json`]({card["name"]}.json).
+- Native model SHA-256: `{card["model_sha256"]}`.
+- Exact combined training JSONL SHA-256: `{card["training_sha256"]}`.
 - Public baseline training SHA-256: `{summary["public_baseline_training_sha256"]}`.
-- Actual vocabulary size: {{vocab:,}}, including special and byte token IDs.
-- Exported with banglatok {{package_version}}.
+- Actual vocabulary size: {card["vocab"]:,}, including special and byte token IDs.
+- Exported with banglatok {card["package_version"]}.
 - Machine-readable export provenance: [model_provenance.json](model_provenance.json).
 
 The restricted preparation path applies the same normalization, quality,
@@ -663,12 +663,6 @@ def main() -> None:
                 )
             except (OSError, ValueError, TypeError) as error:
                 parser.error(f"invalid restricted training summary: {error}")
-    if public_summary:
-        training_data = public_training_data(public_summary)
-    elif restricted_summary:
-        training_data = restricted_training_data(restricted_summary)
-    else:
-        training_data = PUBLIC_TRAINING_DATA
     reports = [(path, json.loads(path.read_text(encoding="utf-8"))) for path in args.benchmark]
     guide = (Path(__file__).resolve().parents[1] / "docs" / "USAGE.md").read_text(encoding="utf-8")
     models = [(path.stem, path) for path in args.model]
@@ -715,23 +709,26 @@ def main() -> None:
                         parser.error(f"invalid benchmark: {error}")
                     selection = selection_statement(public_summary)
                     data_tag = "public-custom-corpus" if public_summary else "corpus-v2"
+                    fields = {
+                        "name": name,
+                        "vocab": tok.vocab_size,
+                        "model_sha256": model_hash,
+                        "training_sha256": training_hash,
+                        "package_version": __version__,
+                    }
+                    if public_summary:
+                        training_data = public_training_data(public_summary, fields)
+                    elif restricted_summary:
+                        training_data = restricted_training_data(restricted_summary, fields)
+                    else:
+                        training_data = PUBLIC_TRAINING_DATA.format(**fields)
                     card = CUSTOM_CARD.format(
-                        name=name,
-                        vocab=tok.vocab_size,
+                        **fields,
                         repo=repo,
-                        model_sha256=model_hash,
-                        training_sha256=training_hash,
-                        package_version=__version__,
                         selection=selection,
                         data_tag=data_tag,
                         benchmarks=benchmarks,
-                        training_data=training_data.format(
-                            name=name,
-                            model_sha256=model_hash,
-                            training_sha256=training_hash,
-                            vocab=tok.vocab_size,
-                            package_version=__version__,
-                        ),
+                        training_data=training_data,
                     )
                 else:
                     card = CARD.format(name=name, vocab=tok.vocab_size, repo=repo)
